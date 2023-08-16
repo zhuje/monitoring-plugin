@@ -726,6 +726,15 @@ const AlertsDetailsPage_: React.FC<AlertsDetailsPageProps> = ({ history, match }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const labels: PrometheusLabels = React.useMemo(() => alert?.labels, [labelsMemoKey]);
 
+  console.log("JZ CANDY alerting > AlertsDetailsPage > labels : ", labels)
+
+  // const ruleLabelsMemoKey = JSON.stringify(rule?.labels);
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // const ruleLabels: PrometheusLabels = React.useMemo(() => rule?.labels, [ruleLabelsMemoKey]);
+
+  // const combinedLabels = { ...labels, ...ruleLabels };
+  // delete combinedLabels?.prometheus;
+
   // eslint-disable-next-line camelcase
   const runbookURL = alert?.annotations?.runbook_url;
 

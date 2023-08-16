@@ -55,6 +55,8 @@ export const getAlertsAndRules = (
   // Flatten the rules data to make it easier to work with, discard non-alerting rules since those
   // are the only ones we will be using and add a unique ID to each rule.
   const groups = _.get(data, 'groups') as PrometheusRulesResponse['data']['groups'];
+  console.warn("JZ getAlertsAndRules > groups : ", groups);
+
   const rules = _.flatMap(groups, (g) => {
     const addID = (r: PrometheusRule): Rule => {
       const key = [
@@ -67,12 +69,52 @@ export const getAlertsAndRules = (
       ].join(',');
       return { ...r, id: String(murmur3(key, 'monitoring-salt')) };
     };
+    console.warn("JZ getAlertsAndRules > addID : ", JSON.stringify(addID));
 
-    return _.filter(g.rules, { type: 'alerting' }).map(addID);
+    // filter for only the firing alerts -- const rules should now only contain 
+    // the rules that are firing 
+    const filtered = _.filter(g.rules, { type: 'alerting' }).map(addID)
+
+    console.warn("JZ getAlertsAndRules > filtered : ", filtered);
+    // return _.filter(g.rules, { type: 'alerting' }).map(addID);
+
+    return filtered;
   });
+
+
+  console.warn("JZ getAlertsAndRules > rules : ", rules);
 
   // Add `rule` object to each alert
   const alerts = _.flatMap(rules, (rule) => rule.alerts.map((a) => ({ rule, ...a })));
+
+  console.warn("JZ getAlertsAndRules > alerts : ", alerts);
+
+  // JZ ** Copy rule labels into alert labels -- so can obtain external labels for filtering and silencing alerts
+  // JZ -- THIS works but this needs to be refactored -- it doesn't need to be in const modifiedAlerts, 
+  // alerts.map() and alerts.labels = merged  -- modifies alerts 
+  const modifiedAlerts = alerts.map((alert) => {
+    console.warn("JZ alert, alert.labels ,alert.rule.labels  : ", alert, "\n", alert.labels,"\n", alert.rule.labels ); 
+   
+    const merged = {
+      ...alert.labels,
+      ...alert.rule.labels
+    };
+    console.warn("JZ BEANS : ", merged) 
+
+    alert.labels = merged;
+    console.warn("JZ PIE alert.labels After push: ", alert )
+    return alert;
+  })
+
+  // LEFT OFF 
+  // verified that alert.labels - merged contains the external labels 
+  // need to do smoke test filtering alerts and silencing alerts 
+  // need to update return to ... return {modifiedAlerts, rules}
+
+  console.log("JZ APPLE alerts: ", alerts)
+  console.log("JZ APPLE modifiedAlerts: ", modifiedAlerts)
+
+
 
   return { alerts, rules };
 };
