@@ -1616,6 +1616,26 @@ const AlertTableRow_: React.FC<AlertTableRowProps> = ({ history, obj }) => {
         {t('Silence alert')}
       </DropdownItem>,
     );
+  }  
+
+  // QUESTION: I'm still unsure of the requirements for handling 
+  // the lightSpeed actions...Do either return a link or run a function 
+  // (e.g.  action.cta: (() => void) | {
+  //     href: string;
+  //     external?: boolean;
+  // };
+  const handleLightSpeedActions = (actions:Action[]) => {
+   actions.map((action) => {
+      if (isActionWithHref(action)){
+        const lightSpeedHref = action.cta.href
+        console.log('action.cta.href', lightSpeedHref)
+      }
+      if (typeof action.cta === 'function'){
+        const lightSpeedCallback = action.cta 
+        lightSpeedCallback() 
+        console.log('action.cta.function', lightSpeedCallback)
+      }
+    })
   }
 
   return (
@@ -1644,7 +1664,21 @@ const AlertTableRow_: React.FC<AlertTableRowProps> = ({ history, obj }) => {
         {alertSource(obj) === AlertSource.User ? t('User') : t('Platform')}
       </td>
       <td className={tableAlertClasses[4]} title={title}>
-        <KebabDropdown dropdownItems={dropdownItems} />
+        {/* TODO: TBD finalize a contextId for lightspeed extension 
+        ... so we can replace 'mock-lightspeed'*/}
+        <ActionServiceProvider context={{ 'mock-lightspeed': { alert } }}>
+          {({ actions, loaded }) => {
+            if (loaded){
+              dropdownItems.push(
+                <DropdownItem key='light-speed' onClick={()=>{handleLightSpeedActions(actions)}}>
+                  Explain
+                </DropdownItem>
+              )
+            }
+            return  <KebabDropdown dropdownItems={dropdownItems} />
+          }}
+          
+        </ActionServiceProvider>
       </td>
     </>
   );
@@ -1987,6 +2021,7 @@ const RulesPage_: React.FC = () => {
         <title>Alerting</title>
       </Helmet>
       <div className="co-m-pane__body">
+        <h1> hello world </h1>
         <ListPageFilter
           data={staticData}
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment

@@ -78,5 +78,12 @@
       "section": "observe",
       "insertAfter": "dashboards"
     }
+  },
+	{
+    "type": "console.action/provider",
+    "properties": {
+      "contextId": "mock-lightspeed", 
+      "provider": { "$codeRef": "MockLightspeed" } 
+    }
   }
 ]
