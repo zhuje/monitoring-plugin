@@ -1,7 +1,10 @@
 import { Action, ExtensionHook } from '@openshift-console/dynamic-plugin-sdk';
 import React from 'react';
-
-
+/**
+ * Mock module for testing <ActionServiceProvider> components
+ * for Lightspeed extension.
+ * @returns a mock Lightspeed extension
+ */
 const useLightspeedActionsExtension: ExtensionHook<Array<Action>> = () => {
   const href = `/monitoring/dashboards`;
   const [actions] = React.useState([
@@ -11,10 +14,11 @@ const useLightspeedActionsExtension: ExtensionHook<Array<Action>> = () => {
       cta: { href },
     },
     {
-        id: 'lightspeed-callback',
-        label: 'lightspeed-label-callback',
-        cta: (()=>console.log('helloworld')),
-      },
+      id: 'lightspeed-callback',
+      label: 'lightspeed-label-callback',
+      // eslint-disable-next-line no-console
+      cta: () => console.log('helloworld'),
+    },
   ]);
   return [actions, true, null];
 };

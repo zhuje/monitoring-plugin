@@ -1616,27 +1616,26 @@ const AlertTableRow_: React.FC<AlertTableRowProps> = ({ history, obj }) => {
         {t('Silence alert')}
       </DropdownItem>,
     );
-  }  
-
-  // QUESTION: I'm still unsure of the requirements for handling 
-  // the lightSpeed actions...Do either return a link or run a function 
-  // (e.g.  action.cta: (() => void) | {
-  //     href: string;
-  //     external?: boolean;
-  // };
-  const handleLightSpeedActions = (actions:Action[]) => {
-   actions.map((action) => {
-      if (isActionWithHref(action)){
-        const lightSpeedHref = action.cta.href
-        console.log('action.cta.href', lightSpeedHref)
-      }
-      if (typeof action.cta === 'function'){
-        const lightSpeedCallback = action.cta 
-        lightSpeedCallback() 
-        console.log('action.cta.function', lightSpeedCallback)
-      }
-    })
   }
+
+  const handleLightSpeedActions = (actions: Action[]) => {
+    actions.map((action) => {
+      if (isActionWithHref(action)) {
+        dropdownItems.push(
+          <DropdownItem key={action.id} href={action.cta.href}>
+            {action.label}
+          </DropdownItem>,
+        );
+      } else {
+        const lightSpeedCallback = action.cta as () => void;
+        dropdownItems.push(
+          <DropdownItem key={action.id} onClick={lightSpeedCallback}>
+            {action.label}
+          </DropdownItem>,
+        );
+      }
+    });
+  };
 
   return (
     <>
@@ -1664,20 +1663,14 @@ const AlertTableRow_: React.FC<AlertTableRowProps> = ({ history, obj }) => {
         {alertSource(obj) === AlertSource.User ? t('User') : t('Platform')}
       </td>
       <td className={tableAlertClasses[4]} title={title}>
-        {/* TODO: TBD finalize a contextId for lightspeed extension 
-        ... so we can replace 'mock-lightspeed'*/}
+        {/* TODO: replace 'mock-lightspeed' with actual light speed contextId */}
         <ActionServiceProvider context={{ 'mock-lightspeed': { alert } }}>
           {({ actions, loaded }) => {
-            if (loaded){
-              dropdownItems.push(
-                <DropdownItem key='light-speed' onClick={()=>{handleLightSpeedActions(actions)}}>
-                  Explain
-                </DropdownItem>
-              )
+            if (loaded) {
+              handleLightSpeedActions(actions);
             }
-            return  <KebabDropdown dropdownItems={dropdownItems} />
+            return <KebabDropdown dropdownItems={dropdownItems} />;
           }}
-          
         </ActionServiceProvider>
       </td>
     </>
