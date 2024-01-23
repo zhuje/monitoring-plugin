@@ -69,6 +69,8 @@ import { formatNumber } from './format';
 import { useBoolean } from './hooks/useBoolean';
 import { queryBrowserTheme } from './query-browser-theme';
 import { PrometheusAPIError, RootState } from './types';
+import ExternalLinkSquareAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-square-alt-icon';
+
 
 const spans = ['5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d', '2d', '1w', '2w'];
 export const colors = queryBrowserTheme.line.colorScale;
@@ -759,8 +761,10 @@ const QueryBrowser_: React.FC<QueryBrowserProps> = ({
           ),
     );
 
+
     return Promise.all(allPromises)
       .then((responses: PrometheusResponse[]) => {
+
         const newResults = _.map(responses, 'data.result');
         const numDataPoints = _.sumBy(newResults, (r) => _.sumBy(r, 'values.length'));
 
@@ -810,6 +814,14 @@ const QueryBrowser_: React.FC<QueryBrowserProps> = ({
         }
       });
   };
+
+  // JZ NOTES: To remove. `graphData` holds the series data points 
+  // Series[[][]] = [
+  // 0: [
+  //       [{alert: 'alert-name}],
+  //       [{x:Date(),y:1}, {x:Date(),y:2}, {x:Date(),y:3}]
+  //    ] 
+  // ]
 
   // Don't poll if an end time was set (because the latest data is not displayed) or if the graph is
   // hidden. Otherwise use a polling interval relative to the graph's timespan.
@@ -904,6 +916,41 @@ const QueryBrowser_: React.FC<QueryBrowserProps> = ({
   const isGraphDataEmpty = !graphData || graphData.every((d) => d.length === 0);
   const hasReducedResolution = !isGraphDataEmpty && samples < maxSamplesForSpan && !updating;
 
+  // Based on work from https://codesandbox.io/p/sandbox/react-export-to-csv-l6uhq?file=%2Fsrc%2FApp.jsx
+  const onClickExportData = () => {
+
+    // Loop through each series. Each series exports as their own file.
+
+    // Process Object to CSV 
+    const data = 
+    `name,lastname,family.name,family.type,family,location,nickname
+    Bob,Smith,Peter,Father
+    James,David,Julie,Mother
+    Robert,Miller,,,,1231;3214;4214
+    David,Martin,,,,,dmartin`
+    const blob = new Blob([data], { type: "data:text/csv;charset=utf-8," });
+
+    const blobURL = window.URL.createObjectURL(blob);
+
+    // Create new tag for download file
+    const anchor = document.createElement("a");
+    anchor.download = "testExport.csv"; // change name to the series title 
+    anchor.href = blobURL;
+    anchor.dataset.downloadurl = [
+      "text/csv",
+      anchor.download,
+      anchor.href
+    ].join(":");
+    anchor.click();
+
+    // Remove URL.createObjectURL. The browser should not save the reference to the file.
+    setTimeout(() => {
+      // For Firefox it is necessary to delay revoking the ObjectURL
+      URL.revokeObjectURL(blobURL);
+    }, 100);
+
+  }
+
   return (
     <div
       className={classNames('query-browser__wrapper', {
@@ -935,7 +982,11 @@ const QueryBrowser_: React.FC<QueryBrowserProps> = ({
                 onChange={(v) => setIsStacked(v)}
               />
             )}
+            <Button variant="link" icon={<ExternalLinkSquareAltIcon />} iconPosition="right" onClick={onClickExportData}>
+              Export 
+            </Button>
           </div>
+
         </div>
       )}
       <div

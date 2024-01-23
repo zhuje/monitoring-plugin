@@ -422,6 +422,7 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
     }
 
     rows = _.map(result, rowMapper);
+
     if (sortBy) {
       // Sort Values column numerically and sort all the other columns alphabetically
       const valuesColIndex = allLabelKeys.length + 1;
