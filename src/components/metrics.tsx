@@ -71,6 +71,10 @@ import { colors, Error, QueryBrowser } from './query-browser';
 import TablePagination from './table-pagination';
 import { PrometheusAPIError, RootState } from './types';
 
+import { CSVLink } from "react-csv";
+import ExternalLinkSquareAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-square-alt-icon';
+
+
 // Stores information about the currently focused query input
 let focusedQuery;
 
@@ -357,6 +361,10 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
     );
   }
 
+  console.log('data: ', data.result);
+
+
+
   // Add any data series from `series` (those displayed in the graph) that are not in `data.result`.
   // This happens for queries that exclude a series currently, but included that same series at some
   // point during the graph's range.
@@ -377,24 +385,32 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
 
   const buttonCell = (labels) => ({ title: <SeriesButton index={index} labels={labels} /> });
 
+
   let columns, rows;
+  // let csvColumns;
+  const valueTitle = t('Value')
   if (data.resultType === 'scalar') {
-    columns = ['', { title: t('Value'), transforms }];
+    columns = ['', { title: valueTitle, transforms }];
     rows = [[buttonCell({}), _.get(result, '[1]')]];
+    // csvColumns = valueTitle
   } else if (data.resultType === 'string') {
-    columns = [{ title: t('Value'), transforms }];
+    columns = [{ title: valueTitle, transforms }];
     rows = [[result?.[1]]];
+    // csvColumns = valueTitle
   } else {
     const allLabelKeys = _.uniq(_.flatMap(result, ({ metric }) => Object.keys(metric))).sort();
-
     columns = [
       '',
       ...allLabelKeys.map((k) => ({
         title: <span>{k === '__name__' ? t('Name') : k}</span>,
         transforms,
       })),
-      { title: t('Value'), transforms },
+      { title: valueTitle, transforms },
     ];
+    // const getCSVColumns = allLabelKeys.map((k) => {
+    //   return k === '__name__' ? t('Name') : k
+    // })
+    // csvColumns = [ ...getCSVColumns, valueTitle];
 
     let rowMapper;
     if (data.resultType === 'matrix') {
@@ -437,6 +453,42 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
     }
   }
 
+  //console.log('rows: ', rows);
+  // console.log('columns: ', columns);
+  // console.log('csvColumns: ', csvColumns);
+
+  // columns.map((column)=> {
+  //   if (!column.isEmpty){
+  //     return
+  //   }
+  // })
+
+  const getCsvColumns = () => {
+    let csvColumns = [];
+    for (var i = 1; i<columns.length; i++) {
+      const column = columns[i];
+      if (!column.isEmpty || null || undefined){
+        if (typeof column?.title === 'string' ){
+          csvColumns.push(column.title)
+        } else if (column.title?.props?.children) {
+          csvColumns.push(column.title.props.children)
+        }
+      }
+    }
+    return csvColumns
+  }
+
+  const getCsvRows = () => {
+    let csvRows = [];
+    for (var i = 0; i<rows.length; i++) {
+      const row = [...rows[i]].slice(1)
+      csvRows.push(row)
+    }
+    return csvRows
+  }
+
+  const csvData = [getCsvColumns(), ...getCsvRows()]
+
   const onSort = (e, i, direction) => setSortBy({ index: i, direction });
 
   const tableRows = rows.slice((page - 1) * perPage, page * perPage).map((cells) => ({ cells }));
@@ -452,6 +504,21 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
             className="query-browser__series-select-all-btn"
           >
             {isDisabledSeriesEmpty ? t('Unselect all') : t('Select all')}
+          </Button>
+          <Button 
+            variant="link"
+            isInline
+            icon={<ExternalLinkSquareAltIcon />} 
+            iconPosition="right"
+            className="query-browser__table-export-link"
+          > 
+            <CSVLink
+                data={csvData}
+                filename={`OpenShift_Metrics_QueryResultsTable_"${query.replace(/\s/g, "")}".csv`}
+                enclosingCharacter={``}
+              >
+                Export to .csv
+            </CSVLink>
           </Button>
           <Table
             aria-label={t('query results table')}

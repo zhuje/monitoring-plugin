@@ -492,6 +492,11 @@ $monitoring-line-height: 18px;
   margin-top: var(--pf-global--spacer--md);
 }
 
+.query-browser__table-export-link {
+  margin-top: var(--pf-global--spacer--md);
+  float: right
+}
+
 .query-browser__table-message {
   border-bottom: solid 1px var(--pf-global--BorderColor--100);
   padding: 10px 20px;
