@@ -21,6 +21,7 @@ const newQueryBrowserQuery = (): ImmutableMap<string, any> =>
     id: _.uniqueId('query-browser-query'),
     isEnabled: true,
     isExpanded: true,
+    data: [],
   });
 
 export const silenceFiringAlerts = (firingAlerts, silences) => {

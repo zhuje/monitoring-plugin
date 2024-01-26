@@ -796,9 +796,21 @@ const QueryBrowser_: React.FC<QueryBrowserProps> = ({
           });
           setGraphData(newGraphData);
 
-          _.each(newResults, (r, i) =>
-            dispatch(queryBrowserPatchQuery(i, { series: r ? _.map(r, 'metric') : undefined })),
-          );
+          // const getMetricAttributesAndValues = (r) => {
+          //   const lastValue = r.values.length-1
+          //   const latestValue = r.values[lastValue][1]
+          //   const series = {
+          //     metric: r.metric,
+          //     value: latestValue
+          //   }
+          //   console.log(series)
+          //   return series
+          // }
+
+          _.each(newResults, (r, i) => {
+            dispatch(queryBrowserPatchQuery(i, { series: r ? _.map(r, 'metric') : undefined }));
+            //dispatch(queryBrowserPatchQuery(i, { seriesData: r ? _.map(r, getMetricAttributesAndValues) : undefined }))
+          });
           setUpdating(false);
         }
         setError(undefined);

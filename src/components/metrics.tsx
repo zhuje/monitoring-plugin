@@ -71,8 +71,6 @@ import { colors, Error, QueryBrowser } from './query-browser';
 import TablePagination from './table-pagination';
 import { PrometheusAPIError, RootState } from './types';
 
-import { CSVLink } from 'react-csv';
-import ExternalLinkSquareAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-square-alt-icon';
 
 // Stores information about the currently focused query input
 let focusedQuery;
@@ -226,6 +224,74 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     observe.getIn(['queryBrowser', 'queries', index, 'isEnabled']),
   );
 
+  const query = useSelector(({ observe }: RootState) =>
+    observe.getIn(['queryBrowser', 'queries', index, 'query']),
+  );
+  console.log('query: ', query);
+
+  const queryTableData = useSelector(({ observe }: RootState) =>
+    observe.getIn(['queryBrowser', 'queries', index, 'queryTableData']),
+  );
+  console.log('queryTableData: ', queryTableData);
+
+  // const seriesTableData = useSelector(({ observe }: RootState) =>
+  //   observe.getIn(['queryBrowser', 'queries', index, 'seriesTableData']),
+  // );
+
+  // console.log('store queries: ', seriesTableData)
+
+  // const exportCSV = () => {
+  //   if (!seriesTableData?.result){
+  //     return
+  //   }
+  //   const result = seriesTableData.result
+  //   let columns, rows;
+  //   if (seriesTableData.resultType === 'scalar'){
+  //     columns = [t('Value')]
+  //     rows = [[_.get(result, '[1]')]]
+  //   } else if (seriesTableData.resultType === 'string'){
+  //     columns = [t('Value')]
+  //     rows = [[result?.[1]]];
+  //   } else {
+  //     // Get column headers
+  //     const allLabelKeys = _.uniq(_.flatMap(result, ({ metric }) => Object.keys(metric))).sort();
+
+  //     // Uppdate '__name__' to more readble format 'Name'
+  //     const nameColumnIndex = allLabelKeys.findIndex((k) => k === '__name__')
+  //     if (nameColumnIndex >= 0) {
+  //       allLabelKeys[nameColumnIndex] = t('Name')
+  //     }
+
+  //     columns = [...allLabelKeys, t('Value') ]
+  //     console.log('final columns' , columns)
+  //   }
+  // }
+  // exportCSV()
+
+  // const getCsvColumns = () => {
+  //   const csvColumns = [];
+  //   for (let i = 1; i < columns.length; i++) {
+  //     const column = columns[i];
+  //     if (typeof column?.title === 'string') {
+  //       csvColumns.push(column.title);
+  //     } else if (column.title?.props?.children) {
+  //       csvColumns.push(column.title.props.children);
+  //     }
+  //   }
+  //   return csvColumns;
+  // };
+
+  // const getCsvRows = () => {
+  //   const csvRows = [];
+  //   for (let i = 0; i < rows.length; i++) {
+  //     const row = [...rows[i]].slice(1);
+  //     csvRows.push(row);
+  //   }
+  //   return csvRows;
+  // };
+
+  // const csvData = [getCsvColumns(), ...getCsvRows()];
+
   const dispatch = useDispatch();
 
   const toggleIsEnabled = React.useCallback(
@@ -247,6 +313,82 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     dispatch(queryBrowserDuplicateQuery(index));
   }, [dispatch, index]);
 
+  const doExportCsv = () => {
+    if (!query) {
+      return;
+    }
+
+    const getCsvColumns = () => {
+      const columns = queryTableData.columns;
+      const csvColumns = [];
+      for (let i = 1; i < columns.length; i++) {
+        const column = columns[i];
+        if (typeof column?.title === 'string') {
+          csvColumns.push(column.title);
+        } else if (column.title?.props?.children) {
+          csvColumns.push(column.title.props.children);
+        }
+      }
+      // console.log('getCsvColumns: ', getCsvColumns())
+      console.log('getCSVColumns:, ', csvColumns);
+      return csvColumns;
+    };
+
+    const getCsvRows = () => {
+      const rows = queryTableData.rows;
+      // const csvRows = [];
+      // for (let i = 0; i < rows.length; i++) {
+      //   const row = [...rows[i]].slice(1)
+      //   console.log('getCsvRows > row:', row);
+      //   csvRows.push(row);
+      // }
+      // console.log('getCsvRows: ', getCsvRows())
+
+      let csvRows = rows.map((row) => row.slice(1)).map((row) => row.map((rowItem)=> typeof rowItem === 'object' ? t('None'): rowItem) )
+      console.log('csvRows: ', csvRows)
+
+      // const csvRows2 = csvRows.map((row) => row.map((rowItem)=> typeof rowItem === 'object' ? t('None'): rowItem) )
+      // console.log(csvRows2);
+
+      return csvRows;
+    };
+
+    const csvData = [getCsvColumns(), ...getCsvRows()];
+    console.log('csvData: ', csvData);
+
+    // https://github.com/Chalarangelo/30-seconds-of-code/blob/master/content/snippets/js/s/array-to-csv.md
+    const arrayToCSV = (arr, delimiter = ',') =>
+      arr
+        .map((v) => v.map((x) => (isNaN(x) ? `"${x.replace(/"/g, '""')}"` : x)).join(delimiter))
+        .join('\n');
+
+    const convertedCSV = arrayToCSV(csvData);
+    console.log('convertedCSV: ', convertedCSV)
+
+
+
+    const blob = new Blob([convertedCSV], { type: "data:text/csv;charset=utf-8," });
+    const blobURL = window.URL.createObjectURL(blob);
+
+    // Create new tag for download file
+    const anchor = document.createElement("a");
+    anchor.download = "OpenShift_Metrics_QueryTable.csv"; // change the name
+    anchor.href = blobURL;
+    anchor.dataset.downloadurl = [
+      "text/csv",
+      anchor.download,
+      anchor.href
+    ].join(":");
+    anchor.click();
+
+    // Remove URL.createObjectURL. The browser should not save the reference to the file.
+    setTimeout(() => {
+      // For Firefox it is necessary to delay revoking the ObjectURL
+      URL.revokeObjectURL(blobURL);
+    }, 100);
+  
+  };
+
   const dropdownItems = [
     <DropdownItem key="toggle-query" component="button" onClick={toggleIsEnabled}>
       {isEnabled ? t('Disable query') : t('Enable query')}
@@ -266,6 +408,22 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     <DropdownItem key="duplicate" component="button" onClick={doClone}>
       {t('Duplicate query')}
     </DropdownItem>,
+    <DropdownItem key="export" component="button" onClick={doExportCsv}>
+      Export
+    </DropdownItem>,
+
+    // <DropdownItem key="export" component="button" >
+    //   <CSVLink
+    //     data={csvData}
+    //     onClick={()=>{
+    //       setCsvData([1])
+    //     }}
+    //     filename={`OpenShift_Metrics_QueryResultsTable.csv`}
+    //     enclosingCharacter={``}
+    //   >
+    //     Export CSV
+    //   </CSVLink>
+    // </DropdownItem>,
   ];
 
   return <KebabDropdown dropdownItems={dropdownItems} />;
@@ -300,6 +458,8 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
   const lastRequestTime = useSelector(({ observe }: RootState) =>
     observe.getIn(['queryBrowser', 'lastRequestTime']),
   );
+
+  // console.log('series, ', series)
 
   const dispatch = useDispatch();
 
@@ -376,6 +536,17 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
     );
   }
 
+  console.log('QueryTable > result: ', result);
+
+  // const seriesTableData = {
+  //   resultType: data.resultType,
+  //   result: result
+  // }
+  // console.log('QueryTable > data: ', data)
+  // console.log('QueryTable > result: ', result)
+  // console.log('QueryTable > csvDataResults: ', seriesTableData)
+  // dispatch(queryBrowserPatchQuery(index, { seriesTableData: seriesTableData }))
+
   const transforms = [sortable, wrappable];
 
   const buttonCell = (labels) => ({ title: <SeriesButton index={index} labels={labels} /> });
@@ -439,29 +610,52 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
     }
   }
 
-  const getCsvColumns = () => {
-    const csvColumns = [];
-    for (let i = 1; i < columns.length; i++) {
-      const column = columns[i];
-      if (typeof column?.title === 'string') {
-        csvColumns.push(column.title);
-      } else if (column.title?.props?.children) {
-        csvColumns.push(column.title.props.children);
-      }
-    }
-    return csvColumns;
-  };
+  // const getMetricAttributesAndValues = (r) => {
+  //   const lastValue = r.values.length-1
+  //   const latestValue = r.values[lastValue][1]
+  //   const series = {
+  //     metric: r.metric,
+  //     value: latestValue
+  //   }
+  //   console.log(series)
+  //   return series
+  // }
 
-  const getCsvRows = () => {
-    const csvRows = [];
-    for (let i = 0; i < rows.length; i++) {
-      const row = [...rows[i]].slice(1);
-      csvRows.push(row);
-    }
-    return csvRows;
-  };
+  //   _.each(result, (r, i) => {
+  //     console.log('queryTable r: , ', r)
+  //     dispatch(queryBrowserPatchQuery(i, { seriesTableData: r ? r : undefined }))
+  //   });
 
-  const csvData = [getCsvColumns(), ...getCsvRows()];
+  // const queries = useSelector(({ observe }: RootState) =>
+  //   observe.getIn(['queryBrowser', 'queries']),
+  // );
+  // console.log('store queries: ', queries)
+
+  // const getCsvColumns = () => {
+  //   const csvColumns = [];
+  //   for (let i = 1; i < columns.length; i++) {
+  //     const column = columns[i];
+  //     if (typeof column?.title === 'string') {
+  //       csvColumns.push(column.title);
+  //     } else if (column.title?.props?.children) {
+  //       csvColumns.push(column.title.props.children);
+  //     }
+  //   }
+  //   return csvColumns;
+  // };
+
+  // const getCsvRows = () => {
+  //   const csvRows = [];
+  //   for (let i = 0; i < rows.length; i++) {
+  //     const row = [...rows[i]].slice(1);
+  //     csvRows.push(row);
+  //   }
+  //   return csvRows;
+  // };
+
+  // const csvData = [getCsvColumns(), ...getCsvRows()];
+
+  dispatch(queryBrowserPatchQuery(index, { queryTableData: { columns, rows } }));
 
   const onSort = (e, i, direction) => setSortBy({ index: i, direction });
 
@@ -479,7 +673,7 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
           >
             {isDisabledSeriesEmpty ? t('Unselect all') : t('Select all')}
           </Button>
-          <Button
+          {/* <Button
             variant="link"
             isInline
             icon={<ExternalLinkSquareAltIcon />}
@@ -493,7 +687,7 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
             >
               {t('Export to .csv')}
             </CSVLink>
-          </Button>
+          </Button> */}
           <Table
             aria-label={t('query results table')}
             cells={columns}
