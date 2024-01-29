@@ -252,52 +252,47 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     dispatch(queryBrowserDuplicateQuery(index));
   }, [dispatch, index]);
 
+  const isSpan = (item) => item.title?.props?.children;
+  const getSpanText = (item) => item.title.props.children;
+
   // Takes data from QueryTable and removes/replaces all html objects from columns and rows
   const convertQueryTable = () => {
     const getColumns = () => {
       const columns = queryTableData.columns;
-      const csvColumns = [];
-      for (let i = 1; i < columns.length; i++) {
-        const column = columns[i];
-        if (typeof column?.title === 'string') {
-          csvColumns.push(column.title);
-        } else if (column.title?.props?.children) {
-          // extract text from <span> element
-          csvColumns.push(column.title.props.children);
+      const csvColumnHeaders = columns.slice(1).map((columnHeader) => {
+        if (typeof columnHeader?.title === 'string') {
+          return columnHeader.title;
+        } else if (isSpan(columnHeader)) {
+          return getSpanText(columnHeader);
         } else {
-          csvColumns.push('');
+          return '';
         }
-      }
-      return csvColumns;
+      });
+      return csvColumnHeaders;
     };
-
     const getRows = () => {
       const rows = queryTableData.rows;
       const csvRows = rows
         .map((row) => row.slice(1))
-        .map((row) => row.map((rowItem) => (typeof rowItem === 'object' ? t('None') : rowItem)));
+        .map((row) =>
+          row.map((rowItem) => {
+            return isSpan(rowItem) ? getSpanText(rowItem) : rowItem;
+          }),
+        );
       return csvRows;
     };
-
     const tableData = [getColumns(), ...getRows()];
     return tableData;
   };
 
-  const doExportCsv = () => {
-    if (!query) {
-      return;
-    }
+  const getCsv = (array, delimiter = ',') =>
+    array
+      .map((row) =>
+        row.map((rowItem) => (isNaN(rowItem) ? `"${rowItem}"` : rowItem)).join(delimiter),
+      )
+      .join('\n');
 
-    const tableData = convertQueryTable();
-
-    const getCSV = (array, delimiter = ',') =>
-      array
-        .map((row) =>
-          row.map((rowItem) => (isNaN(rowItem) ? `"${rowItem}"` : rowItem)).join(delimiter),
-        )
-        .join('\n');
-    const csvData = getCSV(tableData);
-
+  const downloadCsv = (csvData) => {
     // Modified from https://codesandbox.io/p/sandbox/react-export-to-csv-l6uhq?file=%2Fsrc%2FApp.jsx%3A39%2C10-39%2C16
     const blob = new Blob([csvData], { type: 'data:text/csv;charset=utf-8,' });
     const blobURL = window.URL.createObjectURL(blob);
@@ -312,6 +307,12 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       // For Firefox it is necessary to delay revoking the ObjectURL
       URL.revokeObjectURL(blobURL);
     }, 100);
+  };
+
+  const doExportCsv = () => {
+    const tableData = convertQueryTable();
+    const csvData = getCsv(tableData);
+    downloadCsv(csvData);
   };
 
   const exportDropdownItem = (
@@ -341,7 +342,16 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     </DropdownItem>,
   ];
 
-  const drodownItems = query ? [...defaultDropdownItems, exportDropdownItem] : defaultDropdownItems;
+  const hasQueryTableData = () => {
+    if (!query || !queryTableData?.rows || !queryTableData?.columns) {
+      return false;
+    }
+    return true;
+  };
+
+  const drodownItems = hasQueryTableData()
+    ? [...defaultDropdownItems, exportDropdownItem]
+    : defaultDropdownItems;
 
   return <KebabDropdown dropdownItems={drodownItems} />;
 };
@@ -375,8 +385,6 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
   const lastRequestTime = useSelector(({ observe }: RootState) =>
     observe.getIn(['queryBrowser', 'lastRequestTime']),
   );
-
-  // console.log('series, ', series)
 
   const dispatch = useDispatch();
 
@@ -535,21 +543,6 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
           >
             {isDisabledSeriesEmpty ? t('Unselect all') : t('Select all')}
           </Button>
-          {/* <Button
-            variant="link"
-            isInline
-            icon={<ExternalLinkSquareAltIcon />}
-            iconPosition="right"
-            className="query-browser__table-export-link"
-          >
-            <CSVLink
-              data={csvData}
-              filename={`OpenShift_Metrics_QueryResultsTable_${query.replace(/\s/g, '')}.csv`}
-              enclosingCharacter={``}
-            >
-              {t('Export to .csv')}
-            </CSVLink>
-          </Button> */}
           <Table
             aria-label={t('query results table')}
             cells={columns}
