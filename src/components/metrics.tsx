@@ -226,70 +226,10 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
   const query = useSelector(({ observe }: RootState) =>
     observe.getIn(['queryBrowser', 'queries', index, 'query']),
   );
-  console.log('query: ', query);
 
   const queryTableData = useSelector(({ observe }: RootState) =>
     observe.getIn(['queryBrowser', 'queries', index, 'queryTableData']),
   );
-  console.log('queryTableData: ', queryTableData);
-
-  // const seriesTableData = useSelector(({ observe }: RootState) =>
-  //   observe.getIn(['queryBrowser', 'queries', index, 'seriesTableData']),
-  // );
-
-  // console.log('store queries: ', seriesTableData)
-
-  // const exportCSV = () => {
-  //   if (!seriesTableData?.result){
-  //     return
-  //   }
-  //   const result = seriesTableData.result
-  //   let columns, rows;
-  //   if (seriesTableData.resultType === 'scalar'){
-  //     columns = [t('Value')]
-  //     rows = [[_.get(result, '[1]')]]
-  //   } else if (seriesTableData.resultType === 'string'){
-  //     columns = [t('Value')]
-  //     rows = [[result?.[1]]];
-  //   } else {
-  //     // Get column headers
-  //     const allLabelKeys = _.uniq(_.flatMap(result, ({ metric }) => Object.keys(metric))).sort();
-
-  //     // Uppdate '__name__' to more readble format 'Name'
-  //     const nameColumnIndex = allLabelKeys.findIndex((k) => k === '__name__')
-  //     if (nameColumnIndex >= 0) {
-  //       allLabelKeys[nameColumnIndex] = t('Name')
-  //     }
-
-  //     columns = [...allLabelKeys, t('Value') ]
-  //     console.log('final columns' , columns)
-  //   }
-  // }
-  // exportCSV()
-
-  // const getCsvColumns = () => {
-  //   const csvColumns = [];
-  //   for (let i = 1; i < columns.length; i++) {
-  //     const column = columns[i];
-  //     if (typeof column?.title === 'string') {
-  //       csvColumns.push(column.title);
-  //     } else if (column.title?.props?.children) {
-  //       csvColumns.push(column.title.props.children);
-  //     }
-  //   }
-  //   return csvColumns;
-  // };
-
-  // const getCsvRows = () => {
-  //   const csvRows = [];
-  //   for (let i = 0; i < rows.length; i++) {
-  //     const row = [...rows[i]].slice(1);
-  //     csvRows.push(row);
-  //   }
-  //   return csvRows;
-  // };
-
-  // const csvData = [getCsvColumns(), ...getCsvRows()];
 
   const dispatch = useDispatch();
 
@@ -312,74 +252,61 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     dispatch(queryBrowserDuplicateQuery(index));
   }, [dispatch, index]);
 
-  const doExportCsv = () => {
-    if (!query) {
-      return;
-    }
-
-    // TODO: change name to 'convertTableColumns'
-    const getCsvColumns = () => {
+  // Takes data from QueryTable and removes/replaces all html objects from columns and rows
+  const convertQueryTable = () => {
+    const getColumns = () => {
       const columns = queryTableData.columns;
       const csvColumns = [];
       for (let i = 1; i < columns.length; i++) {
         const column = columns[i];
         if (typeof column?.title === 'string') {
           csvColumns.push(column.title);
-        } else if (column.title?.props?.children) { // extract text from <span> element 
+        } else if (column.title?.props?.children) {
+          // extract text from <span> element
           csvColumns.push(column.title.props.children);
+        } else {
+          csvColumns.push('');
         }
       }
-      // console.log('getCsvColumns: ', getCsvColumns())
-      console.log('getCSVColumns:, ', csvColumns);
       return csvColumns;
     };
 
-    // TODO: change name to 'convertTableRows'
-    const getCsvRows = () => {
+    const getRows = () => {
       const rows = queryTableData.rows;
-      // const csvRows = [];
-      // for (let i = 0; i < rows.length; i++) {
-      //   const row = [...rows[i]].slice(1)
-      //   console.log('getCsvRows > row:', row);
-      //   csvRows.push(row);
-      // }
-      // console.log('getCsvRows: ', getCsvRows())
-
       const csvRows = rows
-        .map((row) => row.slice(1)) 
-        .map((row) => row.map((rowItem) => (typeof rowItem === 'object' ? t('None') : rowItem))); 
-      console.log('csvRows: ', csvRows);
-
-      // const csvRows2 = csvRows.map((row) => row.map((rowItem)=> typeof rowItem === 'object' ? t('None'): rowItem) )
-      // console.log(csvRows2);
-
+        .map((row) => row.slice(1))
+        .map((row) => row.map((rowItem) => (typeof rowItem === 'object' ? t('None') : rowItem)));
       return csvRows;
     };
 
-    // Takes data from QueryTable and removes all <span> and <button> objects
-    const tableData = [getCsvColumns(), ...getCsvRows()];
-    console.log('csvData: ', tableData);
+    const tableData = [getColumns(), ...getRows()];
+    return tableData;
+  };
 
-    // https://github.com/Chalarangelo/30-seconds-of-code/blob/master/content/snippets/js/s/array-to-csv.md
-    const arrayToCSV = (array, delimiter = ',') =>
+  const doExportCsv = () => {
+    if (!query) {
+      return;
+    }
+
+    const tableData = convertQueryTable();
+
+    const getCSV = (array, delimiter = ',') =>
       array
-        .map((row) => row.map((rowItem) => (isNaN(rowItem) ? `"${rowItem}"` : rowItem)).join(delimiter))
+        .map((row) =>
+          row.map((rowItem) => (isNaN(rowItem) ? `"${rowItem}"` : rowItem)).join(delimiter),
+        )
         .join('\n');
+    const csvData = getCSV(tableData);
 
-    const csv = arrayToCSV(tableData);
-    console.log('convertedCSV: ', csv);
-
-    // https://codesandbox.io/p/sandbox/react-export-to-csv-l6uhq?file=%2Fsrc%2FApp.jsx%3A39%2C10-39%2C16
-    const blob = new Blob([csv], { type: 'data:text/csv;charset=utf-8,' });
+    // Modified from https://codesandbox.io/p/sandbox/react-export-to-csv-l6uhq?file=%2Fsrc%2FApp.jsx%3A39%2C10-39%2C16
+    const blob = new Blob([csvData], { type: 'data:text/csv;charset=utf-8,' });
     const blobURL = window.URL.createObjectURL(blob);
-
     // Create new tag for download file
     const anchor = document.createElement('a');
-    anchor.download = 'OpenShift_Metrics_QueryTable.csv';
+    anchor.download = `OpenShift_Metrics_QueryTable_${query}.csv`;
     anchor.href = blobURL;
     anchor.dataset.downloadurl = ['text/csv', anchor.download, anchor.href].join(':');
     anchor.click();
-
     // Remove URL.createObjectURL. The browser should not save the reference to the file.
     setTimeout(() => {
       // For Firefox it is necessary to delay revoking the ObjectURL
@@ -414,7 +341,6 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     </DropdownItem>,
   ];
 
-  
   const drodownItems = query ? [...defaultDropdownItems, exportDropdownItem] : defaultDropdownItems;
 
   return <KebabDropdown dropdownItems={drodownItems} />;
@@ -527,17 +453,6 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
     );
   }
 
-  console.log('QueryTable > result: ', result);
-
-  // const seriesTableData = {
-  //   resultType: data.resultType,
-  //   result: result
-  // }
-  // console.log('QueryTable > data: ', data)
-  // console.log('QueryTable > result: ', result)
-  // console.log('QueryTable > csvDataResults: ', seriesTableData)
-  // dispatch(queryBrowserPatchQuery(index, { seriesTableData: seriesTableData }))
-
   const transforms = [sortable, wrappable];
 
   const buttonCell = (labels) => ({ title: <SeriesButton index={index} labels={labels} /> });
@@ -601,51 +516,7 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
     }
   }
 
-  // const getMetricAttributesAndValues = (r) => {
-  //   const lastValue = r.values.length-1
-  //   const latestValue = r.values[lastValue][1]
-  //   const series = {
-  //     metric: r.metric,
-  //     value: latestValue
-  //   }
-  //   console.log(series)
-  //   return series
-  // }
-
-  //   _.each(result, (r, i) => {
-  //     console.log('queryTable r: , ', r)
-  //     dispatch(queryBrowserPatchQuery(i, { seriesTableData: r ? r : undefined }))
-  //   });
-
-  // const queries = useSelector(({ observe }: RootState) =>
-  //   observe.getIn(['queryBrowser', 'queries']),
-  // );
-  // console.log('store queries: ', queries)
-
-  // const getCsvColumns = () => {
-  //   const csvColumns = [];
-  //   for (let i = 1; i < columns.length; i++) {
-  //     const column = columns[i];
-  //     if (typeof column?.title === 'string') {
-  //       csvColumns.push(column.title);
-  //     } else if (column.title?.props?.children) {
-  //       csvColumns.push(column.title.props.children);
-  //     }
-  //   }
-  //   return csvColumns;
-  // };
-
-  // const getCsvRows = () => {
-  //   const csvRows = [];
-  //   for (let i = 0; i < rows.length; i++) {
-  //     const row = [...rows[i]].slice(1);
-  //     csvRows.push(row);
-  //   }
-  //   return csvRows;
-  // };
-
-  // const csvData = [getCsvColumns(), ...getCsvRows()];
-
+  // Dispatch query table result so QueryKebab can access it for data export
   dispatch(queryBrowserPatchQuery(index, { queryTableData: { columns, rows } }));
 
   const onSort = (e, i, direction) => setSortBy({ index: i, direction });
