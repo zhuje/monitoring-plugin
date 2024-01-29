@@ -71,7 +71,6 @@ import { colors, Error, QueryBrowser } from './query-browser';
 import TablePagination from './table-pagination';
 import { PrometheusAPIError, RootState } from './types';
 
-
 // Stores information about the currently focused query input
 let focusedQuery;
 
@@ -318,6 +317,7 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       return;
     }
 
+    // TODO: change name to 'convertTableColumns'
     const getCsvColumns = () => {
       const columns = queryTableData.columns;
       const csvColumns = [];
@@ -325,7 +325,7 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
         const column = columns[i];
         if (typeof column?.title === 'string') {
           csvColumns.push(column.title);
-        } else if (column.title?.props?.children) {
+        } else if (column.title?.props?.children) { // extract text from <span> element 
           csvColumns.push(column.title.props.children);
         }
       }
@@ -334,6 +334,7 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       return csvColumns;
     };
 
+    // TODO: change name to 'convertTableRows'
     const getCsvRows = () => {
       const rows = queryTableData.rows;
       // const csvRows = [];
@@ -344,8 +345,10 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       // }
       // console.log('getCsvRows: ', getCsvRows())
 
-      let csvRows = rows.map((row) => row.slice(1)).map((row) => row.map((rowItem)=> typeof rowItem === 'object' ? t('None'): rowItem) )
-      console.log('csvRows: ', csvRows)
+      const csvRows = rows
+        .map((row) => row.slice(1)) 
+        .map((row) => row.map((rowItem) => (typeof rowItem === 'object' ? t('None') : rowItem))); 
+      console.log('csvRows: ', csvRows);
 
       // const csvRows2 = csvRows.map((row) => row.map((rowItem)=> typeof rowItem === 'object' ? t('None'): rowItem) )
       // console.log(csvRows2);
@@ -353,32 +356,28 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       return csvRows;
     };
 
-    const csvData = [getCsvColumns(), ...getCsvRows()];
-    console.log('csvData: ', csvData);
+    // Takes data from QueryTable and removes all <span> and <button> objects
+    const tableData = [getCsvColumns(), ...getCsvRows()];
+    console.log('csvData: ', tableData);
 
     // https://github.com/Chalarangelo/30-seconds-of-code/blob/master/content/snippets/js/s/array-to-csv.md
-    const arrayToCSV = (arr, delimiter = ',') =>
-      arr
-        .map((v) => v.map((x) => (isNaN(x) ? `"${x.replace(/"/g, '""')}"` : x)).join(delimiter))
+    const arrayToCSV = (array, delimiter = ',') =>
+      array
+        .map((row) => row.map((rowItem) => (isNaN(rowItem) ? `"${rowItem}"` : rowItem)).join(delimiter))
         .join('\n');
 
-    const convertedCSV = arrayToCSV(csvData);
-    console.log('convertedCSV: ', convertedCSV)
+    const csv = arrayToCSV(tableData);
+    console.log('convertedCSV: ', csv);
 
-
-
-    const blob = new Blob([convertedCSV], { type: "data:text/csv;charset=utf-8," });
+    // https://codesandbox.io/p/sandbox/react-export-to-csv-l6uhq?file=%2Fsrc%2FApp.jsx%3A39%2C10-39%2C16
+    const blob = new Blob([csv], { type: 'data:text/csv;charset=utf-8,' });
     const blobURL = window.URL.createObjectURL(blob);
 
     // Create new tag for download file
-    const anchor = document.createElement("a");
-    anchor.download = "OpenShift_Metrics_QueryTable.csv"; // change the name
+    const anchor = document.createElement('a');
+    anchor.download = 'OpenShift_Metrics_QueryTable.csv';
     anchor.href = blobURL;
-    anchor.dataset.downloadurl = [
-      "text/csv",
-      anchor.download,
-      anchor.href
-    ].join(":");
+    anchor.dataset.downloadurl = ['text/csv', anchor.download, anchor.href].join(':');
     anchor.click();
 
     // Remove URL.createObjectURL. The browser should not save the reference to the file.
@@ -386,10 +385,15 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       // For Firefox it is necessary to delay revoking the ObjectURL
       URL.revokeObjectURL(blobURL);
     }, 100);
-  
   };
 
-  const dropdownItems = [
+  const exportDropdownItem = (
+    <DropdownItem key="export" component="button" onClick={doExportCsv}>
+      Export
+    </DropdownItem>
+  );
+
+  const defaultDropdownItems = [
     <DropdownItem key="toggle-query" component="button" onClick={toggleIsEnabled}>
       {isEnabled ? t('Disable query') : t('Enable query')}
     </DropdownItem>,
@@ -408,25 +412,12 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     <DropdownItem key="duplicate" component="button" onClick={doClone}>
       {t('Duplicate query')}
     </DropdownItem>,
-    <DropdownItem key="export" component="button" onClick={doExportCsv}>
-      Export
-    </DropdownItem>,
-
-    // <DropdownItem key="export" component="button" >
-    //   <CSVLink
-    //     data={csvData}
-    //     onClick={()=>{
-    //       setCsvData([1])
-    //     }}
-    //     filename={`OpenShift_Metrics_QueryResultsTable.csv`}
-    //     enclosingCharacter={``}
-    //   >
-    //     Export CSV
-    //   </CSVLink>
-    // </DropdownItem>,
   ];
 
-  return <KebabDropdown dropdownItems={dropdownItems} />;
+  
+  const drodownItems = query ? [...defaultDropdownItems, exportDropdownItem] : defaultDropdownItems;
+
+  return <KebabDropdown dropdownItems={drodownItems} />;
 };
 
 export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace }) => {
