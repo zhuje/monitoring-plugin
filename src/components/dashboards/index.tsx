@@ -613,6 +613,8 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
   const [extensions, extensionsResolved] = useResolvedExtensions<DataSourceExtension>(isDataSource);
   const hasExtensions = !_.isEmpty(extensions);
 
+  // const [csvData, setCsvData] = React.useState({});
+
   React.useEffect(() => {
     const getCustomDataSource = async () => {
       if (!customDataSourceName) {
@@ -711,6 +713,10 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
             {!isLoading && (
               <QueryBrowserLink queries={queries} customDataSourceName={customDataSourceName} />
             )}
+            { panel.type === 'graph' && (
+              // TODO: add real logic so when the user clicks this link the CSV is downloaded 
+              <Link to="/"> Export CSV </Link>
+            )}
           </CardActions>
         </CardHeader>
         <CardBody className="co-dashboard-card__body--dashboard">
@@ -734,6 +740,8 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
                     />
                   )}
                   {panel.type === 'graph' && (
+                    <>
+                    {queries}
                     <Graph
                       formatSeriesTitle={formatSeriesTitle}
                       isStack={panel.stack}
@@ -744,7 +752,9 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
                       onZoomHandle={handleZoom}
                       namespace={namespace}
                       customDataSource={customDataSource}
+                      // setCsvData={setCsvData}
                     />
+                    </>
                   )}
                   {(panel.type === 'singlestat' || panel.type === 'gauge') && (
                     <SingleStat

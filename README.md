@@ -61,6 +61,8 @@ $ oc login <clusterAddress> -u <username> -p <password>
 $ podman machine init 
 $ podman machine start 
 
+# Install Dependencies
+$ yarn install 
 # Run the application 
 $ yarn start
 # In a seperate terminal 
