@@ -55,6 +55,9 @@ import {
   queryBrowserToggleIsEnabled,
   queryBrowserToggleSeries,
   toggleGraphs,
+
+  // testing 
+  queryBrowserAddPredefinedQuery
 } from '../actions/observe';
 
 import { withFallback } from './console/console-shared/error/error-boundary';
@@ -83,6 +86,135 @@ import {
 
 // Stores information about the currently focused query input
 let focusedQuery;
+
+// import { PreDefinedQueriesList } from './metrics-predefined-queries-dropdown';
+
+import {
+  Select,
+  SelectVariant,
+  SelectOption,
+  Grid,
+  GridItem,
+} from '@patternfly/react-core';
+
+type PredefinedQueryType = {
+    name: string;
+    query: string; 
+}
+
+export const PreDefinedQueriesList = () => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState('Select a predefined query');
+
+  const { t } = useTranslation('plugin__distributed-tracing-console-plugin');
+
+    const predefinedQueries: PredefinedQueryType[] = [
+        {
+            name: "CPU Usage", 
+            query: `sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate) by (pod)`
+        },
+        {
+            name: "Memory Usage",
+            query: `sum(container_memory_working_set_bytes{container!=""}) by (pod)`
+        },
+        {
+            name: "Filesystem Usage",
+            query: `topk(25, sort_desc(sum(pod:container_fs_usage_bytes:sum{container="",pod!=""}) BY (pod, namespace)))`
+        },
+        {
+            name: "Recieve bandwidth", 
+            query: `sum(irate(container_network_receive_bytes_total[2h])) by (pod)`
+        },
+        {
+            name: "Transmit bandwidth", 
+            query: `sum(irate(container_network_transmit_bytes_total[2h])) by (pod)`
+        },
+        {
+            name: "Rate of received packets",
+            query: `sum(irate(container_network_receive_packets_total[2h])) by (pod)`
+        },
+        {
+            name: "Rate of transmitted packets",
+            query: `sum(irate(container_network_transmit_packets_total[2h])) by (pod)`
+        },
+        {
+            name: "Rate of received packets dropped",
+            query: `sum(irate(container_network_receive_packets_dropped_total[2h])) by (pod)`
+
+        },
+        {
+            name: "Rate of transmitted packets dropped",
+            query: `sum(irate(container_network_transmit_packets_dropped_total[2h])) by (pod)`
+
+        }
+    ]
+
+  const onToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const dispatch = useDispatch();
+
+  const queriesList = useSelector(({ observe }: RootState) =>
+    observe.getIn(['queryBrowser', 'queries']),
+  );
+
+  const insertPredefinedQuery = (query:string) => {
+    // .size counts up from 1 instead of 0, so we don't need to offset index by 1 
+    const index = queriesList.size
+    const text = query
+
+    // Add current query selection to the Redux store which holds the list of queries
+    dispatch(queryBrowserPatchQuery(index, { isEnabled: true, query: text, text }));
+  };
+
+
+  const onSelect = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | undefined,
+  ) => {
+    if (!value) {
+      setSelected(undefined);
+    }
+    setSelected(value);
+    setIsOpen(false);
+    // props.handleDurationChange(value);
+
+    console.log('JZ Selected: ', value)
+    insertPredefinedQuery(value)
+    // TODO:  dispatch(queryPatch(value))
+  };
+
+  const titleId = 'predefined-query-select';
+  return (
+    <Grid component="ul">
+      <GridItem component="li">
+        <label htmlFor="duration-dropdown">{t('Select query')}</label>
+      </GridItem>
+      <GridItem component="li">
+        <Select
+          id={selected}
+          variant={SelectVariant.typeahead}
+          typeAheadAriaLabel={t('Select query')}
+          onToggle={onToggle}
+          onSelect={onSelect}
+          selections={selected}
+          isOpen={isOpen}
+          aria-labelledby={titleId}
+          placeholderText={t('Select query')}
+          width={400}
+        >
+          {predefinedQueries.map((option) => (
+            <SelectOption key={option.name} value={option.query}>
+              {option.name}
+            </SelectOption>
+          ))}
+        </Select>
+      </GridItem>
+    </Grid>
+  );
+};
+
 
 const MetricsActionsMenu: React.FC = () => {
   const { t } = useTranslation('plugin__monitoring-plugin');
@@ -539,6 +671,9 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
     }
   }
 
+  dispatch(queryBrowserAddPredefinedQuery(index, { queryTableData: { columns, rows } }));
+
+
   // Dispatch query table result so QueryKebab can access it for data export
   dispatch(queryBrowserPatchQuery(index, { queryTableData: { columns, rows } }));
 
@@ -621,6 +756,7 @@ const Query: React.FC<{ index: number; customDatasource?: CustomDataSource }> = 
     [dispatch, index, isExpanded],
   );
 
+  // UPDATES QUERY IN STORE 
   const handleTextChange = React.useCallback(
     (value: string) => {
       dispatch(queryBrowserPatchQuery(index, { text: value }));
@@ -936,6 +1072,7 @@ const QueryBrowserPage_: React.FC = () => {
           </div>
         </h1>
       </div>
+      <PreDefinedQueriesList />
       <div className="co-m-pane__body">
         <div className="row">
           <div className="col-xs-12">

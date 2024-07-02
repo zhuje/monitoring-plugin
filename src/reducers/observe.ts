@@ -178,6 +178,14 @@ export default (state: ObserveState, action: ObserveAction): ObserveState => {
         state.getIn(['queryBrowser', 'queries']).push(newQueryBrowserQuery()),
       );
 
+    case ActionType.QueryBrowserAddPredefinedQuery: {
+      const { patch } = action.payload;
+      return state.setIn(
+        ['queryBrowser', 'queries'],
+        state.getIn(['queryBrowser', 'queries']).push(newQueryBrowserQuery().merge(patch)),
+      )
+    }
+
     case ActionType.QueryBrowserDuplicateQuery: {
       const index = action.payload.index;
       const originQueryText = state.getIn(['queryBrowser', 'queries', index, 'text']);

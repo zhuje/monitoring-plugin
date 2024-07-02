@@ -29,6 +29,10 @@ export enum ActionType {
   QueryBrowserToggleAllSeries = 'queryBrowserToggleAllSeries',
   SetAlertCount = 'SetAlertCount',
   ToggleGraphs = 'toggleGraphs',
+
+  // testing 
+  QueryBrowserAddPredefinedQuery = 'queryBrowserAddPredefinedQuery',
+
 }
 
 export const dashboardsPatchVariable = (key: string, patch: any, perspective: string) =>
@@ -132,6 +136,9 @@ export const queryBrowserToggleSeries = (index: number, labels: { [key: string]:
 
 export const setAlertCount = (alertCount) => action(ActionType.SetAlertCount, { alertCount });
 
+export const queryBrowserAddPredefinedQuery = (patch: { [key: string]: unknown }) =>
+  action(ActionType.QueryBrowserAddPredefinedQuery, { patch });
+
 const actions = {
   alertingErrored,
   alertingLoaded,
@@ -161,6 +168,9 @@ const actions = {
   queryBrowserToggleSeries,
   setAlertCount,
   toggleGraphs,
+
+  // testing 
+  queryBrowserAddPredefinedQuery
 };
 
 export type ObserveAction = Action<typeof actions>;
