@@ -20,6 +20,11 @@ import {
   EmptyStateVariant,
   Switch,
   Title,
+  Select,
+  SelectVariant,
+  SelectOption,
+  Grid,
+  GridItem,
 } from '@patternfly/react-core';
 import {
   AngleDownIcon,
@@ -87,64 +92,54 @@ import {
 // Stores information about the currently focused query input
 let focusedQuery;
 
-// import { PreDefinedQueriesList } from './metrics-predefined-queries-dropdown';
-
-import {
-  Select,
-  SelectVariant,
-  SelectOption,
-  Grid,
-  GridItem,
-} from '@patternfly/react-core';
-
 type PredefinedQueryType = {
     name: string;
-    query: string; 
+    text: string; 
 }
 
 export const PreDefinedQueriesList = () => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState('Select a predefined query');
+  const [selected, setSelected] = React.useState('Select query');
 
   const { t } = useTranslation('plugin__distributed-tracing-console-plugin');
 
     const predefinedQueries: PredefinedQueryType[] = [
         {
             name: "CPU Usage", 
-            query: `sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate) by (pod)`
+            text: `sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate) by (pod)`
         },
         {
             name: "Memory Usage",
-            query: `sum(container_memory_working_set_bytes{container!=""}) by (pod)`
+            text: `sum(container_memory_working_set_bytes{container!=""}) by (pod)`
         },
         {
             name: "Filesystem Usage",
-            query: `topk(25, sort_desc(sum(pod:container_fs_usage_bytes:sum{container="",pod!=""}) BY (pod, namespace)))`
+            text: `topk(25, sort_desc(sum(pod:container_fs_usage_bytes:sum{container="",pod!=""}) BY (pod, namespace)))`
         },
         {
             name: "Recieve bandwidth", 
-            query: `sum(irate(container_network_receive_bytes_total[2h])) by (pod)`
+            text: `sum(irate(container_network_receive_bytes_total[2h])) by (pod)`
         },
         {
             name: "Transmit bandwidth", 
-            query: `sum(irate(container_network_transmit_bytes_total[2h])) by (pod)`
+            text: `sum(irate(container_network_transmit_bytes_total[2h])) by (pod)`
         },
         {
             name: "Rate of received packets",
-            query: `sum(irate(container_network_receive_packets_total[2h])) by (pod)`
+            text: `sum(irate(container_network_receive_packets_total[2h])) by (pod)`
         },
         {
             name: "Rate of transmitted packets",
-            query: `sum(irate(container_network_transmit_packets_total[2h])) by (pod)`
+            text: `sum(irate(container_network_transmit_packets_total[2h])) by (pod)`
         },
         {
             name: "Rate of received packets dropped",
-            query: `sum(irate(container_network_receive_packets_dropped_total[2h])) by (pod)`
+            text: `sum(irate(container_network_receive_packets_dropped_total[2h])) by (pod)`
 
         },
         {
             name: "Rate of transmitted packets dropped",
-            query: `sum(irate(container_network_transmit_packets_dropped_total[2h])) by (pod)`
+            text: `sum(irate(container_network_transmit_packets_dropped_total[2h])) by (pod)`
 
         }
     ]
@@ -160,8 +155,9 @@ export const PreDefinedQueriesList = () => {
   );
 
   const insertPredefinedQuery = (query:string) => {
-    // .size counts up from 1 instead of 0, so we don't need to offset index by 1 
-    const index = queriesList.size
+    const queriesListDetails = queriesList.toJS()
+    const isFirstQueryEmpty =  queriesList.size === 1 && (queriesListDetails[0]?.text === "" ||  queriesListDetails[0]?.text === null ||  queriesListDetails[0]?.text === undefined)
+    const index = isFirstQueryEmpty ? 0 : queriesList.size
     const text = query
 
     // Add current query selection to the Redux store which holds the list of queries
@@ -182,14 +178,13 @@ export const PreDefinedQueriesList = () => {
 
     console.log('JZ Selected: ', value)
     insertPredefinedQuery(value)
-    // TODO:  dispatch(queryPatch(value))
   };
 
   const titleId = 'predefined-query-select';
   return (
     <Grid component="ul">
       <GridItem component="li">
-        <label htmlFor="duration-dropdown">{t('Select query')}</label>
+        <label htmlFor="duration-dropdown">{t('Queries')}</label>
       </GridItem>
       <GridItem component="li">
         <Select
@@ -205,7 +200,7 @@ export const PreDefinedQueriesList = () => {
           width={400}
         >
           {predefinedQueries.map((option) => (
-            <SelectOption key={option.name} value={option.query}>
+            <SelectOption key={option.name} value={option.text}>
               {option.name}
             </SelectOption>
           ))}
