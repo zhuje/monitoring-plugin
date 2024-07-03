@@ -20,6 +20,11 @@ import {
   EmptyStateVariant,
   Switch,
   Title,
+  Select,
+  SelectVariant,
+  SelectOption,
+  Grid,
+  GridItem,
 } from '@patternfly/react-core';
 import {
   AngleDownIcon,
@@ -83,6 +88,125 @@ import {
 
 // Stores information about the currently focused query input
 let focusedQuery;
+
+type PredefinedQueryType = {
+    name: string;
+    text: string; 
+}
+
+export const PreDefinedQueriesList = () => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState('Select query');
+
+  const { t } = useTranslation('plugin__distributed-tracing-console-plugin');
+
+    const predefinedQueries: PredefinedQueryType[] = [
+        {
+            name: "CPU Usage", 
+            text: `sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate) by (pod)`
+        },
+        {
+            name: "Memory Usage",
+            text: `sum(container_memory_working_set_bytes{container!=""}) by (pod)`
+        },
+        {
+            name: "Filesystem Usage",
+            text: `topk(25, sort_desc(sum(pod:container_fs_usage_bytes:sum{container="",pod!=""}) BY (pod, namespace)))`
+        },
+        {
+            name: "Recieve bandwidth", 
+            text: `sum(irate(container_network_receive_bytes_total[2h])) by (pod)`
+        },
+        {
+            name: "Transmit bandwidth", 
+            text: `sum(irate(container_network_transmit_bytes_total[2h])) by (pod)`
+        },
+        {
+            name: "Rate of received packets",
+            text: `sum(irate(container_network_receive_packets_total[2h])) by (pod)`
+        },
+        {
+            name: "Rate of transmitted packets",
+            text: `sum(irate(container_network_transmit_packets_total[2h])) by (pod)`
+        },
+        {
+            name: "Rate of received packets dropped",
+            text: `sum(irate(container_network_receive_packets_dropped_total[2h])) by (pod)`
+
+        },
+        {
+            name: "Rate of transmitted packets dropped",
+            text: `sum(irate(container_network_transmit_packets_dropped_total[2h])) by (pod)`
+
+        }
+    ]
+
+  const onToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const dispatch = useDispatch();
+
+  const queriesList = useSelector(({ observe }: RootState) =>
+    observe.getIn(['queryBrowser', 'queries']),
+  );
+
+  const insertPredefinedQuery = (query:string) => {
+    const queriesListDetails = queriesList.toJS()
+    const isFirstQueryEmpty =  queriesList.size === 1 && (queriesListDetails[0]?.text === "" ||  queriesListDetails[0]?.text === null ||  queriesListDetails[0]?.text === undefined)
+    const index = isFirstQueryEmpty ? 0 : queriesList.size
+    const text = query
+
+    // Add current query selection to the Redux store which holds the list of queries
+    dispatch(queryBrowserPatchQuery(index, { isEnabled: true, query: text, text }));
+  };
+
+
+  const onSelect = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | undefined,
+  ) => {
+    if (!value) {
+      setSelected(undefined);
+    }
+    setSelected(value);
+    setIsOpen(false);
+    // props.handleDurationChange(value);
+
+    console.log('JZ Selected: ', value)
+    insertPredefinedQuery(value)
+  };
+
+  const titleId = 'predefined-query-select';
+  return (
+    <Grid component="ul">
+      <GridItem component="li">
+        <label htmlFor="duration-dropdown">{t('Queries')}</label>
+      </GridItem>
+      <GridItem component="li">
+        <Select
+          id={selected}
+          variant={SelectVariant.typeahead}
+          typeAheadAriaLabel={t('Select query')}
+          onToggle={onToggle}
+          onSelect={onSelect}
+          selections={selected}
+          isOpen={isOpen}
+          aria-labelledby={titleId}
+          placeholderText={t('Select query')}
+          width={400}
+        >
+          {predefinedQueries.map((option) => (
+            <SelectOption key={option.name} value={option.text}>
+              {option.name}
+            </SelectOption>
+          ))}
+        </Select>
+      </GridItem>
+    </Grid>
+  );
+};
+
 
 const MetricsActionsMenu: React.FC = () => {
   const { t } = useTranslation('plugin__monitoring-plugin');
@@ -936,6 +1060,7 @@ const QueryBrowserPage_: React.FC = () => {
           </div>
         </h1>
       </div>
+      <PreDefinedQueriesList />
       <div className="co-m-pane__body">
         <div className="row">
           <div className="col-xs-12">
