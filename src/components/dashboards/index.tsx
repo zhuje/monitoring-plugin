@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import classNames from 'classnames';
 import * as _ from 'lodash-es';
 import {
@@ -17,6 +18,8 @@ import {
   CardTitle,
   CardActions,
   Tooltip,
+  DropdownItem,
+  // DropdownPosition,
 } from '@patternfly/react-core';
 import { AngleDownIcon, AngleRightIcon } from '@patternfly/react-icons';
 import * as React from 'react';
@@ -57,6 +60,7 @@ import IntervalDropdown from '../poll-interval-dropdown';
 import { RootState } from '../types';
 import BarChart from './bar-chart';
 import Graph from './graph';
+//import graphData from './query-browser.tsx'
 import SingleStat from './single-stat';
 import Table from './table';
 import TimespanDropdown from './timespan-dropdown';
@@ -76,6 +80,7 @@ import {
   getAllVariables,
 } from './monitoring-dashboard-utils';
 import { getTimeRanges, isTimeoutError, QUERY_CHUNK_SIZE } from '../utils';
+import KebabDropdown from '../kebab-dropdown';
 
 const intervalVariableRegExps = ['__interval', '__rate_interval', '__auto_interval_[a-z]+'];
 
@@ -613,6 +618,81 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
   const [extensions, extensionsResolved] = useResolvedExtensions<DataSourceExtension>(isDataSource);
   const hasExtensions = !_.isEmpty(extensions);
 
+  const formatSeriesTitle = React.useCallback(
+    (labels, i) => {
+      const title = panel.targets?.[i]?.legendFormat;
+      if (_.isNil(title)) {
+        return _.isEmpty(labels) ? '{}' : '';
+      }
+      // Replace Prometheus labels surrounded by {{ }} in the graph legend label templates
+      // Regex is based on https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels
+      // with additional matchers to allow leading and trailing whitespace
+      return title.replace(
+        /{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}/g,
+        (match, key) => labels[key] ?? '',
+      );
+    },
+    [panel],
+  );
+
+  const [csvData, setCsvData] = React.useState([]);
+
+  const csvExportHandler = () => {
+
+    let csvString = '';
+    const result = {};
+    const seriesNames = [];
+    for (let i = 0; i < csvData.length; i++){
+      const query = csvData[i];
+      for (const series of query) {
+        if (!series[0]) {
+          continue;
+        }
+        const name = formatSeriesTitle(series[0], i);
+        seriesNames.push(name); 
+        if (!name) {
+            continue;
+        }
+        if (!Array.isArray(series[1])){
+          continue;  
+        }
+        for (const entry of series[1]) {
+          const dateTime = entry.x.toISOString();
+          const value = entry.y;
+          if (!result[dateTime]) {
+            result[dateTime] = {};
+          }
+          result[dateTime][name]=value;
+        }  
+      }
+    }
+    const uniqueSeriesNames = new Set(seriesNames);
+    const uniqueSeriesArray = Array.from(uniqueSeriesNames);
+
+    csvString = `DateTime,${uniqueSeriesArray.join(',')}\n`;
+
+    for (const dateTime in result){
+      const temp = [];
+      for (const name of uniqueSeriesArray) {
+        temp.push(result[dateTime][name])
+      }
+      csvString += `${dateTime},${temp.join(',')}\n`;
+    }
+
+    const blobCsvData = new Blob([csvString], { type: 'text/csv' });
+    const csvURL = URL.createObjectURL(blobCsvData);
+    const link = document.createElement('a');
+    link.href = csvURL;
+    link.download = `graphData.csv`;
+    link.click();
+  };
+
+  const dropdownItems = [
+    <DropdownItem key="action" component="button" onClick={csvExportHandler}>
+      {t('Export as CSV')}
+    </DropdownItem>,
+  ];
+
   React.useEffect(() => {
     const getCustomDataSource = async () => {
       if (!customDataSourceName) {
@@ -646,23 +726,6 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
     });
   }, [extensions, extensionsResolved, customDataSourceName, hasExtensions]);
 
-  const formatSeriesTitle = React.useCallback(
-    (labels, i) => {
-      const title = panel.targets?.[i]?.legendFormat;
-      if (_.isNil(title)) {
-        return _.isEmpty(labels) ? '{}' : '';
-      }
-      // Replace Prometheus labels surrounded by {{ }} in the graph legend label templates
-      // Regex is based on https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels
-      // with additional matchers to allow leading and trailing whitespace
-      return title.replace(
-        /{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}/g,
-        (match, key) => labels[key] ?? '',
-      );
-    },
-    [panel],
-  );
-
   const handleZoom = React.useCallback((timeRange: number, endTime: number) => {
     setQueryArguments({
       endTime: endTime.toString(),
@@ -694,6 +757,33 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
 
   const panelClassModifier = getPanelClassModifier(panel);
 
+
+  const isThereCsvData = () => {
+    let result = false;
+    
+    console.log('JZ csvData: ', csvData);
+    console.log('JZ csvData.length: ', csvData.length);
+
+    // case csvData = [] -- before data is fetch
+    if (csvData.length > 0) {
+      console.log('JZ csvData[0]: ', csvData[0]);
+      console.log('JZ csvData[0].length: ', csvData[0].length);
+
+      // case csvData = [Array(0)] -- after data is fetch 
+      if (csvData[0].length > 0) {
+        result = true;
+      }
+    }
+
+    return result;
+  };
+  console.log("JZ isThereCsvData(): ", isThereCsvData());
+
+
+  
+
+
+
   return (
     <div
       className={`monitoring-dashboards__panel monitoring-dashboards__panel--${panelClassModifier}`}
@@ -711,6 +801,11 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
             {!isLoading && (
               <QueryBrowserLink queries={queries} customDataSourceName={customDataSourceName} />
             )}
+
+            
+            {panel.type === 'graph' && isThereCsvData() && <KebabDropdown dropdownItems={dropdownItems} />}
+
+
           </CardActions>
         </CardHeader>
         <CardBody className="co-dashboard-card__body--dashboard">
@@ -733,18 +828,19 @@ const Card: React.FC<CardProps> = React.memo(({ panel }) => {
                       customDataSource={customDataSource}
                     />
                   )}
-                  {panel.type === 'graph' && (
-                    <Graph
-                      formatSeriesTitle={formatSeriesTitle}
-                      isStack={panel.stack}
-                      pollInterval={pollInterval}
-                      queries={queries}
-                      showLegend={panel.legend?.show}
-                      units={panel.yaxes?.[0]?.format}
-                      onZoomHandle={handleZoom}
-                      namespace={namespace}
-                      customDataSource={customDataSource}
-                    />
+                  {panel.type === 'graph' && ( 
+                      <Graph
+                        formatSeriesTitle={formatSeriesTitle}
+                        isStack={panel.stack}
+                        pollInterval={pollInterval}
+                        queries={queries}
+                        showLegend={panel.legend?.show}
+                        units={panel.yaxes?.[0]?.format}
+                        onZoomHandle={handleZoom}
+                        namespace={namespace}
+                        customDataSource={customDataSource}
+                        onDataChange={(data) => setCsvData(data)}
+                      />
                   )}
                   {(panel.type === 'singlestat' || panel.type === 'gauge') && (
                     <SingleStat
