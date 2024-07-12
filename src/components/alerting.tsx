@@ -1859,6 +1859,28 @@ const AlertsPage_: React.FC = () => {
     [t],
   );
 
+  const getTableData = () => {
+    const csvColumns = ['Name', 'Severity', 'State'];
+    const csvRows = () => {
+      return filteredData?.map((row) => {
+        const name = row?.labels?.alertname ?? '';
+        const severity = row?.labels?.severity ?? '';
+        const state = row?.state ?? '';
+        return [name, severity, state];
+      });
+    };
+    return [csvColumns, ...csvRows()];
+  };
+
+  const formatToCsv = (tableData, delimiter = ',') =>
+    tableData
+      ?.map((row) =>
+        row?.map((rowItem) => (isNaN(rowItem) ? `"${rowItem}"` : rowItem)).join(delimiter),
+      )
+      ?.join('\n');
+
+  const csvData = formatToCsv(getTableData());
+
   return (
     <>
       <Helmet>
@@ -1886,6 +1908,7 @@ const AlertsPage_: React.FC = () => {
               loadError={loadError}
               Row={AlertTableRow}
               unfilteredData={data}
+              csvData={csvData}
             />
           </div>
         </div>
