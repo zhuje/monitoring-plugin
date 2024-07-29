@@ -1861,7 +1861,7 @@ const AlertsPage_: React.FC = () => {
 
   const getTableData = () => {
     const csvColumns = ['Name', 'Severity', 'State'];
-    const csvRows = () => {
+    const getCsvRows = () => {
       return filteredData?.map((row) => {
         const name = row?.labels?.alertname ?? '';
         const severity = row?.labels?.severity ?? '';
@@ -1869,7 +1869,7 @@ const AlertsPage_: React.FC = () => {
         return [name, severity, state];
       });
     };
-    return [csvColumns, ...csvRows()];
+    return [csvColumns, ...getCsvRows()];
   };
 
   const formatToCsv = (tableData, delimiter = ',') =>
@@ -1879,7 +1879,10 @@ const AlertsPage_: React.FC = () => {
       )
       ?.join('\n');
 
-  const csvData = formatToCsv(getTableData());
+  let csvData: string;
+  if (loaded) {
+    csvData = formatToCsv(getTableData()) ?? undefined;
+  }
 
   return (
     <>
