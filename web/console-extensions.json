@@ -113,7 +113,7 @@
     "type": "console.tab",
     "properties": {
       "contextId": "dev-console-observe",
-      "name": "%public~Dashboards2%",
+      "name": "%public~Dashboards%",
       "href": "",
       "component": {
         "$codeRef": "MonitoringUI"

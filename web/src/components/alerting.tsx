@@ -1118,7 +1118,7 @@ const PollerPages = () => {
         <Route path="/dev-monitoring/ns/:ns/alerts" exact component={AlertsPage} />
         <Route path="/dev-monitoring/ns/:ns/alerts/:ruleID" component={AlertsDetailsPage} />
         <Route path="/dev-monitoring/ns/:ns/metrics" exact component={QueryBrowserPage} />
-        <Route path="/dev-monitoring/ns/:ns/dashboards2" exact component={MonitoringDashboardsPage} />
+        <Route path="/dev-monitoring/ns/:ns/" component={MonitoringDashboardsPage} />
       </Switch>
     );
   }
