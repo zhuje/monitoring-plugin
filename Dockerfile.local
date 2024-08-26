@@ -2,17 +2,15 @@ FROM registry.redhat.io/ubi9/nodejs-20-minimal:1-51 AS builder
 
 WORKDIR /usr/src/app
 
-RUN npm install --global yarn
-
 ENV HUSKY=0
 
 COPY package.json yarn.lock .
-RUN yarn
+RUN npm install
 
 COPY ./console-extensions.json ./tsconfig.json ./webpack.config.ts .
 COPY ./locales ./locales
 COPY ./src ./src
-RUN yarn build
+RUN npm run build
 
 FROM registry.redhat.io/rhel9/nginx-120:1-148
 

@@ -903,6 +903,8 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({ hi
   const [board, setBoard] = React.useState<string>();
   const [boards, isLoading, error] = useFetchDashboards(namespace);
 
+  console.log('MonitoringDashbaordsPage_ > namespace: ', namespace)
+
   // Clear queries on unmount
   React.useEffect(() => () => dispatch(queryBrowserDeleteAllQueries()), [dispatch]);
 
@@ -1033,6 +1035,7 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({ hi
       <NamespaceContext.Provider value={namespace}>
         <div className="co-m-nav-title co-m-nav-title--detail">
           {!namespace && <HeaderTop />}
+          <h1> Hello  World </h1>
           <div className="monitoring-dashboards__variables">
             <div className="monitoring-dashboards__dropdowns">
               {!_.isEmpty(boardItems) && (
