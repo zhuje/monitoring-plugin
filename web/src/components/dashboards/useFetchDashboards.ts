@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as _ from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useSafeFetch } from '../console/utils/safe-fetch-hook';
@@ -18,17 +17,16 @@ export const useFetchDashboards = (namespace: string): [Board[], boolean, string
   const [error, setError] = React.useState<string>();
   const [isLoading, , , setLoaded] = useBoolean(true);
 
-  console.log(`useFetchDashboards hostname: ${window.location.hostname}`)
+  // console.log(`useFetchDashboards hostname: ${window.location.hostname}`);
 
   React.useEffect(() => {
-
     // if (window.location.host === 'localhost') {
-      const [mockBoards, mockError] = mockUseFetchDashboards(namespace);
-      setBoards(mockBoards);
-      setLoaded();
-      setError(mockError);
-      console.log("useFetchDashboards: mocking")
+    const [mockBoards, mockError] = mockUseFetchDashboards(namespace);
+    setBoards(mockBoards);
+    setLoaded();
+    setError(mockError);
 
+    // console.log('useFetchDashboards: mocking');
 
     // } else {
     //   safeFetch('/api/console/monitoring-dashboard-config')
@@ -69,9 +67,7 @@ export const useFetchDashboards = (namespace: string): [Board[], boolean, string
     //     }
     //   });
     // }
-  }, [namespace, safeFetch, setLoaded, t])
-
-
+  }, [namespace, safeFetch, setLoaded, t]);
 
   return [boards, isLoading, error];
 };

@@ -1118,11 +1118,11 @@ export const MonitoringDashboardConfigResponse = {
 // This must be used because of bug in the console backend that breaks Dev > Observe > Dashboards
 // while running localhost.
 export const mockUseFetchDashboards = (namespace: string): [Board[], string] => {
-//   const [boards, setBoards] = React.useState<Board[]>([]);
-//   const [error, setError] = React.useState<string>();
+  //   const [boards, setBoards] = React.useState<Board[]>([]);
+  //   const [error, setError] = React.useState<string>();
 
   let boards: Board[] = [];
-  let error: string; 
+  let error: string;
 
   let items = MonitoringDashboardConfigResponse.items;
   if (namespace) {
@@ -1145,7 +1145,7 @@ export const mockUseFetchDashboards = (namespace: string): [Board[], string] => 
   };
 
   const newBoards = _.sortBy(_.map(items, getBoardData), (v) => _.toLower(v?.data?.title));
-  boards = newBoards
+  boards = newBoards;
 
   return [boards, error];
 };
