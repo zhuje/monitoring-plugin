@@ -108,5 +108,19 @@
         "$codeRef": "MonitoringUI"
       }
     }
+  },
+  {
+    "type": "console.navigation/href",
+    "flags": {
+      "required": ["PROMETHEUS", "MONITORING", "CAN_GET_NS"]
+    },
+    "properties": {
+      "id": "dev-test-tab",
+      "name": "Dev-Test-Tab-5",
+      "href": "/monitoring/dashboards",
+      "perspective": "admin",
+      "section": "observe",
+      "insertAfter": "Targets"
+    }
   }
 ]

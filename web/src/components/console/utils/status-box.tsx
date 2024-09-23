@@ -73,7 +73,7 @@ export const EmptyBox: React.FC<EmptyBoxProps> = ({ label }) => {
   return (
     <Box>
       <div data-test="empty-message" className="pf-u-text-align-center">
-        {label ? t('~No {{label}} found', { label }) : t('Not found')}
+        {label ? t('No {{label}} found', { label }) : t('Not found')}
       </div>
     </Box>
   );

@@ -2,5 +2,5 @@
 .git
 .gitignore
 web/node_modules
-web/dist
+# web/dist
 plugin-backend
