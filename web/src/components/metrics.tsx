@@ -35,7 +35,10 @@ import {
   Dropdown,
   DropdownItem,
   DropdownPosition,
-  DropdownToggle,
+  // DropdownToggle,
+  MenuToggle,
+  MenuToggleElement,
+  DropdownList,
 } from '@patternfly/react-core';
 import {
   AngleDownIcon,
@@ -323,12 +326,19 @@ const MetricsActionsMenu: React.FC = () => {
   return (
     <Dropdown
       className="co-actions-menu"
-      dropdownItems={dropdownItems}
+      // dropdownItems={dropdownItems}
       isOpen={isOpen}
       onSelect={setClosed}
-      position={DropdownPosition.right}
-      toggle={<DropdownToggle onToggle={setIsOpen}>Actions</DropdownToggle>}
-    />
+      // position={DropdownPosition.right}
+      popperProps={{ position: 'right' }}
+      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+        <MenuToggle onClick={setIsOpen} ref={toggleRef}>
+          Actions
+        </MenuToggle>
+      )}
+    >
+      <DropdownList>{dropdownItems}</DropdownList>
+    </Dropdown>
   );
 };
 
