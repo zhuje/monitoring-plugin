@@ -34,7 +34,7 @@ import {
   SelectVariant,
   Dropdown,
   DropdownItem,
-  DropdownPosition,
+  // DropdownPosition,
   // DropdownToggle,
   MenuToggle,
   MenuToggleElement,
@@ -278,6 +278,7 @@ export const PreDefinedQueriesDropdown = () => {
           aria-labelledby="predefined-query-select"
           placeholderText={t('Select query')}
           width={400}
+          toggle={} // TODO: need to implement typeahead in toggle={} https://www.patternfly.org/components/menus/select#typeahead
         >
           {predefinedQueries.map((option) => (
             <SelectOption key={option.name} value={option.query}>
@@ -549,7 +550,7 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       {isEnabled ? t('Disable query') : t('Enable query')}
     </DropdownItem>,
     <DropdownItem
-      tooltip={!isEnabled ? t('Query must be enabled') : undefined}
+      tooltipProps={!isEnabled ? t('Query must be enabled') : undefined}
       isDisabled={!isEnabled}
       key="toggle-all-series"
       component="button"
