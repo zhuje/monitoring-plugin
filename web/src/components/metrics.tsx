@@ -19,15 +19,24 @@ import {
   Grid,
   GridItem,
 } from '@patternfly/react-core';
+// import {
+//   Select as SelectDeprecated,
+//   SelectOption as SelectOptionDeprecated,
+//   SelectVariant as SelectVariantDeprecated,
+//   Dropdown as DropdownDeprecated,
+//   DropdownItem as DropdownItemDeprecated,
+//   DropdownPosition as DropdownPositionDeprecated,
+//   DropdownToggle as DropdownToggleDeprecated,
+// } from '@patternfly/react-core/deprecated';
 import {
-  Select as SelectDeprecated,
-  SelectOption as SelectOptionDeprecated,
-  SelectVariant as SelectVariantDeprecated,
-  Dropdown as DropdownDeprecated,
-  DropdownItem as DropdownItemDeprecated,
-  DropdownPosition as DropdownPositionDeprecated,
-  DropdownToggle as DropdownToggleDeprecated,
-} from '@patternfly/react-core/deprecated';
+  Select,
+  SelectOption,
+  SelectVariant,
+  Dropdown,
+  DropdownItem,
+  DropdownPosition,
+  DropdownToggle,
+} from '@patternfly/react-core';
 import {
   AngleDownIcon,
   AngleRightIcon,
@@ -255,9 +264,9 @@ export const PreDefinedQueriesDropdown = () => {
         <label htmlFor="predefined-query-select-label">{t('Queries')}</label>
       </GridItem>
       <GridItem component="li">
-        <SelectDeprecated
+        <Select
           id={selected}
-          variant={SelectVariantDeprecated.typeahead}
+          variant={SelectVariant.typeahead}
           typeAheadAriaLabel={t('Select query')}
           onToggle={(_e, isOpen) => onToggle(isOpen)}
           onSelect={onSelect}
@@ -268,11 +277,11 @@ export const PreDefinedQueriesDropdown = () => {
           width={400}
         >
           {predefinedQueries.map((option) => (
-            <SelectOptionDeprecated key={option.name} value={option.query}>
+            <SelectOption key={option.name} value={option.query}>
               {option.name}
-            </SelectOptionDeprecated>
+            </SelectOption>
           ))}
-        </SelectDeprecated>
+        </Select>
       </GridItem>
     </Grid>
   );
@@ -296,29 +305,29 @@ const MetricsActionsMenu: React.FC = () => {
   };
 
   const dropdownItems = [
-    <DropdownItemDeprecated key="add-query" component="button" onClick={addQuery}>
+    <DropdownItem key="add-query" component="button" onClick={addQuery}>
       {t('Add query')}
-    </DropdownItemDeprecated>,
-    <DropdownItemDeprecated
+    </DropdownItem>,
+    <DropdownItem
       key="collapse-all"
       component="button"
       onClick={() => dispatch(queryBrowserSetAllExpanded(!isAllExpanded))}
     >
       {isAllExpanded ? t('Collapse all query tables') : t('Expand all query tables')}
-    </DropdownItemDeprecated>,
-    <DropdownItemDeprecated key="delete-all" component="button" onClick={doDelete}>
+    </DropdownItem>,
+    <DropdownItem key="delete-all" component="button" onClick={doDelete}>
       {t('Delete all queries')}
-    </DropdownItemDeprecated>,
+    </DropdownItem>,
   ];
 
   return (
-    <DropdownDeprecated
+    <Dropdown
       className="co-actions-menu"
       dropdownItems={dropdownItems}
       isOpen={isOpen}
       onSelect={setClosed}
-      position={DropdownPositionDeprecated.right}
-      toggle={<DropdownToggleDeprecated onToggle={setIsOpen}>Actions</DropdownToggleDeprecated>}
+      position={DropdownPosition.right}
+      toggle={<DropdownToggle onToggle={setIsOpen}>Actions</DropdownToggle>}
     />
   );
 };
@@ -520,16 +529,16 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
   };
 
   const exportDropdownItem = (
-    <DropdownItemDeprecated key="export" component="button" onClick={doExportCsv}>
+    <DropdownItem key="export" component="button" onClick={doExportCsv}>
       {t('Export as CSV')}
-    </DropdownItemDeprecated>
+    </DropdownItem>
   );
 
   const defaultDropdownItems = [
-    <DropdownItemDeprecated key="toggle-query" component="button" onClick={toggleIsEnabled}>
+    <DropdownItem key="toggle-query" component="button" onClick={toggleIsEnabled}>
       {isEnabled ? t('Disable query') : t('Enable query')}
-    </DropdownItemDeprecated>,
-    <DropdownItemDeprecated
+    </DropdownItem>,
+    <DropdownItem
       tooltip={!isEnabled ? t('Query must be enabled') : undefined}
       isDisabled={!isEnabled}
       key="toggle-all-series"
@@ -537,13 +546,13 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       onClick={toggleAllSeries}
     >
       {isDisabledSeriesEmpty ? t('Hide all series') : t('Show all series')}
-    </DropdownItemDeprecated>,
-    <DropdownItemDeprecated key="delete" component="button" onClick={doDelete}>
+    </DropdownItem>,
+    <DropdownItem key="delete" component="button" onClick={doDelete}>
       {t('Delete query')}
-    </DropdownItemDeprecated>,
-    <DropdownItemDeprecated key="duplicate" component="button" onClick={doClone}>
+    </DropdownItem>,
+    <DropdownItem key="duplicate" component="button" onClick={doClone}>
       {t('Duplicate query')}
-    </DropdownItemDeprecated>,
+    </DropdownItem>,
   ];
 
   const hasQueryTableData = () => {
