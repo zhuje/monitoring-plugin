@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-
 import {
   Select,
   SelectList,
@@ -9,8 +8,6 @@ import {
   MenuToggle,
   MenuToggleElement,
 } from '@patternfly/react-core';
-
-import { useBoolean } from './hooks/useBoolean';
 
 // TODO: These will be available in future versions of the plugin SDK
 import { formatPrometheusDuration, parsePrometheusDuration } from './console/utils/datetime';
@@ -24,7 +21,9 @@ type Props = {
 };
 
 const IntervalDropdown: React.FC<Props> = ({ id, interval, setInterval }) => {
-  const [isOpen, toggleIsOpen, setOpen, setClosed] = useBoolean(false);
+  // const [isOpen, toggleIsOpen, setOpen, setClosed] = useBoolean(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+
   const { t } = useTranslation('plugin__monitoring-plugin');
 
   const onSelect = React.useCallback(
@@ -47,15 +46,34 @@ const IntervalDropdown: React.FC<Props> = ({ id, interval, setInterval }) => {
 
   const selectedKey = interval === null ? OFF_KEY : formatPrometheusDuration(interval);
 
+  // const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
+  //   <MenuToggle
+  //     ref={toggleRef}
+  //     onClick={toggleIsOpen}
+  //     id={`${id}-dropdown`}
+  //     isExpanded={isOpen}
+  //     className="monitoring-dashboards__dropdown-button"
+  //   >
+  //     {intervalOptions[selectedKey]}
+  //   </MenuToggle>
+  // );
+
+  const onToggleClick = () => {
+    setIsOpen(!isOpen);
+  };
+
   const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
     <MenuToggle
-      id={`${id}-dropdown`}
-      onClick={toggleIsOpen}
-      isExpanded={isOpen}
       ref={toggleRef}
-      className="monitoring-dashboards__dropdown-button"
+      onClick={onToggleClick}
+      isExpanded={isOpen}
+      style={
+        {
+          width: '200px',
+        } as React.CSSProperties
+      }
     >
-      {intervalOptions[selectedKey]}
+      Select a value
     </MenuToggle>
   );
 
@@ -66,11 +84,11 @@ const IntervalDropdown: React.FC<Props> = ({ id, interval, setInterval }) => {
         if (value) {
           onSelect(value);
         }
-        setClosed();
+        setIsOpen(false);
       }}
       toggle={toggle}
       className="monitoring-dashboards__variable-dropdown"
-      onOpenChange={(open) => (open ? setOpen() : setClosed())}
+      onOpenChange={(open) => (open ? setIsOpen(true) : setIsOpen(false))}
     >
       <SelectList>
         {_.map(intervalOptions, (name, key) => (

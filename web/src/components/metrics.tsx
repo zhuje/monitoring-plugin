@@ -89,6 +89,7 @@ import {
 } from '@openshift-console/dynamic-plugin-sdk/lib/extensions/dashboard-data-source';
 import { usePerspective } from './hooks/usePerspective';
 import { useActiveNamespace } from './console/console-shared/hooks/useActiveNamespace';
+import { SelectSimpleDemo } from './delete-me-single-select';
 
 // Stores information about the currently focused query input
 let focusedQuery;
@@ -206,8 +207,8 @@ export const PreDefinedQueriesDropdown = () => {
   }
 
   // Note this fires twice when <Select> is clicked.
-  const onToggle = (isExpanded: boolean) => {
-    setIsOpen(isExpanded);
+  const onToggle = (_event: React.MouseEvent<Element, MouseEvent> | undefined, isOpen: boolean) => {
+    setIsOpen(isOpen);
   };
 
   const dispatch = useDispatch();
@@ -259,7 +260,7 @@ export const PreDefinedQueriesDropdown = () => {
           id={selected}
           variant={SelectVariantDeprecated.typeahead}
           typeAheadAriaLabel={t('Select query')}
-          onToggle={(_e, isOpen) => onToggle(isOpen)}
+          onToggle={onToggle}
           onSelect={onSelect}
           selections={selected}
           isOpen={isOpen}
@@ -1137,6 +1138,7 @@ const QueryBrowserPage_: React.FC = () => {
         <h1 className="co-m-pane__heading">
           <span>{t('Metrics')}</span>
           <div className="co-actions">
+            <SelectSimpleDemo />
             <PollIntervalDropdown />
             <MetricsActionsMenu />
           </div>
