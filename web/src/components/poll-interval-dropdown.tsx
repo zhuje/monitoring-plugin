@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+
 import {
   Select,
   SelectList,
@@ -9,6 +10,16 @@ import {
   MenuToggleElement,
 } from '@patternfly/react-core';
 
+import { SelectOptionProps } from '@patternfly/react-core/dist/esm/components/Select';
+
+import { useBoolean } from './hooks/useBoolean';
+
+interface SimpleSelectOption extends Omit<SelectOptionProps, 'content'> {
+  /** Content of the select option. */
+  content: React.ReactNode;
+  /** Value of the select option. */
+  value: string | number;
+}
 // TODO: These will be available in future versions of the plugin SDK
 import { formatPrometheusDuration, parsePrometheusDuration } from './console/utils/datetime';
 
@@ -21,82 +32,76 @@ type Props = {
 };
 
 const IntervalDropdown: React.FC<Props> = ({ id, interval, setInterval }) => {
-  // const [isOpen, toggleIsOpen, setOpen, setClosed] = useBoolean(false);
   const [isOpen, setIsOpen] = React.useState(false);
-
+  const [selected, setSelected] = React.useState<SimpleSelectOption | undefined>();
   const { t } = useTranslation('plugin__monitoring-plugin');
 
-  const onSelect = React.useCallback(
-    (v: string) => setInterval(v === OFF_KEY ? null : parsePrometheusDuration(v)),
-    [setInterval],
-  );
+  const initialOptions: SimpleSelectOption[] = [
+    { content: t('Refresh off'), value: OFF_KEY },
+    { content: t('{{count}} second', { count: 15 }), value: '15s' },
+    { content: t('{{count}} second', { count: 30 }), value: '30s' },
+    { content: t('{{count}} minute', { count: 1 }), value: '1m' },
+    { content: t('{{count}} minute', { count: 15 }), value: '15m' },
+    { content: t('{{count}} hour', { count: 1 }), value: '1h' },
+    { content: t('{{count}} hour', { count: 2 }), value: '2h' },
+    { content: t('{{count}} hour', { count: 1 }), value: '1d' },
+  ];
 
-  const intervalOptions = {
-    [OFF_KEY]: t('Refresh off'),
-    '15s': t('{{count}} second', { count: 15 }),
-    '30s': t('{{count}} second', { count: 30 }),
-    '1m': t('{{count}} minute', { count: 1 }),
-    '5m': t('{{count}} minute', { count: 5 }),
-    '15m': t('{{count}} minute', { count: 15 }),
-    '30m': t('{{count}} minute', { count: 30 }),
-    '1h': t('{{count}} hour', { count: 1 }),
-    '2h': t('{{count}} hour', { count: 2 }),
-    '1d': t('{{count}} day', { count: 1 }),
-  };
+  React.useEffect(() => {
+    const selectedOption = initialOptions?.find((option) => option.selected);
+    setSelected(selectedOption);
+  }, []);
 
-  const selectedKey = interval === null ? OFF_KEY : formatPrometheusDuration(interval);
-
-  // const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
-  //   <MenuToggle
-  //     ref={toggleRef}
-  //     onClick={toggleIsOpen}
-  //     id={`${id}-dropdown`}
-  //     isExpanded={isOpen}
-  //     className="monitoring-dashboards__dropdown-button"
-  //   >
-  //     {intervalOptions[selectedKey]}
-  //   </MenuToggle>
-  // );
+  const simpleSelectOptions = initialOptions?.map((option) => {
+    const { content, value, ...props } = option;
+    const isSelected = selected?.value === value;
+    return (
+      <SelectOption value={value} key={value} isSelected={isSelected} {...props}>
+        {content}
+      </SelectOption>
+    );
+  });
 
   const onToggleClick = () => {
     setIsOpen(!isOpen);
   };
 
+  const onSelect = (
+    _event: React.MouseEvent<Element, MouseEvent> | undefined,
+    value: string | number | undefined,
+  ) => {
+    onSelect && onSelect(_event, value);
+    setSelected(initialOptions.find((o) => o.value === value));
+    setIsOpen(false);
+  };
+
+  const selectedKey = interval === null ? OFF_KEY : formatPrometheusDuration(interval);
+
   const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
     <MenuToggle
       ref={toggleRef}
       onClick={onToggleClick}
+      id={`${id}-dropdown`}
       isExpanded={isOpen}
-      style={
-        {
-          width: '200px',
-        } as React.CSSProperties
-      }
+      className="monitoring-dashboards__dropdown-button"
     >
-      Select a value
+      {selected?.content || selectedKey}
     </MenuToggle>
   );
 
   return (
     <Select
       isOpen={isOpen}
-      onSelect={(_event, value: string) => {
-        if (value) {
-          onSelect(value);
-        }
-        setIsOpen(false);
+      selected={selected}
+      onSelect={onSelect}
+      className="monitoring-dashboards__variable-dropdown"
+      onOpenChange={(isOpen) => {
+        setIsOpen(isOpen);
       }}
       toggle={toggle}
-      className="monitoring-dashboards__variable-dropdown"
-      onOpenChange={(open) => (open ? setIsOpen(true) : setIsOpen(false))}
+      shouldFocusToggleOnSelect
     >
-      <SelectList>
-        {_.map(intervalOptions, (name, key) => (
-          <SelectOption key={key} value={key} isSelected={key === selectedKey}>
-            {name}
-          </SelectOption>
-        ))}
-      </SelectList>
+      <SelectList>{simpleSelectOptions}</SelectList>
     </Select>
   );
 };
