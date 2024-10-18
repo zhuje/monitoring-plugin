@@ -61,6 +61,7 @@ import {
   queryBrowserToggleIsEnabled,
   queryBrowserToggleSeries,
   toggleGraphs,
+  queryBrowserSetPollInterval,
 } from '../actions/observe';
 
 import { withFallback } from './console/console-shared/error/error-boundary';
@@ -1041,6 +1042,15 @@ const QueriesList: React.FC<{ customDatasource?: CustomDataSource }> = ({ custom
   );
 };
 
+const IntervalDropdown = () => {
+  const dispatch = useDispatch();
+  const setInterval = React.useCallback(
+    (v: number) => dispatch(queryBrowserSetPollInterval(v)),
+    [dispatch],
+  );
+  return <DropDownPollInterval setInterval={setInterval} />;
+};
+
 const QueryBrowserPage_: React.FC = () => {
   const { t } = useTranslation('plugin__monitoring-plugin');
 
@@ -1122,7 +1132,7 @@ const QueryBrowserPage_: React.FC = () => {
         <h1 className="co-m-pane__heading">
           <span>{t('Metrics')}</span>
           <div className="co-actions">
-            <DropDownPollInterval />
+            <IntervalDropdown />
             <MetricsActionsMenu />
           </div>
         </h1>
