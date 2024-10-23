@@ -120,7 +120,7 @@ const TimespanDropdown: React.FC = () => {
         >
           {t('Time range')}
         </label>
-        <Select
+        {/* <Select
           className="monitoring-dashboards__variable-dropdown"
           isOpen={isOpen}
           onSelect={(_event, value) => {
@@ -139,7 +139,7 @@ const TimespanDropdown: React.FC = () => {
               </SelectOption>
             ))}
           </SelectList>
-        </Select>
+        </Select> */}
 
         <SimpleSelect
           id="monitoring-time-range-dropdown"
