@@ -1,22 +1,22 @@
 import * as _ from 'lodash';
 // TODO: These will be available in future versions of the plugin SDK
-import { formatPrometheusDuration, parsePrometheusDuration } from '../console/utils/datetime';
-import {
-  Select,
-  SelectList,
-  SelectOption,
-  MenuToggle,
-  MenuToggleElement,
-} from '@patternfly/react-core';
+import { parsePrometheusDuration } from '../console/utils/datetime';
+// import {
+//   Select,
+//   SelectList,
+//   SelectOption,
+//   MenuToggle,
+//   MenuToggleElement,
+// } from '@patternfly/react-core';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
-import { getQueryArgument, removeQueryArgument, setQueryArgument } from '../console/utils/router';
+import { removeQueryArgument, setQueryArgument } from '../console/utils/router';
 
 import { dashboardsSetEndTime, dashboardsSetTimespan } from '../../actions/observe';
 import { useBoolean } from '../hooks/useBoolean';
-import { RootState } from '../types';
+// import { RootState } from '../types';
 import CustomTimeRangeModal from './custom-time-range-modal';
 import { usePerspective } from '../hooks/usePerspective';
 import { SimpleSelect, SimpleSelectOption } from '../SimpleSelect';
@@ -28,19 +28,19 @@ const TimespanDropdown: React.FC = () => {
 
   const { perspective } = usePerspective();
 
-  const [isOpen, toggleIsOpen, setOpen, setClosed] = useBoolean(false);
+  // const [isOpen, toggleIsOpen, setOpen, setClosed] = useBoolean(false);
   const [isModalOpen, , setModalOpen, setModalClosed] = useBoolean(false);
   const [selected, setSelected] = React.useState<string | undefined>('5m');
 
-  const timespan = useSelector(({ observe }: RootState) =>
-    observe.getIn(['dashboards', perspective, 'timespan']),
-  );
-  const endTime = useSelector(({ observe }: RootState) =>
-    observe.getIn(['dashboards', perspective, 'endTime']),
-  );
+  // const timespan = useSelector(({ observe }: RootState) =>
+  //   observe.getIn(['dashboards', perspective, 'timespan']),
+  // );
+  // const endTime = useSelector(({ observe }: RootState) =>
+  //   observe.getIn(['dashboards', perspective, 'endTime']),
+  // );
 
-  const timeSpanFromParams = getQueryArgument('timeRange');
-  const endTimeFromParams = getQueryArgument('endTime');
+  // const timeSpanFromParams = getQueryArgument('timeRange');
+  // const endTimeFromParams = getQueryArgument('endTime');
 
   const dispatch = useDispatch();
   const onChange = React.useCallback(
@@ -57,20 +57,20 @@ const TimespanDropdown: React.FC = () => {
     [perspective, dispatch, setModalOpen],
   );
 
-  const items = {
-    [CUSTOM_TIME_RANGE_KEY]: t('Custom time range'),
-    '5m': t('Last {{count}} minute', { count: 5 }),
-    '15m': t('Last {{count}} minute', { count: 15 }),
-    '30m': t('Last {{count}} minute', { count: 30 }),
-    '1h': t('Last {{count}} hour', { count: 1 }),
-    '2h': t('Last {{count}} hour', { count: 2 }),
-    '6h': t('Last {{count}} hour', { count: 6 }),
-    '12h': t('Last {{count}} hour', { count: 12 }),
-    '1d': t('Last {{count}} day', { count: 1 }),
-    '2d': t('Last {{count}} day', { count: 2 }),
-    '1w': t('Last {{count}} week', { count: 1 }),
-    '2w': t('Last {{count}} week', { count: 2 }),
-  };
+  // const items = {
+  //   [CUSTOM_TIME_RANGE_KEY]: t('Custom time range'),
+  //   '5m': t('Last {{count}} minute', { count: 5 }),
+  //   '15m': t('Last {{count}} minute', { count: 15 }),
+  //   '30m': t('Last {{count}} minute', { count: 30 }),
+  //   '1h': t('Last {{count}} hour', { count: 1 }),
+  //   '2h': t('Last {{count}} hour', { count: 2 }),
+  //   '6h': t('Last {{count}} hour', { count: 6 }),
+  //   '12h': t('Last {{count}} hour', { count: 12 }),
+  //   '1d': t('Last {{count}} day', { count: 1 }),
+  //   '2d': t('Last {{count}} day', { count: 2 }),
+  //   '1w': t('Last {{count}} week', { count: 1 }),
+  //   '2w': t('Last {{count}} week', { count: 2 }),
+  // };
 
   const initialOptions = React.useMemo<SimpleSelectOption[]>(() => {
     const intervalOptions: SimpleSelectOption[] = [
@@ -89,22 +89,22 @@ const TimespanDropdown: React.FC = () => {
     return intervalOptions.map((o) => ({ ...o, selected: o.value === selected }));
   }, [selected, t]);
 
-  const selectedKey =
-    endTime || endTimeFromParams
-      ? CUSTOM_TIME_RANGE_KEY
-      : formatPrometheusDuration(_.toNumber(timeSpanFromParams) || timespan);
+  // const selectedKey =
+  //   endTime || endTimeFromParams
+  //     ? CUSTOM_TIME_RANGE_KEY
+  //     : formatPrometheusDuration(_.toNumber(timeSpanFromParams) || timespan);
 
-  const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
-    <MenuToggle
-      id="monitoring-time-range-dropdown"
-      onClick={toggleIsOpen}
-      isExpanded={isOpen}
-      ref={toggleRef}
-      className="monitoring-dashboards__dropdown-button"
-    >
-      {items[selectedKey]}
-    </MenuToggle>
-  );
+  // const toggle = (toggleRef: React.Ref<MenuToggleElement>) => (
+  //   <MenuToggle
+  //     id="monitoring-time-range-dropdown"
+  //     onClick={toggleIsOpen}
+  //     isExpanded={isOpen}
+  //     ref={toggleRef}
+  //     className="monitoring-dashboards__dropdown-button"
+  //   >
+  //     {items[selectedKey]}
+  //   </MenuToggle>
+  // );
 
   return (
     <>
@@ -152,7 +152,7 @@ const TimespanDropdown: React.FC = () => {
               onChange(String(selection));
             }
             setSelected(String(selection));
-            setClosed();
+            // setClosed();
           }}
           toggleWidth="150px"
         />
