@@ -147,7 +147,7 @@ const TimespanDropdown: React.FC = () => {
           // isOpen={isOpen}
           className="monitoring-dashboards__variable-dropdown"
           onSelect={(_event, selection) => {
-            console.log('timespan-drowndown selection: ', selection);
+            // console.log('timespan-drowndown selection: ', selection);
             if (selection) {
               onChange(String(selection));
             }
