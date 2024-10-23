@@ -19,6 +19,7 @@ import { useBoolean } from '../hooks/useBoolean';
 import { RootState } from '../types';
 import CustomTimeRangeModal from './custom-time-range-modal';
 import { usePerspective } from '../hooks/usePerspective';
+import { SimpleSelect, SimpleSelectOption } from '../SimpleSelect';
 
 const CUSTOM_TIME_RANGE_KEY = 'CUSTOM_TIME_RANGE_KEY';
 
@@ -29,6 +30,7 @@ const TimespanDropdown: React.FC = () => {
 
   const [isOpen, toggleIsOpen, setOpen, setClosed] = useBoolean(false);
   const [isModalOpen, , setModalOpen, setModalClosed] = useBoolean(false);
+  const [selected, setSelected] = React.useState<string | undefined>('5m');
 
   const timespan = useSelector(({ observe }: RootState) =>
     observe.getIn(['dashboards', perspective, 'timespan']),
@@ -69,6 +71,23 @@ const TimespanDropdown: React.FC = () => {
     '1w': t('Last {{count}} week', { count: 1 }),
     '2w': t('Last {{count}} week', { count: 2 }),
   };
+
+  const initialOptions = React.useMemo<SimpleSelectOption[]>(() => {
+    const intervalOptions: SimpleSelectOption[] = [
+      { content: t('Last {{count}} minute', { count: 5 }), value: '5m' },
+      { content: t('Last {{count}} minute', { count: 15 }), value: '15m' },
+      { content: t('Last {{count}} minute', { count: 30 }), value: '30m' },
+      { content: t('Last {{count}} hour', { count: 1 }), value: '1h' },
+      { content: t('Last {{count}} hour', { count: 2 }), value: '2h' },
+      { content: t('Last {{count}} hour', { count: 6 }), value: '6h' },
+      { content: t('Last {{count}} hour', { count: 12 }), value: '12h' },
+      { content: t('Last {{count}} day', { count: 1 }), value: '1d' },
+      { content: t('Last {{count}} day', { count: 2 }), value: '2d' },
+      { content: t('Last {{count}} week', { count: 1 }), value: '1w' },
+      { content: t('Last {{count}} week', { count: 2 }), value: '2w' },
+    ];
+    return intervalOptions.map((o) => ({ ...o, selected: o.value === selected }));
+  }, [selected, t]);
 
   const selectedKey =
     endTime || endTimeFromParams
@@ -121,6 +140,22 @@ const TimespanDropdown: React.FC = () => {
             ))}
           </SelectList>
         </Select>
+
+        <SimpleSelect
+          id="monitoring-time-range-dropdown"
+          initialOptions={initialOptions}
+          // isOpen={isOpen}
+          className="monitoring-dashboards__variable-dropdown"
+          onSelect={(_event, selection) => {
+            console.log('timespan-drowndown selection: ', selection);
+            if (selection) {
+              onChange(String(selection));
+            }
+            setSelected(String(selection));
+            setClosed();
+          }}
+          toggleWidth="150px"
+        />
       </div>
     </>
   );

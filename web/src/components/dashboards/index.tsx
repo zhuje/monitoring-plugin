@@ -56,7 +56,6 @@ import {
   Perspective,
   queryBrowserDeleteAllQueries,
 } from '../../actions/observe';
-import IntervalDropdown from '../poll-interval-dropdown';
 import { RootState } from '../types';
 import BarChart from './bar-chart';
 import Graph from './graph';
