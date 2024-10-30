@@ -281,12 +281,19 @@ export default (state: ObserveState, action: ObserveAction): ObserveState => {
         (v) => _.xorWith(v, [action.payload.labels], _.isEqual),
       );
 
-    case ActionType.SetAlertCount:
+    case ActionType.SetAlertCount: {
       return state.set('alertCount', action.payload.alertCount);
+    }
+
+    case ActionType.SetIncidents:
+      return state.set('incidents', action.payload.incidents);
 
     default:
       break;
   }
+
+  console.log('Store State in Observe Reducers: ', state);
+
   return state;
 };
 

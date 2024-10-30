@@ -61,6 +61,7 @@ import {
   queryBrowserToggleIsEnabled,
   queryBrowserToggleSeries,
   toggleGraphs,
+  setIncidents,
 } from '../actions/observe';
 
 import { withFallback } from './console/console-shared/error/error-boundary';
@@ -1063,7 +1064,6 @@ const QueriesList: React.FC<{ customDatasource?: CustomDataSource }> = ({ custom
     (state: MonitoringState) =>
       getObserveState(perspective, state)?.getIn(['queryBrowser', 'queries']).size,
   );
-
   return (
     <>
       {_.range(count).map((index) => {
@@ -1091,6 +1091,11 @@ const QueryBrowserPage_: React.FC = () => {
   const [extensions, extensionsResolved] = useResolvedExtensions<DataSource>(isDataSource);
   const hasExtensions = !_.isEmpty(extensions);
   const [customDatasourceError, setCustomDataSourceError] = React.useState(false);
+
+  dispatch(setIncidents([1, 2, 3]));
+  const state = useSelector(({ observe }) => observe);
+
+  console.log('Redux State: ', { state });
 
   // get custom datasources
   React.useEffect(() => {
