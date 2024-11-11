@@ -1,5 +1,10 @@
 import * as _ from 'lodash-es';
-import { consoleFetchJSON, Silence, SilenceStates } from '@openshift-console/dynamic-plugin-sdk';
+import {
+  consoleFetchJSON,
+  Silence,
+  SilenceStates,
+  useActiveNamespace,
+} from '@openshift-console/dynamic-plugin-sdk';
 import {
   Alert,
   ActionGroup,
@@ -161,6 +166,8 @@ const SilenceForm_: React.FC<SilenceFormProps> = ({ defaults, history, Info, tit
 
   const user = useSelector(getUser);
 
+  const [activeNamespace] = useActiveNamespace();
+
   React.useEffect(() => {
     if (!createdBy && user) {
       setCreatedBy(user.metadata?.name || user.username);
@@ -202,7 +209,7 @@ const SilenceForm_: React.FC<SilenceFormProps> = ({ defaults, history, Info, tit
       return;
     }
 
-    const url = getFetchSilenceAlertUrl(perspective);
+    const url = getFetchSilenceAlertUrl(perspective, activeNamespace);
     if (!url) {
       setError('Alertmanager URL not set');
       return;
@@ -226,10 +233,10 @@ const SilenceForm_: React.FC<SilenceFormProps> = ({ defaults, history, Info, tit
     };
 
     consoleFetchJSON
-      .post(getFetchSilenceAlertUrl(perspective), body)
+      .post(getFetchSilenceAlertUrl(perspective, activeNamespace), body)
       .then(({ silenceID }) => {
         setError(undefined);
-        refreshSilences(dispatch, perspective, silencesKey);
+        refreshSilences(dispatch, perspective, silencesKey, activeNamespace);
         history.push(getSilenceAlertUrl(perspective, silenceID));
       })
       .catch((err) => {

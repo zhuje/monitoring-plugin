@@ -119,15 +119,21 @@ export const refreshSilences = (
   dispatch: Dispatch,
   perspective: Perspective,
   silencesKey: silencesKey,
+  activeNamespace?: string,
 ): void => {
   const { alertManagerBaseURL } = window.SERVER_FLAGS;
   if (!alertManagerBaseURL) {
     return;
   }
 
+  const url = getFetchSilenceAlertUrl(perspective, activeNamespace);
+  if (!url) {
+    return;
+  }
+
   dispatch(alertingLoading(silencesKey, perspective));
 
-  consoleFetchJSON(getFetchSilenceAlertUrl(perspective))
+  consoleFetchJSON(getFetchSilenceAlertUrl(perspective, activeNamespace))
     .then((silences) => {
       // Set a name field on the Silence to make things easier
       _.each(silences, (s) => {

@@ -311,6 +311,12 @@ const CreateSilenceButton: React.FC = React.memo(() => {
   const { perspective } = usePerspective();
   const namespace = useActiveNamespace();
 
+  console.log('CreateSilenceButton perspective and namespace', { perspective, namespace });
+  console.log(
+    'CreateSilenceButton > GetNewSilencesURL: ',
+    getNewSilenceUrl(perspective, namespace),
+  );
+
   return (
     <Link className="co-m-primary-action" to={getNewSilenceUrl(perspective, namespace)}>
       <Button data-test="create-silence-btn" variant="primary">
