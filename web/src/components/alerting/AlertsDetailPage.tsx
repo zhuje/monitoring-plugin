@@ -84,10 +84,8 @@ const AlertsDetailsPage_: React.FC<AlertsDetailsPageProps> = ({ history, match }
 
   const { alertsKey, alertingContextId, silencesKey, perspective } = usePerspective();
 
-  const [activeNamespace] = useActiveNamespace();
+  const [namespace] = useActiveNamespace();
 
-  const namespace = activeNamespace;
-  // const namespace = match.params?.ns;
   const hideGraphs = useSelector(
     (state: MonitoringState) => !!getObserveState(perspective, state)?.get('hideGraphs'),
   );
@@ -144,7 +142,7 @@ const AlertsDetailsPage_: React.FC<AlertsDetailsPageProps> = ({ history, match }
   console.log('useSilencePoller from AlertDetailsPage > namespace: ', namespace);
 
   useRulesAlertsPoller(namespace, dispatch, alertsSource);
-  useSilencesPoller({ namespace });
+  useSilencesPoller({ namespace, from: 'AlertsDetailsPage_-Details' });
 
   return (
     <>

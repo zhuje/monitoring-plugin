@@ -163,10 +163,8 @@ const SilenceForm_: React.FC<SilenceFormProps> = ({ defaults, history, Info, tit
     defaults.matchers ?? [{ isRegex: false, name: '', value: '' }],
   );
   const [startsAt, setStartsAt] = React.useState(defaults.startsAt ?? formatDate(now));
-
   const user = useSelector(getUser);
-
-  const [activeNamespace] = useActiveNamespace();
+  const [namespace] = useActiveNamespace();
 
   React.useEffect(() => {
     if (!createdBy && user) {
@@ -209,11 +207,13 @@ const SilenceForm_: React.FC<SilenceFormProps> = ({ defaults, history, Info, tit
       return;
     }
 
-    const url = getFetchSilenceAlertUrl(perspective, activeNamespace);
+    const url = getFetchSilenceAlertUrl(perspective, 'SilenceForm_', namespace);
     if (!url) {
       setError('Alertmanager URL not set');
       return;
     }
+
+    console.log('onSubmit: url', { url, perspective, namespace });
 
     setInProgress(true);
 
@@ -233,11 +233,11 @@ const SilenceForm_: React.FC<SilenceFormProps> = ({ defaults, history, Info, tit
     };
 
     consoleFetchJSON
-      .post(getFetchSilenceAlertUrl(perspective, activeNamespace), body)
+      .post(getFetchSilenceAlertUrl(perspective, 'SilenceForm_', namespace), body)
       .then(({ silenceID }) => {
         setError(undefined);
-        refreshSilences(dispatch, perspective, silencesKey, activeNamespace);
-        history.push(getSilenceAlertUrl(perspective, silenceID));
+        refreshSilences(dispatch, perspective, silencesKey, namespace);
+        history.push(getSilenceAlertUrl(perspective, silenceID, namespace));
       })
       .catch((err) => {
         const errorMessage =

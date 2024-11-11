@@ -9,11 +9,11 @@ import { getSilenceName } from '../utils';
 
 const URL_POLL_DEFAULT_DELAY = 15000; // 15 seconds
 
-export const useSilencesPoller = ({ namespace }) => {
+export const useSilencesPoller = ({ namespace, from }) => {
   const { perspective, silencesKey } = usePerspective();
 
-  const url = getFetchSilenceAlertUrl(perspective, namespace);
-  console.log('useSilencesPoller > namespace :', { namespace, url });
+  const url = getFetchSilenceAlertUrl(perspective, from, namespace);
+  console.log('useSilencesPoller > namespace!! :', { namespace, url });
 
   const [response, loadError, loading] = useURLPoll<Silence[]>(
     url,

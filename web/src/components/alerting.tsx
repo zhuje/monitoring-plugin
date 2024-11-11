@@ -610,8 +610,6 @@ const AlertingPage: React.FC<RouteComponentProps<{ url: string }>> = ({ match })
   const rulesPath = getAlertRulesUrl(perspective);
   const silencesPath = getSilencesUrl(perspective);
 
-  console.log({ silencesPath });
-
   const { url } = match;
 
   return (
@@ -649,10 +647,12 @@ const PollerPages = () => {
   const dispatch = useDispatch();
 
   const { alertingContextId, perspective } = usePerspective();
-  // const namespace = useActiveNamespace();
-  const [activeNamespace] = useActiveNamespace();
+  const [namespace] = useActiveNamespace();
 
-  console.log('PollerPages > namespace :', { activeNamespace });
+  // if (!namespace || namespace == 'undefined') {
+  //   console.log('PollerPages > namespace undefined! ');
+  //   return;
+  // }
 
   const [customExtensions] =
     useResolvedExtensions<AlertingRulesSourceExtension>(isAlertingRulesSource);
@@ -665,8 +665,8 @@ const PollerPages = () => {
     [customExtensions, alertingContextId],
   );
 
-  useRulesAlertsPoller(activeNamespace, dispatch, alertsSource);
-  useSilencesPoller({ namespace: activeNamespace });
+  useRulesAlertsPoller(namespace, dispatch, alertsSource);
+  useSilencesPoller({ namespace, from: 'useSilencesPoller > PollerPages' });
 
   if (perspective === 'acm') {
     return (
@@ -723,6 +723,9 @@ const PrometheusUIRedirect = () => {
 
 const MonitoringUI = () => {
   const { perspective } = usePerspective();
+
+  const [namespace] = useActiveNamespace();
+  console.log('MonitoringUI > namespace: ', namespace);
 
   if (perspective === 'acm') {
     return <AcmAlertingUI />;

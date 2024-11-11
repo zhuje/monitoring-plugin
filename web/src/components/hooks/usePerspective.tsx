@@ -178,8 +178,16 @@ export const getEditSilenceAlertUrl = (
   }
 };
 
-export const getFetchSilenceAlertUrl = (perspective: Perspective, namespace?: string) => {
-  console.log('getFetchSilenceAlertUrl > namespace: ', { namespace, perspective });
+export const getFetchSilenceAlertUrl = (
+  perspective: Perspective,
+  from: string,
+  namespace: string,
+) => {
+  console.log('getFetchSilenceAlertUrl > namespace: ', { namespace, perspective, from });
+
+  // if (!namespace || namespace == 'undefined' || namespace == undefined || namespace == null) {
+  //   console.log('getFetchSilenceAlertUrl > UNDEFINED NAMESPACE > getFetchSilenceAlertUrl :', from);
+  // }
 
   switch (perspective) {
     case 'acm':
