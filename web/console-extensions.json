@@ -116,26 +116,11 @@
       "name": "%plugin__monitoring-plugin~Silences%",
       "href": "silences",
       "component": {
-        "$codeRef": "MonitoringUI"
+        "$codeRef": "SilencesPage"
       }
     }
   },
-  {
-    "type": "console.page/route",
-    "properties": {
-      "exact": false,
-      "path": ["/dev-monitoring/ns/:ns/silences/"],
-      "component": { "$codeRef": "MonitoringUI" }
-    }
-  },
-  {
-    "type": "console.page/route",
-    "properties": {
-      "exact": false,
-      "path": ["/dev-monitoring/ns/:ns/silences/~new"],
-      "component": { "$codeRef": "MonitoringUI" }
-    }
-  },
+
   {
     "type": "console.page/route",
     "properties": {
