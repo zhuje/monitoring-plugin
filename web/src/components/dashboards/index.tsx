@@ -15,12 +15,17 @@ import {
   CardTitle,
   Tooltip,
   DropdownItem,
+  Dropdown,
+  MenuToggleElement,
+  MenuToggle,
+  DropdownList,
+  Checkbox,
 } from '@patternfly/react-core';
 import {
   Select as SelectDeprecated,
   SelectOption as SelectOptionDeprecated,
 } from '@patternfly/react-core/deprecated';
-import { AngleDownIcon, AngleRightIcon } from '@patternfly/react-icons';
+import { AngleDownIcon, AngleRightIcon, EllipsisVIcon } from '@patternfly/react-icons';
 import * as React from 'react';
 import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
@@ -81,6 +86,85 @@ import {
 import KebabDropdown from '../kebab-dropdown';
 import { MonitoringState } from '../../reducers/observe';
 import { DropDownPollInterval } from '../dropdown-poll-interval';
+
+export const CardTitleInHeader: React.FunctionComponent = () => {
+  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const [isChecked, setIsChecked] = React.useState<boolean>(false);
+
+  const onSelect = () => {
+    setIsOpen(!isOpen);
+  };
+  const onClick = (checked: boolean) => {
+    setIsChecked(checked);
+  };
+
+  const dropdownItems = (
+    <>
+      <DropdownItem key="action">Action</DropdownItem>
+      {/* Prevent default onClick functionality for example purposes */}
+      <DropdownItem key="link" to="#" onClick={(event: any) => event.preventDefault()}>
+        Link
+      </DropdownItem>
+      <DropdownItem key="disabled action" isDisabled>
+        Disabled Action
+      </DropdownItem>
+      <DropdownItem
+        key="disabled link"
+        isDisabled
+        to="#"
+        onClick={(event: any) => event.preventDefault()}
+      >
+        Disabled Link
+      </DropdownItem>
+      <DropdownItem key="separated action">Separated Action</DropdownItem>
+      <DropdownItem key="separated link" to="#" onClick={(event: any) => event.preventDefault()}>
+        Separated Link
+      </DropdownItem>
+    </>
+  );
+
+  const headerActions = (
+    <>
+      <Dropdown
+        onSelect={onSelect}
+        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+          <MenuToggle
+            ref={toggleRef}
+            isExpanded={isOpen}
+            onClick={() => setIsOpen(!isOpen)}
+            variant="plain"
+            aria-label="Card title inline with images and actions example kebab toggle"
+          >
+            <EllipsisVIcon aria-hidden="true" />
+          </MenuToggle>
+        )}
+        isOpen={isOpen}
+        onOpenChange={(isOpen: boolean) => setIsOpen(isOpen)}
+      >
+        <DropdownList>{dropdownItems}</DropdownList>
+      </Dropdown>
+      <Checkbox
+        isChecked={isChecked}
+        onChange={(_event, checked) => onClick(checked)}
+        aria-label="card checkbox example"
+        id="check-2"
+        name="check2"
+      />
+    </>
+  );
+
+  return (
+    <PFCard>
+      <CardHeader actions={{ actions: headerActions }}>
+        <CardTitle>
+          This is a really really really really really really really really really really long
+          header
+        </CardTitle>
+      </CardHeader>
+      <CardBody>Body</CardBody>
+    </PFCard>
+  );
+};
 
 const intervalVariableRegExps = ['__interval', '__rate_interval', '__auto_interval_[a-z]+'];
 
@@ -759,6 +843,17 @@ const Card: React.FC<CardProps> = React.memo(({ panel, perspective }) => {
     return false;
   };
 
+  const headerActions = (
+    <>
+      {!isLoading && (
+        <QueryBrowserLink queries={queries} customDataSourceName={customDataSourceName} />
+      )}
+      {panel.type === 'graph' && isThereCsvData() && (
+        <KebabDropdown dropdownItems={dropdownItems} />
+      )}
+    </>
+  );
+
   return (
     <div
       className={`monitoring-dashboards__panel monitoring-dashboards__panel--${panelClassModifier}`}
@@ -772,22 +867,19 @@ const Card: React.FC<CardProps> = React.memo(({ panel, perspective }) => {
       >
         <CardHeader
           actions={{
-            actions: (
-              <>
-                {!isLoading && (
-                  <QueryBrowserLink queries={queries} customDataSourceName={customDataSourceName} />
-                )}
-                {panel.type === 'graph' && isThereCsvData() && (
-                  <KebabDropdown dropdownItems={dropdownItems} />
-                )}
-              </>
-            ),
-            hasNoOffset: false,
-            className: 'co-overview-card__actions',
+            actions: headerActions,
           }}
-          className="monitoring-dashboards__card-header"
+          // className="monitoring-dashboards__card-header"
         >
           <CardTitle>{panel.title}</CardTitle>
+          <div className="co-overview-card__actions" style={{ float: 'right' }}>
+            {!isLoading && (
+              <QueryBrowserLink queries={queries} customDataSourceName={customDataSourceName} />
+            )}
+            {panel.type === 'graph' && isThereCsvData() && (
+              <KebabDropdown dropdownItems={dropdownItems} />
+            )}
+          </div>
         </CardHeader>
         <CardBody className="co-dashboard-card__body--dashboard">
           {isError ? (
@@ -877,6 +969,7 @@ const PanelsRow: React.FC<PanelsRowProps> = ({ row, perspective }) => {
       )}
       {isExpanded && (
         <div className="monitoring-dashboards__row">
+          <CardTitleInHeader />
           {_.map(row.panels, (panel) => (
             <Card key={panel.id} panel={panel} perspective={perspective} />
           ))}
