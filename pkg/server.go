@@ -33,6 +33,7 @@ type Config struct {
 	LogLevel         string
 	AlertmanagerUrl  string
 	ThanosQuerierUrl string
+	PersesUrl        string
 }
 
 type PluginConfig struct {
@@ -156,6 +157,10 @@ func Start(cfg *Config) {
 			startProxy(cfg, k8sclient, tlsConfig, timeout, proxy.ThanosQuerierKind, proxy.ThanosQuerierPort)
 		}
 
+		if cfg.PersesUrl != "" {
+			startProxy(cfg, k8sclient, tlsConfig, timeout, proxy.PersesKind, proxy.PersesPort)
+		}
+
 		logrus.SetLevel(logrusLevel)
 		panic(httpServer.ListenAndServeTLS(cfg.CertFile, cfg.PrivateKeyFile))
 	} else {
@@ -189,6 +194,8 @@ func setupProxyRoutes(cfg *Config, k8sclient *dynamic.DynamicClient, kind proxy.
 		proxyUrl = cfg.AlertmanagerUrl
 	case proxy.ThanosQuerierKind:
 		proxyUrl = cfg.ThanosQuerierUrl
+	case proxy.PersesKind:
+		proxyUrl = cfg.PersesUrl
 	}
 
 	router.PathPrefix("/").Handler(proxy.NewProxyHandler(

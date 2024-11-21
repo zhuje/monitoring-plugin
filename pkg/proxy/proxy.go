@@ -28,6 +28,7 @@ type KindType string
 const (
 	AlertManagerKind  KindType = "alertmanager"
 	ThanosQuerierKind KindType = "thanos-querier"
+	PersesKind        KindType = "perses"
 )
 
 type ProxyPort int
@@ -35,6 +36,7 @@ type ProxyPort int
 const (
 	AlertmanagerPort  ProxyPort = 9444
 	ThanosQuerierPort ProxyPort = 9445
+	PersesPort        ProxyPort = 9446
 )
 
 func NewProxyHandler(k8sclient *dynamic.DynamicClient, serviceCAfile string, kind KindType, proxyUrl string) *ProxyHandler {

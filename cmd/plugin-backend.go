@@ -22,6 +22,7 @@ var (
 	alertmanagerUrlArg  = flag.String("alertmanager", "", "alertmanager url to proxy to for acm mode")
 	thanosQuerierUrlArg = flag.String("thanos-querier", "", "thanos querier url to proxy to for acm mode")
 	log                 = logrus.WithField("module", "main")
+	persesUrlArg        = flag.String("perses", "", "perses api url to fetch dashboards")
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 	logLevel := mergeEnvValue("MONITORING_PLUGIN_LOG_LEVEL", *logLevelArg, "error")
 	alertmanagerUrl := mergeEnvValue("MONITORING_PLUGIN_ALERTMANAGER", *alertmanagerUrlArg, "")
 	thanosQuerierUrl := mergeEnvValue("MONITORING_PLUGIN_THANOS_QUERIER", *thanosQuerierUrlArg, "")
+	persesUrlArg := mergeEnvValue("MONITORING_PLUGIN_PERSES", *persesUrlArg, "")
 
 	featuresList := strings.Fields(strings.Join(strings.Split(strings.ToLower(features), ","), " "))
 
@@ -58,6 +60,7 @@ func main() {
 		LogLevel:         logLevel,
 		AlertmanagerUrl:  alertmanagerUrl,
 		ThanosQuerierUrl: thanosQuerierUrl,
+		PersesUrl:        persesUrlArg,
 	})
 }
 
