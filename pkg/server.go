@@ -23,17 +23,17 @@ import (
 var log = logrus.WithField("module", "server")
 
 type Config struct {
-	Port             int
-	CertFile         string
-	PrivateKeyFile   string
-	Features         map[Feature]bool
-	StaticPath       string
-	ConfigPath       string
-	PluginConfigPath string
-	LogLevel         string
-	AlertmanagerUrl  string
-	ThanosQuerierUrl string
-	PersesUrl        string
+	Port                int
+	CertFile            string
+	PrivateKeyFile      string
+	Features            map[Feature]bool
+	StaticPath          string
+	ConfigPath          string
+	PluginConfigPath    string
+	LogLevel            string
+	AlertmanagerUrl     string
+	ThanosQuerierUrl    string
+	PersesDashboardsUrl string
 }
 
 type PluginConfig struct {
@@ -43,8 +43,9 @@ type PluginConfig struct {
 type Feature string
 
 const (
-	AcmAlerting Feature = "acm-alerting"
-	Incidents   Feature = "incidents"
+	AcmAlerting      Feature = "acm-alerting"
+	Incidents        Feature = "incidents"
+	PersesDashboards Feature = "perses-dashboards"
 )
 
 func (pluginConfig *PluginConfig) MarshalJSON() ([]byte, error) {
@@ -157,10 +158,6 @@ func Start(cfg *Config) {
 			startProxy(cfg, k8sclient, tlsConfig, timeout, proxy.ThanosQuerierKind, proxy.ThanosQuerierPort)
 		}
 
-		if cfg.PersesUrl != "" {
-			startProxy(cfg, k8sclient, tlsConfig, timeout, proxy.PersesKind, proxy.PersesPort)
-		}
-
 		logrus.SetLevel(logrusLevel)
 		panic(httpServer.ListenAndServeTLS(cfg.CertFile, cfg.PrivateKeyFile))
 	} else {
@@ -174,6 +171,8 @@ func setupRoutes(cfg *Config) (*mux.Router, *PluginConfig) {
 	configHandlerFunc, pluginConfig := configHandler(cfg)
 
 	router := mux.NewRouter()
+
+	router.PathPrefix("/api/v1/perses/dashboards-url").HandlerFunc(persesDashboardsHandler(cfg))
 
 	router.PathPrefix("/health").HandlerFunc(healthHandler())
 
@@ -194,8 +193,6 @@ func setupProxyRoutes(cfg *Config, k8sclient *dynamic.DynamicClient, kind proxy.
 		proxyUrl = cfg.AlertmanagerUrl
 	case proxy.ThanosQuerierKind:
 		proxyUrl = cfg.ThanosQuerierUrl
-	case proxy.PersesKind:
-		proxyUrl = cfg.PersesUrl
 	}
 
 	router.PathPrefix("/").Handler(proxy.NewProxyHandler(

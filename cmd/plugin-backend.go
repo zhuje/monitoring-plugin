@@ -11,18 +11,18 @@ import (
 )
 
 var (
-	portArg             = flag.Int("port", 0, "server port to listen on (default: 9443)\nports 9444 and 9445 reserved for other use")
-	certArg             = flag.String("cert", "", "cert file path to enable TLS (disabled by default)")
-	keyArg              = flag.String("key", "", "private key file path to enable TLS (disabled by default)")
-	featuresArg         = flag.String("features", "", "enabled features, comma separated.\noptions: ['acm-alerting']")
-	staticPathArg       = flag.String("static-path", "", "static files path to serve frontend (default: './web/dist')")
-	configPathArg       = flag.String("config-path", "", "config files path (default: './config')")
-	pluginConfigArg     = flag.String("plugin-config-path", "", "plugin yaml configuration")
-	logLevelArg         = flag.String("log-level", "error", "verbosity of logs\noptions: ['panic', 'fatal', 'error', 'warn', 'info', 'debug', 'trace']\n'trace' level will log all incoming requests\n(default 'error')")
-	alertmanagerUrlArg  = flag.String("alertmanager", "", "alertmanager url to proxy to for acm mode")
-	thanosQuerierUrlArg = flag.String("thanos-querier", "", "thanos querier url to proxy to for acm mode")
-	log                 = logrus.WithField("module", "main")
-	persesUrlArg        = flag.String("perses", "", "perses api url to fetch dashboards")
+	portArg                = flag.Int("port", 0, "server port to listen on (default: 9443)\nports 9444 and 9445 reserved for other use")
+	certArg                = flag.String("cert", "", "cert file path to enable TLS (disabled by default)")
+	keyArg                 = flag.String("key", "", "private key file path to enable TLS (disabled by default)")
+	featuresArg            = flag.String("features", "", "enabled features, comma separated.\noptions: ['acm-alerting']")
+	staticPathArg          = flag.String("static-path", "", "static files path to serve frontend (default: './web/dist')")
+	configPathArg          = flag.String("config-path", "", "config files path (default: './config')")
+	pluginConfigArg        = flag.String("plugin-config-path", "", "plugin yaml configuration")
+	logLevelArg            = flag.String("log-level", "error", "verbosity of logs\noptions: ['panic', 'fatal', 'error', 'warn', 'info', 'debug', 'trace']\n'trace' level will log all incoming requests\n(default 'error')")
+	alertmanagerUrlArg     = flag.String("alertmanager", "", "alertmanager url to proxy to for acm mode")
+	thanosQuerierUrlArg    = flag.String("thanos-querier", "", "thanos querier url to proxy to for acm mode")
+	log                    = logrus.WithField("module", "main")
+	persesDashboardsUrlArg = flag.String("perses-dashboards", "", "perses api url to fetch dashboards")
 )
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 	logLevel := mergeEnvValue("MONITORING_PLUGIN_LOG_LEVEL", *logLevelArg, "error")
 	alertmanagerUrl := mergeEnvValue("MONITORING_PLUGIN_ALERTMANAGER", *alertmanagerUrlArg, "")
 	thanosQuerierUrl := mergeEnvValue("MONITORING_PLUGIN_THANOS_QUERIER", *thanosQuerierUrlArg, "")
-	persesUrlArg := mergeEnvValue("MONITORING_PLUGIN_PERSES", *persesUrlArg, "")
+	perseDashboardsUrl := mergeEnvValue("MONITORING_PLUGIN_PERSES", *persesDashboardsUrlArg, "")
 
 	featuresList := strings.Fields(strings.Join(strings.Split(strings.ToLower(features), ","), " "))
 
@@ -50,17 +50,17 @@ func main() {
 	log.Infof("enabled features: %+q\n", featuresList)
 
 	server.Start(&server.Config{
-		Port:             port,
-		CertFile:         cert,
-		PrivateKeyFile:   key,
-		Features:         featuresSet,
-		StaticPath:       staticPath,
-		ConfigPath:       configPath,
-		PluginConfigPath: pluginConfigPath,
-		LogLevel:         logLevel,
-		AlertmanagerUrl:  alertmanagerUrl,
-		ThanosQuerierUrl: thanosQuerierUrl,
-		PersesUrl:        persesUrlArg,
+		Port:                port,
+		CertFile:            cert,
+		PrivateKeyFile:      key,
+		Features:            featuresSet,
+		StaticPath:          staticPath,
+		ConfigPath:          configPath,
+		PluginConfigPath:    pluginConfigPath,
+		LogLevel:            logLevel,
+		AlertmanagerUrl:     alertmanagerUrl,
+		ThanosQuerierUrl:    thanosQuerierUrl,
+		PersesDashboardsUrl: perseDashboardsUrl,
 	})
 }
 

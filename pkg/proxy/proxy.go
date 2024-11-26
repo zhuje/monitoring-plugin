@@ -36,7 +36,6 @@ type ProxyPort int
 const (
 	AlertmanagerPort  ProxyPort = 9444
 	ThanosQuerierPort ProxyPort = 9445
-	PersesPort        ProxyPort = 9446
 )
 
 func NewProxyHandler(k8sclient *dynamic.DynamicClient, serviceCAfile string, kind KindType, proxyUrl string) *ProxyHandler {
