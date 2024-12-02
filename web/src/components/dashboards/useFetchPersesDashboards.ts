@@ -8,16 +8,18 @@ export const useFetchPersesDashboards = (): [[], boolean, string] => {
   const safeFetch = React.useCallback(useSafeFetch(), []);
   const [boards, setBoards] = React.useState();
   const [error, setError] = React.useState<string>();
-  const [isLoading, , , setLoaded] = useBoolean(true);
+  const [isLoading, , setLoaded] = useBoolean(false);
 
-  const PERSES_ENDPOINT = '/api/proxy/plugin/monitoring-plugin/perses/';
+  const PERSES_ENDPOINT_LIST_DASHBOARDS_METADATA =
+    '/api/proxy/plugin/monitoring-console-plugin/perses/api/v1/dashboards?metadata_only=true';
 
   React.useEffect(() => {
-    safeFetch(PERSES_ENDPOINT)
+    safeFetch(PERSES_ENDPOINT_LIST_DASHBOARDS_METADATA)
       .then((response) => {
-        setLoaded();
+        console.log('API ressponse : ', JSON.stringify(response, null, 2));
         setError(undefined);
-        setBoards(response.json);
+        setBoards(response);
+        setLoaded();
       })
       .catch((err) => {
         setLoaded();

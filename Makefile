@@ -46,7 +46,7 @@ build-backend:
 
 .PHONY: start-backend
 start-backend:
-	go run ./cmd/plugin-backend.go -port='9001' -config-path='./web/dist' -static-path='./web/dist' -plugin-config-path='ct.yaml'
+	go run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist' -plugin-config-path='ct.yaml' -features='perses-dashboards' -perses-dashboards='http://localhost:8080/'
 
 .PHONY: build-image
 build-image:
