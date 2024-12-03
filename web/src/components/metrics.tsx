@@ -90,7 +90,6 @@ import { getObserveState, usePerspective } from './hooks/usePerspective';
 import { useActiveNamespace } from './console/console-shared/hooks/useActiveNamespace';
 import { MonitoringState } from '../reducers/observe';
 import { DropDownPollInterval } from './dropdown-poll-interval';
-import { useFetchPersesDashboards } from './dashboards/useFetchPersesDashboards';
 
 // Stores information about the currently focused query input
 let focusedQuery;
@@ -1102,10 +1101,6 @@ const QueryBrowserPage_: React.FC = () => {
   const [extensions, extensionsResolved] = useResolvedExtensions<DataSource>(isDataSource);
   const hasExtensions = !_.isEmpty(extensions);
   const [customDatasourceError, setCustomDataSourceError] = React.useState(false);
-
-  const [boards, isLoading, error] = useFetchPersesDashboards();
-
-  console.log({ boards, isLoading, error });
 
   // get custom datasources
   React.useEffect(() => {
