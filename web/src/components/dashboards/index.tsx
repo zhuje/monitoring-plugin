@@ -81,6 +81,7 @@ import {
 import KebabDropdown from '../kebab-dropdown';
 import { MonitoringState } from '../../reducers/observe';
 import { DropDownPollInterval } from '../dropdown-poll-interval';
+import { usePersesClient } from './perses-client';
 
 const intervalVariableRegExps = ['__interval', '__rate_interval', '__auto_interval_[a-z]+'];
 
@@ -905,6 +906,9 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({ hi
   const [board, setBoard] = React.useState<string>();
   const [boards, isLoading, error] = useFetchDashboards(namespace);
 
+  const { getDashboards } = usePersesClient();
+  const [persesBoards] = getDashboards;
+
   // Clear queries on unmount
   React.useEffect(() => () => dispatch(queryBrowserDeleteAllQueries()), [dispatch]);
 
@@ -918,14 +922,24 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({ hi
     [perspective, dispatch],
   );
 
-  const boardItems = React.useMemo(
-    () =>
-      _.mapValues(_.mapKeys(boards, 'name'), (b, name) => ({
-        tags: b.data?.tags,
-        title: b.data?.title ?? name,
-      })),
-    [boards],
-  );
+  const boardItems = React.useMemo(() => {
+    const ocpBoardItems = _.mapValues(_.mapKeys(boards, 'name'), (b, name) => ({
+      tags: b.data?.tags,
+      title: b.data?.title ?? name,
+    }));
+
+    if (persesBoards) {
+      const persesKeys = _.mapKeys(persesBoards, function (item) {
+        return item?.metadata?.name;
+      });
+      const persesBoardItems = _.mapValues(persesKeys, (b, name) => ({
+        tags: ['perses'],
+        title: `${b.metadata?.project} / ${b.metadata?.name}` ?? name,
+      }));
+      return { ...persesBoardItems, ...ocpBoardItems };
+    }
+    return ocpBoardItems;
+  }, [boards, persesBoards]);
 
   const changeBoard = React.useCallback(
     (newBoard: string) => {
