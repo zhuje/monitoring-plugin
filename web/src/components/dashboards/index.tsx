@@ -81,7 +81,7 @@ import {
 import KebabDropdown from '../kebab-dropdown';
 import { MonitoringState } from '../../reducers/observe';
 import { DropDownPollInterval } from '../dropdown-poll-interval';
-import { usePersesClient } from './perses-client';
+import { usePerses } from './usePerses';
 
 const intervalVariableRegExps = ['__interval', '__rate_interval', '__auto_interval_[a-z]+'];
 
@@ -905,9 +905,12 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({ hi
   const { perspective } = usePerspective();
   const [board, setBoard] = React.useState<string>();
   const [boards, isLoading, error] = useFetchDashboards(namespace);
+  const { getPersesDashboards, dashboardsData: persesDashboards } = usePerses();
 
-  const { getDashboards } = usePersesClient();
-  const [persesBoards] = getDashboards;
+  // Called only once on mount
+  React.useEffect(() => {
+    getPersesDashboards();
+  }, [getPersesDashboards]);
 
   // Clear queries on unmount
   React.useEffect(() => () => dispatch(queryBrowserDeleteAllQueries()), [dispatch]);
@@ -928,8 +931,8 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({ hi
       title: b.data?.title ?? name,
     }));
 
-    if (persesBoards) {
-      const persesKeys = _.mapKeys(persesBoards, function (item) {
+    if (persesDashboards) {
+      const persesKeys = _.mapKeys(persesDashboards, function (item) {
         return item?.metadata?.name;
       });
       const persesBoardItems = _.mapValues(persesKeys, (b, name) => ({
@@ -939,7 +942,7 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({ hi
       return { ...persesBoardItems, ...ocpBoardItems };
     }
     return ocpBoardItems;
-  }, [boards, persesBoards]);
+  }, [boards, persesDashboards]);
 
   const changeBoard = React.useCallback(
     (newBoard: string) => {
