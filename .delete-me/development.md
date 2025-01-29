@@ -1,5 +1,12 @@
 # Development Notes
 
+## Testing on Cluster 
+This needs to be on a AWS cluster NOT ROSA. Because we need to change the Monitroing Console Operator > monitoring console image. 
+ 
+We need to update the monitoring-plugin with our image and need to make sure the the monitoring-console-plugin deploys the changes for incidents. 
+
+
+
 ## Incidents: Build Image, Enable Incidents, and Deploy changes on the cluster 
 
 REGISTRY_ORG="jezhu" TAG="ou594-incidents-0.0.3" make build-mcp-image
@@ -36,4 +43,4 @@ fi
 ```
 
 
-1. 
+# Testing on a Cluster 
