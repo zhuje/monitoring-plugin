@@ -46,7 +46,7 @@ fi
 # Rollback local changes made
 if [[ "$OSTYPE" == "darwin"* ]] && [[ "$DOCKER_FILE_NAME" == "Dockerfile.mcp" ]]; then
     printf "${YELLOW}Replacing in package.json and values.yaml${ENDCOLOR}\n"
-    sed -i 's/"name": "monitoring-console-plugin",/"name": "monitoring-plugin",/g' web/package.json
+    sed -i '' 's/"name": "monitoring-console-plugin",/"name": "monitoring-plugin",/g' web/package.json
     printf "${YELLOW}Renaming translations to the original plugin name${ENDCOLOR}\n"
     cd web/locales/ && for dir in *; do if cd $dir; then  for filename in *; do mv plugin__monitoring-console-plugin.json plugin__monitoring-plugin.json; done; cd ..; fi; done
 fi
