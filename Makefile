@@ -89,3 +89,7 @@ export FEATURES?=incidents,dev-config
 .PHONY: start-feature-backend
 start-feature-backend:
 	go run ./cmd/plugin-backend.go -port='9443' -config-path='./config' -static-path='./web/dist' -features='$(FEATURES)'
+
+.PHONY: deploy-incidents
+deploy-incidents:
+	./scripts/deploy-incidents.sh

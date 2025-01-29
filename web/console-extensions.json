@@ -256,5 +256,13 @@
       "scope": "mp",
       "reducer": { "$codeRef": "MonitoringReducer" }
     }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": false,
+      "path": "/monitoring/incidents",
+      "component": { "$codeRef": "IncidentsPage" }
+    }
   }
 ]
