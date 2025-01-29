@@ -7,6 +7,7 @@ import '../_monitoring.scss';
 import {
   getAlertRulesUrl,
   getAlertsUrl,
+  getIncidentsUrl,
   getSilencesUrl,
   usePerspective,
 } from '../hooks/usePerspective';
@@ -31,6 +32,7 @@ const AlertingPage: React.FC<RouteComponentProps<{ url: string }>> = ({ match })
   const alertsPath = getAlertsUrl(perspective);
   const rulesPath = getAlertRulesUrl(perspective);
   const silencesPath = getSilencesUrl(perspective);
+  const incidentsPath = getIncidentsUrl(perspective);
 
   const { url } = match;
 
@@ -54,6 +56,9 @@ const AlertingPage: React.FC<RouteComponentProps<{ url: string }>> = ({ match })
         </Tab>
         <Tab active={url === rulesPath}>
           <Link to={rulesPath}>{t('Alerting rules')}</Link>
+        </Tab>
+        <Tab active={url === incidentsPath}>
+          <Link to={incidentsPath}>{t('Incidents')}</Link>
         </Tab>
       </ul>
       <Switch>
