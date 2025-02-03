@@ -3,21 +3,18 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
 
-// Monitoring Console Plugin
+// Monitoring Plugin - 4.17
 
 import '../_monitoring.scss';
 import {
   getAlertRulesUrl,
   getAlertsUrl,
-  getIncidentsUrl,
   getSilencesUrl,
   usePerspective,
 } from '../hooks/usePerspective';
 import AlertsPage from '../alerting/AlertsPage';
 import SilencesPage from '../alerting/SilencesPage';
 import AlertRulesPage from '../alerting/AlertRulesPage';
-import { useFeatures } from '../hooks/useFeatures';
-import incidentsPageWithFallback from '../Incidents/IncidentsPage';
 
 const Tab: React.FC<{ active: boolean; children: React.ReactNode }> = ({ active, children }) => (
   <li
@@ -32,12 +29,10 @@ const Tab: React.FC<{ active: boolean; children: React.ReactNode }> = ({ active,
 const AlertingPage: React.FC<RouteComponentProps<{ url: string }>> = ({ match }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { perspective } = usePerspective();
-  const { areIncidentsActive } = useFeatures();
 
   const alertsPath = getAlertsUrl(perspective);
   const rulesPath = getAlertRulesUrl(perspective);
   const silencesPath = getSilencesUrl(perspective);
-  const incidentsPath = getIncidentsUrl(perspective);
 
   // const mcpEnabled = useMCPAvailable();
   // useMCPAvailable() use this to end a request to this endpoint
@@ -79,18 +74,11 @@ const AlertingPage: React.FC<RouteComponentProps<{ url: string }>> = ({ match })
         <Tab active={url === rulesPath}>
           <Link to={rulesPath}>{t('Alerting rules')}</Link>
         </Tab>
-        {areIncidentsActive && (
-          <Tab active={url === incidentsPath}>
-            <Link to={incidentsPath}>{t('Incidents')}</Link>
-          </Tab>
-        )}
       </ul>
       <Switch>
         <Route path={alertsPath} exact component={AlertsPage} />
         <Route path={rulesPath} exact component={AlertRulesPage} />
         <Route path={silencesPath} exact component={SilencesPage} />
-        <Route path={incidentsPath} exact component={incidentsPageWithFallback} />
-        {/* Mayyybbbeee need to add route for incidents */}
       </Switch>
     </>
   );
