@@ -9,6 +9,7 @@ import { ConsoleRemotePlugin } from '@openshift-console/dynamic-plugin-sdk-webpa
 interface Configuration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;
 }
+const isMCP = process.env.PLUGIN_NAME == 'monitoring-console-plugin';
 
 const config: Configuration = {
   mode: 'development',
@@ -16,7 +17,7 @@ const config: Configuration = {
   entry: {},
   context: path.resolve(__dirname, 'src'),
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, isMCP ? 'dist-mcp' : 'dist'),
     filename: '[name]-bundle.js',
     chunkFilename: '[name]-chunk.js',
   },
@@ -102,6 +103,7 @@ const config: Configuration = {
     new DefinePlugin({
       'process.env': {
         I18N_NAMESPACE: JSON.stringify('plugin__monitoring-plugin'),
+        PLUGIN_NAME: JSON.stringify('monitoring-plugin'),
       },
     }),
   ],

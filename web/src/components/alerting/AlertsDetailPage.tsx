@@ -80,6 +80,7 @@ import { useSilencesPoller } from '../hooks/useSilencesPoller';
 import { MonitoringState } from '../../reducers/observe';
 
 const AlertsDetailsPage_: React.FC<AlertsDetailsPageProps> = ({ history, match }) => {
+  // process.env.I18N_NAMESPACE plugin_monitoring-console-plugin or plugin_monitoring-plugin
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   const { alertsKey, alertingContextId, silencesKey, perspective } = usePerspective();

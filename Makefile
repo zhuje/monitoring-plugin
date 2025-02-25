@@ -77,6 +77,10 @@ deploy:
 deploy-acm:
 	./scripts/deploy-acm.sh
 
+.PHONY: deploy-incidents
+deploy-incidents:
+	./scripts/deploy-incidents.sh
+
 .PHONY: build-mcp-image
 build-mcp-image:
 	DOCKER_FILE_NAME="Dockerfile.mcp" scripts/build-image.sh
