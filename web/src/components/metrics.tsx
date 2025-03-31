@@ -472,17 +472,17 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     dispatch(queryBrowserDuplicateQuery(index));
   }, [dispatch, index]);
 
-  type Item = {
-    title?: {
-      props?: {
-        children?: any;
-      };
-    };
-  };
-  const isSpan = (item: any): item is Item => {
-    return !!item?.title?.props?.children;
-  };
-  const getSpanText = (item) => item.title.props.children;
+  // type Item = {
+  //   title?: {
+  //     props?: {
+  //       children?: any;
+  //     };
+  //   };
+  // };
+  // const isSpan = (item: any): item is Item => {
+  //   return !!item?.title?.props?.children;
+  // };
+  // const getSpanText = (item) => item.title.props.children;
 
   // Takes data from QueryTable and removes/replaces all html objects from columns and rows
   const convertQueryTable = () => {
@@ -491,6 +491,8 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       const csvColumnNames = columnNames.map((columnName) => {
         if (columnName?.csvTitle) {
           return columnName.csvTitle;
+        } else if (columnName?.title) {
+          return columnName.title;
         } else {
           return '';
         }
@@ -502,8 +504,17 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
       const csvRows = rows
         .map((row) => row.slice(1))
         .map((row) =>
-          row.map((rowItem) => {
-            return isSpan(rowItem) ? getSpanText(rowItem) : rowItem;
+          row.map((rowItem, i) => {
+            console.log('getRows()', i);
+            console.log(`${i} row`, row);
+            console.log(`${i} rowItem`, rowItem);
+            if (rowItem?.title) {
+              return null;
+            } else if (rowItem?.csvTitle) {
+              return rowItem.csvTitle;
+            } else {
+              return rowItem;
+            }
           }),
         );
       return csvRows;
@@ -733,6 +744,14 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
 
   const buttonCell = (labels) => ({ title: <SeriesButton index={index} labels={labels} /> });
 
+  /*
+    PromQL Dataresult types 
+    Scalar: A single numeric value.
+    String: A set of string values, typically for label values.
+    Matrix: A set of time series with multiple timestamped values (for a range of time).
+    Vector: A set of time series at a single point in time.
+  */
+
   let columns, rows;
   if (data.resultType === 'scalar') {
     columns = ['', { title: t('Value'), transforms }];
@@ -742,23 +761,23 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
     rows = [[result?.[1]]];
   } else {
     const allLabelKeys = _.uniq(_.flatMap(result, ({ metric }) => Object.keys(metric))).sort();
-
     const btnColumnPlaceholder = '';
-    const titleColumn: TitleColumn[] = allLabelKeys.map((k) => ({
+    const columnsTitle: TitleColumn[] = allLabelKeys.map((k) => ({
       title: <span>{k === '__name__' ? t('Name') : k}</span>,
       transforms,
       csvTitle: k === '__name__' ? t('Name') : k,
     }));
     const valueColumn: ValueColumn = { title: t('Value'), transforms, csvTitle: t('Value') };
+    columns = [btnColumnPlaceholder, ...columnsTitle, valueColumn];
+    console.log('0. Columns: ', columns);
 
-    columns = [btnColumnPlaceholder, ...titleColumn, valueColumn];
-
+    // HERE BE ROWS
     let rowMapper;
     if (data.resultType === 'matrix') {
-      rowMapper = ({ metric, values }) => [
-        '',
-        ..._.map(allLabelKeys, (k) => metric[k]),
-        {
+      rowMapper = ({ metric, values }) => {
+        const btn = ''; // formatting placeholder
+        const keys: string[] = _.map(allLabelKeys, (k) => metric[k]);
+        const val: ReactNode = {
           title: (
             <>
               {_.map(values, ([time, v]) => (
@@ -768,15 +787,30 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
               ))}
             </>
           ),
-        },
-      ];
+        };
+        const csvVal = {
+          csvTitle: _.map(values, ([time, v]) => `${v}@${time}`),
+        };
+        console.log('MAXTRIX', 'btn', btn, 'keys', keys, 'val', val, 'csvVal', csvVal);
+        return [btn, ...keys, val];
+      };
     } else {
-      rowMapper = ({ metric, value }) => [
-        buttonCell(metric),
-        ..._.map(allLabelKeys, (k) => metric[k]),
-        _.get(value, '[1]', { title: <span className="text-muted">{t('None')}</span> }),
-      ];
+      rowMapper = ({ metric, value }) => {
+        const btn: ReactNode = buttonCell(metric);
+        const keys: string[] = _.map(allLabelKeys, (k) => metric[k]);
+        const val: ReactNode = _.get(value, '[1]', {
+          title: <span className="text-muted">{t('None')}</span>,
+        });
+        const csvVal: string[] = _.get(value, '[1]', {
+          csvtitle: t('None'),
+        });
+        console.log('value: ', value);
+        console.log('btn', btn, 'keys', keys, 'val', val, 'csvVal', csvVal);
+        return [btn, ...keys, val];
+      };
     }
+
+    console.log('3. result: ', result);
 
     rows = _.map(result, rowMapper);
     if (sortBy) {
@@ -792,6 +826,8 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
       rows = _.orderBy(rows, [sort], [sortBy.direction]);
     }
   }
+
+  console.log('2. rows:  ', rows);
 
   // Dispatch query table result so QueryKebab can access it for data export
   dispatch(queryBrowserPatchQuery(index, { queryTableData: { columns, rows } }));
