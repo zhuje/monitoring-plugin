@@ -472,18 +472,6 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     dispatch(queryBrowserDuplicateQuery(index));
   }, [dispatch, index]);
 
-  // type Item = {
-  //   title?: {
-  //     props?: {
-  //       children?: any;
-  //     };
-  //   };
-  // };
-  // const isSpan = (item: any): item is Item => {
-  //   return !!item?.title?.props?.children;
-  // };
-  // const getSpanText = (item) => item.title.props.children;
-
   // Takes data from QueryTable and removes/replaces all html objects from columns and rows
   const convertQueryTable = () => {
     const getColumns = () => {
@@ -501,13 +489,14 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     };
     const getRows = () => {
       const rows = queryTableData.rows;
+      console.log('3. getRows()', rows);
       const csvRows = rows
         .map((row) => row.slice(1))
         .map((row) =>
           row.map((rowItem, i) => {
-            console.log('getRows()', i);
-            console.log(`${i} row`, row);
-            console.log(`${i} rowItem`, rowItem);
+            // console.log('getRows()', i);
+            // console.log(`${i} row`, row);
+            // console.log(`${i} rowItem`, rowItem);
             if (rowItem?.title) {
               return null;
             } else if (rowItem?.csvTitle) {
@@ -792,7 +781,7 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
           csvTitle: _.map(values, ([time, v]) => `${v}@${time}`),
         };
         console.log('MAXTRIX', 'btn', btn, 'keys', keys, 'val', val, 'csvVal', csvVal);
-        return [btn, ...keys, val];
+        return [btn, ...keys, val, csvVal];
       };
     } else {
       rowMapper = ({ metric, value }) => {
@@ -806,7 +795,7 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
         });
         console.log('value: ', value);
         console.log('btn', btn, 'keys', keys, 'val', val, 'csvVal', csvVal);
-        return [btn, ...keys, val];
+        return [btn, ...keys, val, csvVal];
       };
     }
 
