@@ -96,7 +96,8 @@ const SilencesPage_: React.FC = () => {
     },
   ];
 
-  if (perspective === 'acm') {
+  // JZ: TESTING ONLY; REVERT
+  if (true) {
     rowFilters.splice(-1, 0, {
       type: 'silence-cluster',
       filter: (filter, silence: Silence) =>
@@ -167,7 +168,8 @@ const SilencesPage_: React.FC = () => {
       },
     ];
 
-    if (perspective === 'acm') {
+    // JZ: TESTING ONLY; REVERT
+    if (true) {
       cols.splice(-1, 0, {
         id: 'cluster',
         props: { className: tableSilenceClasses[5] },

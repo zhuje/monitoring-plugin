@@ -2,8 +2,8 @@
 .DS_Store
 web/cypress/screenshots/
 web/cypress/videos/
-web/dist/
-web/node_modules/
+# web/dist/
+# web/node_modules/
 plugin-backend
 # adding these while the PR is in review. This should be removed after
 node_modules/

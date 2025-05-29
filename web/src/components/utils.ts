@@ -83,7 +83,9 @@ export const getAlertsAndRules = (
   if (perspective !== 'dev') {
     // Add external labels to all `rules[].alerts[].labels`
     rules.forEach((rule) => {
-      rule.alerts.forEach((alert) => (alert.labels = { ...rule.labels, ...alert.labels }));
+      rule.alerts.forEach(
+        (alert) => (alert.labels = { ...rule.labels, ...alert.labels, cluster: rule.name }),
+      );
     });
   }
 

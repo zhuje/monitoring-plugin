@@ -127,7 +127,8 @@ const AlertTableRow: React.FC<{ alert: Alert }> = ({ alert }) => {
       <Td className={tableAlertClasses[4]} title={title}>
         {alertSource(alert) === AlertSource.User ? t('User') : t('Platform')}
       </Td>
-      {perspective === 'acm' && (
+      {/* JZ TESTING ONLY; REVERT */}
+      {true && (
         <Td className={tableAlertClasses[5]} title={title}>
           {alert.labels?.cluster}
         </Td>

@@ -7,14 +7,14 @@ USER 0
 ENV HUSKY=0
 COPY web/package*.json web/
 COPY Makefile Makefile
-RUN make install-frontend-ci
+# RUN make install-frontend-ci
 
 COPY web/ web/
 COPY config/ config/
 COPY scripts/update-plugin-name.sh scripts/update-plugin-name.sh
 RUN make update-plugin-name
 ENV I18N_NAMESPACE="plugin__monitoring-console-plugin"
-RUN make build-frontend
+# RUN make build-frontend
 
 FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:rhel_9_1.22 as go-builder
 

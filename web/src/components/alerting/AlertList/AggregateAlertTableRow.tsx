@@ -26,7 +26,11 @@ const AggregateAlertTableRow: AggregateAlertTableRowProps = ({
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { perspective } = usePerspective();
   const title = aggregatedAlert.name;
-  const isACMPerspective = perspective === 'acm';
+
+  // JZ: For testing only!
+  // const isACMPerspective = perspective === 'acm';
+  const isACMPerspective = true;
+
   const [namespace] = useActiveNamespace();
 
   const filteredAlerts = useMemo(

@@ -134,7 +134,8 @@ const AlertsPage_: React.FC = () => {
 
   if (perspective === 'dev') {
     rowFilters = rowFilters.filter((filter) => filter.type !== 'alert-source');
-  } else if (perspective === 'acm') {
+    // JZ TESTING ONLY; REVERT
+  } else {
     rowFilters.splice(-1, 0, {
       filter: (filter, alert: Alert) => {
         return (
