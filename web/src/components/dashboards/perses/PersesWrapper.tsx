@@ -134,6 +134,10 @@ function InnerWrapper({ children, project, dashboardName }) {
   const persesTimeRange = usePersesTimeRange();
   const persesRefrshInterval = usePersesRefreshInterval();
 
+  console.log({ persesDashboard });
+  console.log({ persesTimeRange });
+  console.log({ persesRefrshInterval });
+
   const builtinVariables = useMemo(() => {
     const result = [
       {
