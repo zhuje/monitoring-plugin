@@ -19,6 +19,8 @@ import {
   StackItem,
   Title,
 } from '@patternfly/react-core';
+import { TimeRangeControls } from '@perses-dev/plugin-system';
+import './dashboard-skeleton.scss';
 
 const HeaderTop: React.FC = React.memo(() => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -30,6 +32,11 @@ const HeaderTop: React.FC = React.memo(() => {
       </SplitItem>
       <SplitItem>
         <Split hasGutter isWrappable>
+          <SplitItem>
+            Perses Time Range Controls
+            <TimeRangeControls />
+          </SplitItem>
+          <SplitItem isFilled></SplitItem>
           <SplitItem>
             <TimespanDropdown />
           </SplitItem>

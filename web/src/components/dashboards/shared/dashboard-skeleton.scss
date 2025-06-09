@@ -1,0 +1,21 @@
+// .round {
+//     border-radius: 6px; /* or any value like 10px, 1rem, etc. */
+//     overflow: hidden;   /* optional, if you want to clip child content */
+//   }
+
+  /* Contains substring */
+div[aria-label*="Select time range"] {
+    border-radius: 6px; /* or any value like 10px, 1rem, etc. */
+    overflow: hidden;   /* optional, if you want to clip child content */
+  }
+
+div[aria-label^="Select refresh interval"] {
+    border-radius: 6px; /* or any value like 10px, 1rem, etc. */
+    overflow: hidden;   /* optional, if you want to clip child content */
+}
+
+
+  button[aria-label="Refresh"]:hover {
+    border-radius: 6px; /* or any value like 10px, 1rem, etc. */
+    overflow: hidden;   /* optional, if you want to clip child content */
+  }

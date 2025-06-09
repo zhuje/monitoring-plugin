@@ -42,6 +42,8 @@ export const fetchPersesDashboard = async (
 export const useFetchPersesDashboard = (project: string, dashboardName: string) => {
   const [refreshInterval] = useQueryParam(QueryParams.RefreshInterval, NumberParam);
 
+  console.log('!!!!!', { refreshInterval });
+
   const {
     isLoading: persesDashboardLoading,
     error: persesDashboardError,
