@@ -87,9 +87,11 @@ export function PersesWrapper({ children, project }: PersesWrapperProps) {
       fontFamily: 'var(--pf-t--global--font--family--body)',
     },
     shape: {
-      borderRadius: 0,
+      borderRadius: 6,
     },
   });
+
+  // BORDER RADIUS
 
   const chartsTheme: PersesChartsTheme = generateChartsTheme(muiTheme, {
     echartsTheme: {
