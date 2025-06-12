@@ -10,7 +10,6 @@ import { PollIntervalDropdown, TimespanDropdown } from './time-dropdowns';
 import { CombinedDashboardMetadata } from '../perses/hooks/useDashboardsData';
 import { AllVariableDropdowns } from '../perses/variable-dropdowns';
 import { useIsPerses } from './useIsPerses';
-<<<<<<< Updated upstream
 import {
   Divider,
   PageSection,
@@ -20,9 +19,6 @@ import {
   StackItem,
   Title,
 } from '@patternfly/react-core';
-=======
-import { Divider, PageSection, Split, SplitItem, Title } from '@patternfly/react-core';
->>>>>>> Stashed changes
 import { TimeRangeControls } from '@perses-dev/plugin-system';
 import './dashboard-skeleton.scss';
 
@@ -37,16 +33,9 @@ const HeaderTop: React.FC = React.memo(() => {
       <SplitItem>
         <Split hasGutter isWrappable>
           <SplitItem>
-<<<<<<< Updated upstream
-            Perses Time Range Controls
+            <b> Time Range Controls </b>
             <TimeRangeControls />
           </SplitItem>
-          <SplitItem isFilled></SplitItem>
-=======
-            <b> Perses TimeRangeControls</b>
-            <TimeRangeControls />
-          </SplitItem>
->>>>>>> Stashed changes
           <SplitItem>
             <TimespanDropdown />
           </SplitItem>
