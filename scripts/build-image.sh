@@ -7,6 +7,7 @@ PUSH="${PUSH:-0}"
 TAG="${TAG:-v1.0.0}"
 REGISTRY_ORG="${REGISTRY_ORG:-openshift-observability-ui}"
 DOCKER_FILE_NAME="${DOCKER_FILE_NAME:-Dockerfile.dev}"
+PROJECT_NAME="${DOCKER_FILE_NAME:-Dockerfile.dev}"
 
 # Terminal output colors
 YELLOW='\033[0;33m'
@@ -30,7 +31,7 @@ else
     OCI_BIN="docker"
 fi
 
-BASE_IMAGE="quay.io/${REGISTRY_ORG}/monitoring-plugin"
+BASE_IMAGE="quay.io/${REGISTRY_ORG}/monitoring-console-plugin"
 IMAGE=${BASE_IMAGE}:${TAG}
 
 make lint-backend
@@ -42,11 +43,10 @@ if [[ $PUSH == 1 ]]; then
     $OCI_BIN push $IMAGE
 fi
 
-
 # Rollback local changes made
 if [[ "$OSTYPE" == "darwin"* ]] && [[ "$DOCKER_FILE_NAME" == "Dockerfile.mcp" ]]; then
     printf "${YELLOW}Replacing in package.json and values.yaml${ENDCOLOR}\n"
-    sed -i 's/"name": "monitoring-console-plugin",/"name": "monitoring-plugin",/g' web/package.json
+    sed -i '' 's/"name": "monitoring-console-plugin",/"name": "monitoring-plugin",/g' web/package.json
     printf "${YELLOW}Renaming translations to the original plugin name${ENDCOLOR}\n"
     cd web/locales/ && for dir in *; do if cd $dir; then  for filename in *; do mv plugin__monitoring-console-plugin.json plugin__monitoring-plugin.json; done; cd ..; fi; done
 fi
