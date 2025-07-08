@@ -113,16 +113,22 @@ import { ReactNode } from 'react';
 // Stores information about the currently focused query input
 let focusedQuery;
 
-type TitleColumn = {
-  title: ReactNode; // <span> {Title} </span>
-  transforms: (typeof sortable | typeof wrappable)[];
-  csvTitle: string; // string of Title
-};
-
-type ValueColumn = {
-  title: string;
+type TableColumn = {
+  title: ReactNode | string;
   transforms: (typeof sortable | typeof wrappable)[];
   csvTitle: string;
+};
+
+// The '' is a placehold for a button;
+type QueryTableColumn = '' | TableColumn;
+
+// A single row is an array of cells
+// Each cell can be either an object with a React title, or a primitive (string, number, etc.)
+type QueryTableRow = ({ title: ReactNode } | string | number | boolean | null)[];
+
+type QueryTableData = {
+  columns: QueryTableColumn[];
+  rows: QueryTableRow[];
 };
 
 const predefinedQueriesAdmin: SelectOptionProps[] = [
@@ -429,7 +435,7 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
     getLegacyObserveState(perspective, state)?.getIn(['queryBrowser', 'queries', index, 'query']),
   );
 
-  const queryTableData = useSelector((state: MonitoringState) =>
+  const queryTableData: QueryTableData = useSelector((state: MonitoringState) =>
     getLegacyObserveState(perspective, state)?.getIn([
       'queryBrowser',
       'queries',
@@ -471,18 +477,23 @@ const QueryKebab: React.FC<{ index: number }> = ({ index }) => {
   };
   const getSpanText = (item) => item.title.props.children;
 
+  const isColumnObject = (col: QueryTableColumn): col is TableColumn => {
+    return typeof col === 'object' && col !== null && 'csvTitle' in col;
+  };
+
   // Takes data from QueryTable and removes/replaces all html objects from columns and rows
   const convertQueryTable = () => {
     const getColumns = () => {
-      const columnNames = queryTableData.columns.slice(1);
-      const csvColumnNames = columnNames.map((columnName) => {
-        if (columnName?.csvTitle) {
-          return columnName.csvTitle;
+      // skip columns[0] because this is a placeholder for a button
+      const cols = queryTableData.columns.slice(1);
+      const colCsvTitle = cols.map((col) => {
+        if (isColumnObject(col)) {
+          return col.csvTitle;
         } else {
           return '';
         }
       });
-      return csvColumnNames;
+      return colCsvTitle;
     };
     const getRows = () => {
       const rows = queryTableData.rows;
@@ -723,14 +734,14 @@ export const QueryTable: React.FC<QueryTableProps> = ({ index, namespace, custom
     const allLabelKeys = _.uniq(_.flatMap(result, ({ metric }) => Object.keys(metric))).sort();
 
     const btnColumnPlaceholder = '';
-    const titleColumn: TitleColumn[] = allLabelKeys.map((k) => ({
+    const columnsTitle: QueryTableColumn[] = allLabelKeys.map((k) => ({
       title: <span>{k === '__name__' ? t('Name') : k}</span>,
       transforms,
       csvTitle: k === '__name__' ? t('Name') : k,
     }));
-    const valueColumn: ValueColumn = { title: t('Value'), transforms, csvTitle: t('Value') };
+    const columnsValue: QueryTableColumn = { title: t('Value'), transforms, csvTitle: t('Value') };
 
-    columns = [btnColumnPlaceholder, ...titleColumn, valueColumn];
+    columns = [btnColumnPlaceholder, ...columnsTitle, columnsValue];
 
     let rowMapper;
     if (data.resultType === 'matrix') {
