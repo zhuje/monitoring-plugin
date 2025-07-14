@@ -10,7 +10,7 @@
       "href": "/monitoring/alerts",
       "perspective": "admin",
       "section": "observe",
-      "startsWith": ["monitoring/alertrules", "monitoring/silences"]
+      "startsWith": ["monitoring/alertrules", "monitoring/silences", "monitoring/incidents"]
     }
   },
   {
@@ -39,7 +39,7 @@
       "href": "/virt-monitoring/alerts",
       "perspective": "virtualization-perspective",
       "section": "observe-virt-perspective",
-      "startsWith": ["virt-monitoring/alertrules", "virt-monitoring/silences"]
+      "startsWith": ["virt-monitoring/alertrules", "virt-monitoring/silences", "virt-monitoring/incidents"]
     }
   },
   {
@@ -181,7 +181,7 @@
     "type": "console.page/route",
     "properties": {
       "exact": false,
-      "path": ["/monitoring/alerts", "/monitoring/silences", "/monitoring/alertrules"],
+      "path": ["/monitoring/alerts", "/monitoring/silences", "/monitoring/alertrules", "/monitoring/incidents" ],
       "component": { "$codeRef": "AlertingPage" }
     }
   },
@@ -264,7 +264,8 @@
       "path": [
         "/virt-monitoring/alerts",
         "/virt-monitoring/silences",
-        "/virt-monitoring/alertrules"
+        "/virt-monitoring/alertrules",
+        "/virt-monitoring/incidents"
       ],
       "component": { "$codeRef": "AlertingPage" }
     }

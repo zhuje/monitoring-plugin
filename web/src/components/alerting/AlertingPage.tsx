@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
 import {
   getAlertRulesUrl,
   getAlertsUrl,
+  getIncidentsUrl,
   getSilencesUrl,
   usePerspective,
 } from '../hooks/usePerspective';
@@ -26,6 +27,9 @@ const SilencesPage = React.lazy(
 const AlertRulesPage = React.lazy(
   () => import(/* webpackChunkName: "AlertRulesPage" */ '../alerting/AlertRulesPage'),
 );
+const IncidentsPage = React.lazy(
+  () => import(/* webpackChunkName: "IncidentsPage" */ '../Incidents/IncidentsPage.jsx'),
+);
 
 const AlertingPage: React.FC = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -36,7 +40,10 @@ const AlertingPage: React.FC = () => {
   const alertsPath = getAlertsUrl(perspective);
   const silencesPath = getSilencesUrl(perspective);
   const rulesPath = getAlertRulesUrl(perspective);
-  const paths = [alertsPath, silencesPath, rulesPath];
+  const incidentsPath = getIncidentsUrl(perspective);
+  const paths = [alertsPath, silencesPath, rulesPath, incidentsPath];
+
+  console.log('JZ PATHS!', { alertsPath, silencesPath, rulesPath, incidentsPath });
 
   const activeTabKey = React.useMemo(() => {
     const path = location.pathname;
@@ -49,8 +56,11 @@ const AlertingPage: React.FC = () => {
     if (path === rulesPath) {
       return 2;
     }
+    if (path === incidentsPath) {
+      return 3;
+    }
     return -1;
-  }, [location.pathname, alertsPath, silencesPath, rulesPath]);
+  }, [location.pathname, alertsPath, silencesPath, rulesPath, incidentsPath]);
 
   const handleTabClick = (
     event: React.MouseEvent<any> | React.KeyboardEvent | MouseEvent,
@@ -74,6 +84,7 @@ const AlertingPage: React.FC = () => {
           <Tab eventKey={0} title={<TabTitleText>{t('Alerts')}</TabTitleText>} />
           <Tab eventKey={1} title={<TabTitleText>{t('Silences')}</TabTitleText>} />
           <Tab eventKey={2} title={<TabTitleText>{t('Alerting rules')}</TabTitleText>} />
+          <Tab eventKey={3} title={<TabTitleText>{t('Incidents')}</TabTitleText>} />
         </Tabs>
       </PageSection>
 
@@ -110,6 +121,18 @@ const AlertingPage: React.FC = () => {
       >
         <TabContentBody>
           <AlertRulesPage />
+        </TabContentBody>
+      </TabContent>
+
+      <TabContent
+        key={3}
+        eventKey={3}
+        id="incidents-content"
+        activeKey={activeTabKey}
+        hidden={3 !== activeTabKey}
+      >
+        <TabContentBody>
+          <IncidentsPage />
         </TabContentBody>
       </TabContent>
     </>

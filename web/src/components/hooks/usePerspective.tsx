@@ -2,7 +2,13 @@ import { PrometheusAlert, Rule, useActivePerspective } from '@openshift-console/
 import { Perspective, rulesKey, alertKey, silencesKey } from '../../actions/observe';
 import { AlertSource } from '../types';
 import * as _ from 'lodash-es';
-import { AlertResource, labelsToParams, RuleResource, SilenceResource } from '../utils';
+import {
+  AlertResource,
+  IncidentResource,
+  labelsToParams,
+  RuleResource,
+  SilenceResource,
+} from '../utils';
 import {
   ALERTMANAGER_BASE_PATH,
   ALERTMANAGER_PROXY_PATH,
@@ -146,6 +152,20 @@ export const getSilencesUrl = (perspective: Perspective, namespace?: string) => 
     case 'dev':
     default:
       return `/dev-monitoring/ns/${namespace}/silences`;
+  }
+};
+
+export const getIncidentsUrl = (perspective: Perspective, namespace?: string) => {
+  switch (perspective) {
+    case 'acm':
+      return `/multicloud${IncidentResource.plural}`;
+    case 'admin':
+      return IncidentResource.plural;
+    case 'virtualization-perspective':
+      return `/virt-monitoring/incidents`;
+    case 'dev':
+    default:
+      return `/dev-monitoring/ns/${namespace}/incidents`;
   }
 };
 

@@ -22,7 +22,8 @@
         "path": [
           "/multicloud/monitoring/alerts",
           "/multicloud/monitoring/silences",
-          "/multicloud/monitoring/alertrules"
+          "/multicloud/monitoring/alertrules",
+          "/multicloud/monitoring/incidents"
         ],
         "component": { "$codeRef": "AlertingPage" }
       }
@@ -98,7 +99,8 @@
         "path": [
           "/multicloud/monitoring/alerts",
           "/multicloud/monitoring/silences",
-          "/multicloud/monitoring/alertrules"
+          "/multicloud/monitoring/alertrules",
+          "/multicloud/monitoring/incidents"
         ],
         "component": { "$codeRef": "AlertingPage" }
       }
@@ -117,7 +119,8 @@
         "section": "acm-observe",
         "startsWith": [
           "multicloud/monitoring/alertrules",
-          "multicloud/monitoring/silences"
+          "multicloud/monitoring/silences",
+          "multicloud/monitoring/incidents"
         ]
       }
     }

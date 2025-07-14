@@ -49,6 +49,13 @@ export const SilenceResource: MonitoringResource = {
   abbr: 'SL',
 };
 
+export const IncidentResource: MonitoringResource = {
+  kind: 'Incident',
+  label: 'Incident',
+  plural: '/monitoring/incidents',
+  abbr: 'IN',
+};
+
 export const fuzzyCaseInsensitive = (a: string, b: string): boolean =>
   fuzzy(_.toLower(a), _.toLower(b));
 

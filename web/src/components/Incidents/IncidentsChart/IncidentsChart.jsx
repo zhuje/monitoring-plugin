@@ -18,7 +18,6 @@ import {
   generateDateArray,
   updateBrowserUrl,
 } from '../utils';
-import { getResizeObserver } from '@patternfly/react-core';
 import { useDispatch, useSelector } from 'react-redux';
 import { setChooseIncident } from '../../../actions/observe';
 import {
@@ -27,6 +26,25 @@ import {
   t_global_color_status_warning_default,
 } from '@patternfly/react-tokens';
 import { setAlertsAreLoading } from '../../../actions/observe';
+
+const useResizeObserver = (ref, callback) => {
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        callback();
+      });
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [ref, callback]);
+};
 
 const IncidentsChart = ({ incidentsData, chartDays, theme }) => {
   const dispatch = useDispatch();
@@ -52,16 +70,17 @@ const IncidentsChart = ({ incidentsData, chartDays, theme }) => {
   const [width, setWidth] = React.useState(0);
   const containerRef = React.useRef(null);
 
-  const handleResize = () => {
-    if (containerRef.current && containerRef.current.clientWidth) {
+  const handleResize = React.useCallback(() => {
+    if (containerRef.current) {
       setWidth(containerRef.current.clientWidth);
     }
-  };
-  React.useEffect(() => {
-    const observer = getResizeObserver(containerRef.current, handleResize);
-    handleResize();
-    return () => observer();
   }, []);
+
+  useResizeObserver(containerRef, handleResize);
+
+  React.useEffect(() => {
+    handleResize();
+  }, [handleResize]);
 
   const selectedId = useSelector((state) => state.plugins.mcp.getIn(['incidentsData', 'groupId']));
   const incidentsActiveFilters = useSelector((state) =>

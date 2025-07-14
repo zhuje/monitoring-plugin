@@ -281,9 +281,7 @@ const IncidentsPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{title}</title>
-      </Helmet>
+      <Helmet>{perspective === 'dev' ? <title>Incidents</title> : <title>Alerting</title>}</Helmet>
       <PageSection hasBodyWrapper={false}>
         <Title headingLevel="h1">{t('Incidents')}</Title>
       </PageSection>
