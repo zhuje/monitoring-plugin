@@ -17,6 +17,7 @@ import {
   getSilencesUrl,
   usePerspective,
 } from '../hooks/usePerspective';
+import { useFeatures } from '../hooks/useFeatures';
 
 const AlertsPage = React.lazy(
   () => import(/* webpackChunkName: "AlertsPage" */ '../alerting/AlertsPage'),
@@ -43,7 +44,7 @@ const AlertingPage: React.FC = () => {
   const incidentsPath = getIncidentsUrl(perspective);
   const paths = [alertsPath, silencesPath, rulesPath, incidentsPath];
 
-  console.log('JZ PATHS!', { alertsPath, silencesPath, rulesPath, incidentsPath });
+  const { areIncidentsActive } = useFeatures();
 
   const activeTabKey = React.useMemo(() => {
     const path = location.pathname;
@@ -84,7 +85,9 @@ const AlertingPage: React.FC = () => {
           <Tab eventKey={0} title={<TabTitleText>{t('Alerts')}</TabTitleText>} />
           <Tab eventKey={1} title={<TabTitleText>{t('Silences')}</TabTitleText>} />
           <Tab eventKey={2} title={<TabTitleText>{t('Alerting rules')}</TabTitleText>} />
-          <Tab eventKey={3} title={<TabTitleText>{t('Incidents')}</TabTitleText>} />
+          {areIncidentsActive && (
+            <Tab eventKey={3} title={<TabTitleText>{t('Incidents')}</TabTitleText>} />
+          )}
         </Tabs>
       </PageSection>
 
@@ -124,17 +127,19 @@ const AlertingPage: React.FC = () => {
         </TabContentBody>
       </TabContent>
 
-      <TabContent
-        key={3}
-        eventKey={3}
-        id="incidents-content"
-        activeKey={activeTabKey}
-        hidden={3 !== activeTabKey}
-      >
-        <TabContentBody>
-          <IncidentsPage />
-        </TabContentBody>
-      </TabContent>
+      {areIncidentsActive && (
+        <TabContent
+          key={3}
+          eventKey={3}
+          id="incidents-content"
+          activeKey={activeTabKey}
+          hidden={3 !== activeTabKey}
+        >
+          <TabContentBody>
+            <IncidentsPage />
+          </TabContentBody>
+        </TabContent>
+      )}
     </>
   );
 };
