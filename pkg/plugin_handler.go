@@ -45,6 +45,9 @@ func patchManifest(baseManifestData []byte, cfg *Config) []byte {
 	}
 
 	for feature := range cfg.Features {
+		if feature == "incidents" {
+			continue
+		}
 		patchedManifest = performPatch(patchedManifest, filepath.Join(cfg.ConfigPath, fmt.Sprintf("%s.patch.json", feature)))
 	}
 
