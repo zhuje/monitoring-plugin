@@ -83,7 +83,7 @@ build-mcp-image:
 
 .PHONY: build-dev-mcp-image
 build-dev-mcp-image:
-	DOCKER_FILE_NAME="Dockerfile.dev-mcp" scripts/build-image.sh
+	DOCKER_FILE_NAME="Dockerfile.dev-mcp" REGISTRY="monitoring-console-plugin" scripts/build-image.sh
 
 .PHONY: start-feature-console
 start-feature-console:

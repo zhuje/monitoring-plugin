@@ -7,6 +7,7 @@ PUSH="${PUSH:-0}"
 TAG="${TAG:-v1.0.0}"
 REGISTRY_ORG="${REGISTRY_ORG:-openshift-observability-ui}"
 DOCKER_FILE_NAME="${DOCKER_FILE_NAME:-Dockerfile.dev}"
+REGISTRY="${REGISTRY:-monitoring-plugin}"
 
 # Terminal output colors
 YELLOW='\033[0;33m'
@@ -15,17 +16,17 @@ RED='\033[0;31m'
 
 
 # due to apple silicon limitation with installing npm packages inside amd64 images, builds of the frontend must be done outside the dockerfile.
-if [[ "$OSTYPE" == "darwin"* ]] && [[ "$DOCKER_FILE_NAME" == "Dockerfile.mcp" ]]; then
-    printf "${YELLOW}Updateing plugin-name ${ENDCOLOR}\n"
-    make update-plugin-name
-    export I18N_NAMESPACE='plugin__monitoring-console-plugin'
+# if [[ "$OSTYPE" == "darwin"* ]] && [[ "$DOCKER_FILE_NAME" == "Dockerfile.mcp" ]]; then
+#     printf "${YELLOW}Updateing plugin-name ${ENDCOLOR}\n"
+#     make update-plugin-name
+#     export I18N_NAMESPACE='plugin__monitoring-console-plugin'
 
-    printf "${YELLOW}Installing Frontend${ENDCOLOR}\n"
-    make install-frontend
+#     printf "${YELLOW}Installing Frontend${ENDCOLOR}\n"
+#     make install-frontend
 
-    printf "${YELLOW}Building Frontend${ENDCOLOR}\n"
-    make build-frontend
-fi
+#     printf "${YELLOW}Building Frontend${ENDCOLOR}\n"
+#     make build-frontend
+# fi
 
 if [[ -x "$(command -v podman)" && $PREFER_PODMAN == 1 ]]; then
     OCI_BIN="podman"
@@ -33,7 +34,7 @@ else
     OCI_BIN="docker"
 fi
 
-BASE_IMAGE="quay.io/${REGISTRY_ORG}/monitoring-plugin"
+BASE_IMAGE="quay.io/${REGISTRY_ORG}/${REGISTRY}"
 IMAGE=${BASE_IMAGE}:${TAG}
 
 make lint-backend
@@ -46,10 +47,10 @@ if [[ $PUSH == 1 ]]; then
 fi
 
 
-# Rollback local changes made
-if [[ "$OSTYPE" == "darwin"* ]] && [[ "$DOCKER_FILE_NAME" == "Dockerfile.mcp" ]]; then
-    printf "${YELLOW}Replacing in package.json and values.yaml${ENDCOLOR}\n"
-    sed -i 's/"name": "monitoring-console-plugin",/"name": "monitoring-plugin",/g' web/package.json
-    printf "${YELLOW}Renaming translations to the original plugin name${ENDCOLOR}\n"
-    cd web/locales/ && for dir in *; do if cd $dir; then  for filename in *; do mv plugin__monitoring-console-plugin.json plugin__monitoring-plugin.json; done; cd ..; fi; done
-fi
+# # Rollback local changes made
+# if [[ "$OSTYPE" == "darwin"* ]] && [[ "$DOCKER_FILE_NAME" == "Dockerfile.mcp" ]]; then
+#     printf "${YELLOW}Replacing in package.json and values.yaml${ENDCOLOR}\n"
+#     sed -i 's/"name": "monitoring-console-plugin",/"name": "monitoring-plugin",/g' web/package.json
+#     printf "${YELLOW}Renaming translations to the original plugin name${ENDCOLOR}\n"
+#     cd web/locales/ && for dir in *; do if cd $dir; then  for filename in *; do mv plugin__monitoring-console-plugin.json plugin__monitoring-plugin.json; done; cd ..; fi; done
+# fi
