@@ -405,7 +405,8 @@ const PanelsRow: FC<PanelsRowProps> = ({ row, perspective }) => {
 export const LegacyDashboard: FC<BoardProps> = ({ rows, perspective }) => (
   <Flex direction={{ default: 'column' }}>
     {_.map(rows, (row) => (
-      <FlexItem>
+      <FlexItem key={_.map(row.panels, 'id').join('-FlexItem')}>
+        <h1> With Key </h1>
         <PanelsRow key={_.map(row.panels, 'id').join()} row={row} perspective={perspective} />
       </FlexItem>
     ))}

@@ -26,10 +26,14 @@ import { useNavigate } from 'react-router-dom-v5-compat';
 import { Map as ImmutableMap } from 'immutable';
 import { QueryParams } from '../../query-params';
 import { NumberParam, StringParam, useQueryParam } from 'use-query-params';
+import { mockUseFetchDashboards } from './mock-monitoring-dashboard-config-response';
 
 export const useLegacyDashboards = (namespace: string, urlBoard: string) => {
   const { t } = useTranslation('plugin__monitoring-plugin');
   const { perspective } = usePerspective();
+
+  const [mockBoards, mockError] = mockUseFetchDashboards(namespace);
+  console.log({ mockBoards });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const safeFetch = useCallback(useSafeFetch(), []);
@@ -49,45 +53,15 @@ export const useLegacyDashboards = (namespace: string, urlBoard: string) => {
   }, [perspective, dashboardParam, urlBoard]);
 
   useEffect(() => {
-    safeFetch<any>('/api/console/monitoring-dashboard-config')
-      .then((response) => {
-        setLegacyDashboardsLoaded();
-        setLegacyDashboardsError(undefined);
-        let items = response.items;
-        if (namespace) {
-          items = _.filter(
-            items,
-            (item) => item.metadata?.labels['console.openshift.io/odc-dashboard'] === 'true',
-          );
-        }
-        const getBoardData = (item): Board => {
-          try {
-            return {
-              data: JSON.parse(_.values(item.data)[0]),
-              name: item.metadata.name,
-            };
-          } catch {
-            setLegacyDashboardsError(
-              t('Could not parse JSON data for dashboard "{{dashboard}}"', {
-                dashboard: item.metadata.name,
-              }),
-            );
-            return { data: undefined, name: item?.metadata?.name };
-          }
-        };
-        const newBoards = _.sortBy(_.map(items, getBoardData), (v) => _.toLower(v?.data?.title));
-        setLegacyDashboards(newBoards);
-      })
-      .catch((err) => {
-        setLegacyDashboardsLoaded();
-        if (err.name !== 'AbortError') {
-          setLegacyDashboardsError(_.get(err, 'json.error', err.message));
-        }
-      });
+    setLegacyDashboards(mockBoards);
+    setLegacyDashboardsLoaded();
+    setLegacyDashboardsError(mockError);
   }, [namespace, safeFetch, setLegacyDashboardsLoaded, t]);
 
   const legacyRows = useMemo(() => {
+    console.log('legacyRows');
     const data = _.find(legacyDashboards, { name: legacyDashboard })?.data;
+    console.log({ data });
 
     return data?.rows?.length
       ? data.rows

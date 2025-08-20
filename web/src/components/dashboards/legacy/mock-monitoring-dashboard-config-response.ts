@@ -1138,7 +1138,7 @@ export const mockUseFetchDashboards = (namespace: string): [Board[], string] => 
         data: JSON.parse(_.values(item.data)[0]),
         name: item.metadata.name,
       };
-    } catch (e) {
+    } catch {
       error = `Could not parse JSON data for dashboard ${item.metadata.name}`;
       return { data: undefined, name: item?.metadata?.name };
     }
