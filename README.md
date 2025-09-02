@@ -157,18 +157,59 @@ $ make start-feature-backend
 `make start-feature-backend` will inject the `perses-dashboards`, `incidents`, and `dev-config` features by default. Features such as `acm-alerting` which take in extra parameters will need to run the `make start-feature-backend` command with the appropriate environment variables, such as `MONITORING_PLUGIN_ALERTMANAGER`.
 
 #### Local Development with Perses Proxy 
-The bridge script `start-console.sh` is configured to proxy to a local Perses instance running at port `:8080`. To run the local Perses instance you will need to clone the [perses/perses](https://github.com/perses/perses) repository and follow the start up instructions in [ui/README.md](https://github.com/perses/perses/blob/63601751674403f626d1dea3dec168bdad0ef1c7/ui/README.md) :
+The bridge script `start-console.sh` is configured to proxy to a local Perses instance running at port `:8080`. To run the local Perses instance you will need to clone the [perses/perses](https://github.com/perses/perses) repository and follow the start up instructions in [README.md](https://github.com/perses/perses?tab=readme-ov-file#building-from-source) :
 
+##### Building From Source 
 ```
 # Clone the perses/perses repo 
 $ git clone https://github.com/perses/perses.git
 $ cd perses
 
-# Follow the instructions in ui/README.md
-$ cd ui 
-$ npm install 
-$ npm run build
-$ ./scripts/api_backend_dev.sh
+# Build from source 
+$ make build
 
-# Lastly navigate to http://localhost:8080/ to see Perses app running 
+# Lastly navigate to http://localhost:8080/ to see Perses app running
 ```
+You can edit/create dashboards in the Perses UI at `http://localhost:8080/`  and view the changes after reloading monitoring-plugin pages in `http://localhost:9000/`.
+
+##### [Optional Configuration] Connecting Perses to Promethues Instance via OpenShift
+To use the OpenShift instance of Prometheus follow these instructions:
+
+```
+# Login to an OpenShift cluster
+$ oc login <clusterAddress> -u <username> -p <password>
+
+# Port forward Prometheus Operated to localhost at port 9090
+$ oc port-forward -n openshift-monitoring service/prometheus-operated 9090:9090
+
+# Test the connection to the Promtheus API
+$ curl "http://localhost:9090/api/v1/query?query=up"     
+```
+
+Then you must update datasource configurations to point to `http://localhost:9090`, see instructions [here](#datasource-configuration).
+
+##### [Optional Configuration] Connecting Perses to Promethues Instance via Docker Image 
+
+Navigate to the root of perses/perses and run the [docker-comspose.yaml](https://github.com/perses/perses/blob/main/dev/docker-compose.yaml
+) file. 
+
+```
+docker-compose --file dev/docker-compose.yaml --profile prometheus --profile tempo up --detach
+```
+
+Then you must update datasource configurations to point to `http://localhost:9090`, see instructions [here](#datasource-configuration).
+
+##### Datasource Configuration
+By default Perses is setup to use as the global datasource for Prometheus `demo.prometheus.io` ([github](https://github.com/prometheus/demo-site)).
+
+You can update Perses datasource configuration to point to `http://localhost:9090` after port-forwarding a Promethus instance, see `Connecting Perses to Promethues Instance via OpenShift` or `Connecting Perses to Promethues Instance via Docker Image`.
+
+Then, in Perses UI change the Perses > Admin > Global Datasource > select `prometehuslocal` > Edit > `Set as default`. This will allow the proxy to `http://localhost:9090` to used as the default datasource. 
+
+Additional you may need to set a Project datasource configuration proxy to `http://localhost:9090` as your Datasource within your Project. Select your project > `Datasources` tab > `Add Datasource` > Create Datasource Form. In this form enter the following (replace `ABITRARY_DATASOURCE_NAME` with whatever you like to label the datasource):
+- Name: `ABITRARY_DATASOURCE_NAME`
+- Source : `Prometheus Datasource` 
+- HTTP Settings: `Proxy`
+- URL: `http://localhost:9090`
+
+Then click `Save`. 
