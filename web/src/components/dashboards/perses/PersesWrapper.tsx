@@ -6,7 +6,6 @@ import {
   getTheme,
   PersesChartsTheme,
   SnackbarProvider,
-  typography,
 } from '@perses-dev/components';
 import {
   BuiltinVariableDefinition,
@@ -38,7 +37,7 @@ import { OcpDatasourceApi } from './datasource-api';
 import { PERSES_PROXY_BASE_PATH, useFetchPersesDashboard } from './perses-client';
 import { CachedDatasourceAPI } from './perses/datasource-api';
 
-import { t_color_gray_95, t_color_white } from '@patternfly/react-tokens';
+import { t_color_gray_40, t_color_gray_95, t_color_white } from '@patternfly/react-tokens';
 
 import { QueryParams } from '../../query-params';
 import { StringParam, useQueryParam } from 'use-query-params';
@@ -83,10 +82,6 @@ interface PersesWrapperProps {
 
 const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
   return {
-    typography: {
-      fontFamily: 'var(--pf-t--global--font--family--body)',
-      ...typography,
-    },
     components: {
       MuiIconButton: {
         styleOverrides: {
@@ -95,7 +90,41 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
           },
         },
       },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderColor: theme === 'dark' ? t_color_gray_40.value : t_color_gray_95.value,
+            borderRadius: 'var(--pf-t--global--border--radius--300)',
+            // ...(theme === 'dark' && {
+            //   borderColor: t_color_gray_40.value,
+            // }),
+          },
+        },
+      },
+      MuiCardHeader: {
+        styleOverrides: {
+          root: {
+            // LEFT OFF HERE: NEED TO FIX PADDING
+            paddingBlock: 24,
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          subtitle1: {
+            // This targets the h6 with subtitle1 variant in MUI Card Heading
+            fontFamily: 'var(--pf-t--global--font--family--heading)',
+            fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
+            fontSize: 'var(--pf-v6-c-card__title-text--FontSize)',
+            lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
+          },
+          root: {
+            fontFamily: 'var(--pf-t--global--font--family)',
+          },
+        },
+      },
     },
+
     palette: {
       primary: {
         main: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
@@ -128,7 +157,8 @@ export function PersesWrapper({ children, project }: PersesWrapperProps) {
 
   const muiTheme = getTheme(theme, {
     shape: {
-      borderRadius: 6,
+      // --pf-v6-c-card--BorderRadius
+      borderRadius: 0,
     },
     ...mapPatterflyThemeToMUI(theme),
   });
