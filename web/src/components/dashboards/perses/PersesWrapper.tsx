@@ -95,6 +95,55 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
           },
         },
       },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 'var(--pf-t--global--border--radius--medium)',
+          },
+        },
+      },
+      MuiCardHeader: {
+        styleOverrides: {
+          root: {
+            // overrides global patternfly styling
+            '&.MuiCardHeader-root': {
+              borderBottom: 'none',
+              paddingBlockEnd: 'var(--pf-t--global--spacer--md)',
+              paddingBlockStart: 'var(--pf-t--global--spacer--lg)',
+              paddingLeft: 'var(--pf-t--global--spacer--lg)',
+              paddingRight: 'var(--pf-t--global--spacer--lg)',
+            },
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          subtitle1: {
+            // This targets the h6 with subtitle1 variant in MUI Card Heading
+            fontFamily: 'var(--pf-t--global--font--family--heading)',
+            fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
+            lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
+          },
+          root: {
+            fontFamily: 'var(--pf-t--global--font--family)',
+          },
+        },
+      },
+      MuiCardContent: {
+        styleOverrides: {
+          root: {
+            // overrides global patternfly styling
+            '&.MuiCardContent-root': {
+              borderTop: 'none',
+              '&:last-child': {
+                paddingBottom: 'var(--pf-t--global--spacer--lg)',
+                paddingLeft: 'var(--pf-t--global--spacer--lg)',
+                paddingRight: 'var(--pf-t--global--spacer--lg)',
+              },
+            },
+          },
+        },
+      },
     },
     palette: {
       primary: {
