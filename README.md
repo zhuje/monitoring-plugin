@@ -194,7 +194,14 @@ Navigate to the root of perses/perses and run the [docker-comspose.yaml](https:/
 ) file. 
 
 ```
-docker-compose --file dev/docker-compose.yaml --profile prometheus --profile tempo up --detach
+# Run Prometheus and Tempo instances 
+$ docker-compose --file dev/docker-compose.yaml --profile prometheus --profile tempo up --detach
+
+# Check if the containers are running 
+$ docker ps 
+
+# Test the connection to the Promtheus API
+$ curl "http://localhost:9090/api/v1/query?query=up"     
 ```
 
 Then you must update datasource configurations to point to `http://localhost:9090`, see instructions [here](#datasource-configuration).
