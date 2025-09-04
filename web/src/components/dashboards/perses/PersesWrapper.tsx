@@ -88,10 +88,37 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
       ...typography,
     },
     components: {
-      MuiIconButton: {
+      MuiTypography: {
+        styleOverrides: {
+          root: {
+            fontFamily: 'var(--pf-t--global--font--family)',
+          },
+          subtitle1: {
+            // This targets the MUI Card Heading
+            fontFamily: 'var(--pf-t--global--font--family--heading)',
+            fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
+            lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
+            fontSize: 'var(--pf-t--global--font--size--heading--md)',
+          },
+          // This targets the Panel Group Heading
+          h2: {
+            color: 'var(--pf-t--global--text--color--brand--default)',
+            fontWeight: 'var(--pf-t--global--font--weight--body--default)',
+          },
+        },
+      },
+      MuiSvgIcon: {
         styleOverrides: {
           root: {
             color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+          },
+        },
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+            borderColor: 'var(--pf-t--global--border--color--default)',
           },
         },
       },
@@ -99,6 +126,7 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
         styleOverrides: {
           root: {
             borderRadius: 'var(--pf-t--global--border--radius--medium)',
+            borderColor: 'var(--pf-t--global--border--color--default)',
           },
         },
       },
@@ -116,23 +144,9 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
           },
         },
       },
-      MuiTypography: {
-        styleOverrides: {
-          subtitle1: {
-            // This targets the h6 with subtitle1 variant in MUI Card Heading
-            fontFamily: 'var(--pf-t--global--font--family--heading)',
-            fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
-            lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
-          },
-          root: {
-            fontFamily: 'var(--pf-t--global--font--family)',
-          },
-        },
-      },
       MuiCardContent: {
         styleOverrides: {
           root: {
-            // overrides global patternfly styling
             '&.MuiCardContent-root': {
               borderTop: 'none',
               '&:last-child': {
@@ -141,6 +155,29 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
                 paddingRight: 'var(--pf-t--global--spacer--lg)',
               },
             },
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          notchedOutline: {
+            borderColor: 'var(--pf-t--global--border--color--default)',
+          },
+          root: {
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--pf-t--global--border--color--default)',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--pf-t--global--border--color--default)',
+            },
+          },
+        },
+      },
+
+      MuiSelect: {
+        styleOverrides: {
+          icon: {
+            color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
           },
         },
       },
