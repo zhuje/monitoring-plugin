@@ -88,9 +88,94 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
       ...typography,
     },
     components: {
-      MuiIconButton: {
+      MuiTypography: {
         styleOverrides: {
           root: {
+            fontFamily: 'var(--pf-t--global--font--family)',
+          },
+          subtitle1: {
+            // This targets the typography in Card Heading
+            fontFamily: 'var(--pf-t--global--font--family--heading)',
+            fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
+            lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
+            fontSize: 'var(--pf-t--global--font--size--heading--sm)',
+          },
+          // This targets the typogrpahy in Panel Group Heading
+          h2: {
+            color: 'var(--pf-t--global--text--color--brand--default)',
+            fontWeight: 'var(--pf-t--global--font--weight--body--default)',
+            fontSize: 'var(--pf-t--global--font--size--600)',
+          },
+        },
+      },
+      MuiSvgIcon: {
+        styleOverrides: {
+          root: {
+            color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+          },
+        },
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+            borderColor: 'var(--pf-t--global--border--color--default)',
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 'var(--pf-t--global--border--radius--medium)',
+            borderColor: 'var(--pf-t--global--border--color--default)',
+          },
+        },
+      },
+      MuiCardHeader: {
+        styleOverrides: {
+          root: {
+            '&.MuiCardHeader-root': {
+              borderBottom: 'none',
+              paddingBlockEnd: 'var(--pf-t--global--spacer--md)',
+              paddingBlockStart: 'var(--pf-t--global--spacer--lg)',
+              paddingLeft: 'var(--pf-t--global--spacer--lg)',
+              paddingRight: 'var(--pf-t--global--spacer--lg)',
+            },
+          },
+        },
+      },
+      MuiCardContent: {
+        styleOverrides: {
+          root: {
+            '&.MuiCardContent-root': {
+              borderTop: 'none',
+              '&:last-child': {
+                paddingBottom: 'var(--pf-t--global--spacer--lg)',
+                paddingLeft: 'var(--pf-t--global--spacer--lg)',
+                paddingRight: 'var(--pf-t--global--spacer--lg)',
+              },
+            },
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          notchedOutline: {
+            borderColor: 'var(--pf-t--global--border--color--default)',
+          },
+          root: {
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--pf-t--global--border--color--default)',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--pf-t--global--border--color--default)',
+            },
+          },
+        },
+      },
+      MuiSelect: {
+        styleOverrides: {
+          icon: {
             color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
           },
         },
