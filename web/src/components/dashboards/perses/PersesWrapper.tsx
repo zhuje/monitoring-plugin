@@ -98,12 +98,13 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
             fontFamily: 'var(--pf-t--global--font--family--heading)',
             fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
             lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
-            fontSize: 'var(--pf-t--global--font--size--heading--md)',
+            fontSize: 'var(--pf-t--global--font--size--heading--sm)',
           },
           // This targets the Panel Group Heading
           h2: {
             color: 'var(--pf-t--global--text--color--brand--default)',
             fontWeight: 'var(--pf-t--global--font--weight--body--default)',
+            fontSize: 'var(--pf-t--global--font--size--600)',
           },
         },
       },
