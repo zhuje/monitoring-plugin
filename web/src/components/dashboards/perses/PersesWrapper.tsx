@@ -171,6 +171,13 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
               borderColor: 'var(--pf-t--global--border--color--default)',
             },
           },
+          input: {
+            // Target Dashboard Variables > Text Variable
+            paddingLeft: 14,
+            paddingRight: 14,
+            paddingTop: 8.5,
+            paddingBottom: 8.5,
+          },
         },
       },
       MuiSelect: {
@@ -210,6 +217,8 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
 export function PersesWrapper({ children, project }: PersesWrapperProps) {
   const { theme } = usePatternFlyTheme();
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
+
+  console.log('HELLO!!!!');
 
   const muiTheme = getTheme(theme, {
     shape: {
