@@ -38,7 +38,13 @@ import { OcpDatasourceApi } from './datasource-api';
 import { PERSES_PROXY_BASE_PATH, useFetchPersesDashboard } from './perses-client';
 import { CachedDatasourceAPI } from './perses/datasource-api';
 
-import { t_color_gray_95, t_color_white } from '@patternfly/react-tokens';
+import {
+  chart_color_blue_100,
+  chart_color_blue_200,
+  chart_color_blue_300,
+  t_color_gray_95,
+  t_color_white,
+} from '@patternfly/react-tokens';
 
 import { QueryParams } from '../../query-params';
 import { StringParam, useQueryParam } from 'use-query-params';
@@ -92,6 +98,10 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
         styleOverrides: {
           root: {
             fontFamily: 'var(--pf-t--global--font--family)',
+            // This targets the typography in Custom Time Range Selector
+            '&.MuiClock-meridiemText': {
+              color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+            },
           },
           subtitle1: {
             // This targets the typography in Card Heading
@@ -112,14 +122,6 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
         styleOverrides: {
           root: {
             color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-            borderColor: 'var(--pf-t--global--border--color--default)',
           },
         },
       },
@@ -190,7 +192,10 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
     },
     palette: {
       primary: {
-        main: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+        light: chart_color_blue_100.value,
+        main: chart_color_blue_200.value,
+        dark: chart_color_blue_300.value,
+        contrastText: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
       },
       background: {
         navigation: 'var(--pf-t--global--background--color--primary--default)',
@@ -217,8 +222,6 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
 export function PersesWrapper({ children, project }: PersesWrapperProps) {
   const { theme } = usePatternFlyTheme();
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
-
-  console.log('HELLO!!!!');
 
   const muiTheme = getTheme(theme, {
     shape: {
