@@ -37,7 +37,6 @@ import { usePatternFlyTheme } from '../../hooks/usePatternflyTheme';
 import { OcpDatasourceApi } from './datasource-api';
 import { PERSES_PROXY_BASE_PATH, useFetchPersesDashboard } from './perses-client';
 import { CachedDatasourceAPI } from './perses/datasource-api';
-
 import {
   chart_color_blue_100,
   chart_color_blue_200,
@@ -45,7 +44,6 @@ import {
   t_color_gray_95,
   t_color_white,
 } from '@patternfly/react-tokens';
-
 import { QueryParams } from '../../query-params';
 import { StringParam, useQueryParam } from 'use-query-params';
 import { useTranslation } from 'react-i18next';
@@ -88,33 +86,67 @@ interface PersesWrapperProps {
 }
 
 const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
+  const isDark = theme === 'dark';
+  const primaryTextColor = isDark ? t_color_white.value : t_color_gray_95.value;
+  const primaryBackgroundColor = 'var(--pf-t--global--background--color--primary--default)';
+
   return {
     typography: {
-      fontFamily: 'var(--pf-t--global--font--family--body)',
       ...typography,
+      fontFamily: 'var(--pf-t--global--font--family--body)',
+      subtitle1: {
+        // Card Heading
+        fontFamily: 'var(--pf-t--global--font--family--heading)',
+        fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
+        lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
+        fontSize: 'var(--pf-t--global--font--size--heading--sm)',
+      },
+      h2: {
+        // Panel Group Heading
+        color: 'var(--pf-t--global--text--color--brand--default)',
+        fontWeight: 'var(--pf-t--global--font--weight--body--default)',
+        fontSize: 'var(--pf-t--global--font--size--600)',
+      },
+    },
+    palette: {
+      primary: {
+        light: chart_color_blue_100.value,
+        main: chart_color_blue_200.value,
+        dark: chart_color_blue_300.value,
+        contrastText: primaryTextColor,
+      },
+      secondary: {
+        main: primaryTextColor,
+        light: primaryTextColor,
+        dark: primaryTextColor,
+      },
+      background: {
+        default: primaryBackgroundColor,
+        paper: primaryBackgroundColor,
+        navigation: primaryBackgroundColor,
+        code: primaryBackgroundColor,
+        tooltip: primaryBackgroundColor,
+        lighter: primaryBackgroundColor,
+        border: primaryBackgroundColor,
+      },
+      text: {
+        primary: primaryTextColor,
+        secondary: primaryTextColor,
+        disabled: primaryTextColor,
+        navigation: primaryTextColor,
+        accent: primaryTextColor,
+        link: primaryTextColor,
+        linkHover: primaryTextColor,
+      },
     },
     components: {
       MuiTypography: {
         styleOverrides: {
           root: {
-            fontFamily: 'var(--pf-t--global--font--family)',
-            // This targets the typography in Custom Time Range Selector
+            // Custom Time Range Selector
             '&.MuiClock-meridiemText': {
-              color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+              color: primaryTextColor,
             },
-          },
-          subtitle1: {
-            // This targets the typography in Card Heading
-            fontFamily: 'var(--pf-t--global--font--family--heading)',
-            fontWeight: 'var(--pf-t--global--font--weight--heading--default)',
-            lineHeight: 'var(--pf-v6-c-card__title-text--LineHeight)',
-            fontSize: 'var(--pf-t--global--font--size--heading--sm)',
-          },
-          // This targets the typogrpahy in Panel Group Heading
-          h2: {
-            color: 'var(--pf-t--global--text--color--brand--default)',
-            fontWeight: 'var(--pf-t--global--font--weight--body--default)',
-            fontSize: 'var(--pf-t--global--font--size--600)',
           },
         },
       },
@@ -174,46 +206,17 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
             },
           },
           input: {
-            // Target Dashboard Variables > Text Variable
-            paddingLeft: 14,
-            paddingRight: 14,
-            paddingTop: 8.5,
-            paddingBottom: 8.5,
+            // Dashboard Variables >> Text Variable
+            padding: '8.5px 14px',
           },
         },
       },
       MuiSelect: {
         styleOverrides: {
           icon: {
-            color: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
+            color: primaryTextColor,
           },
         },
-      },
-    },
-    palette: {
-      primary: {
-        light: chart_color_blue_100.value,
-        main: chart_color_blue_200.value,
-        dark: chart_color_blue_300.value,
-        contrastText: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-      },
-      background: {
-        navigation: 'var(--pf-t--global--background--color--primary--default)',
-        default: 'var(--pf-t--global--background--color--primary--default)',
-        paper: 'var(--pf-t--global--background--color--primary--default)',
-        code: 'var(--pf-t--global--background--color--primary--default)',
-        tooltip: 'var(--pf-t--global--background--color--primary--default)',
-        lighter: 'var(--pf-t--global--background--color--primary--default)',
-        border: 'var(--pf-t--global--background--color--primary--default)',
-      },
-      text: {
-        navigation: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-        accent: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-        primary: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-        secondary: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-        disabled: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-        link: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
-        linkHover: theme === 'dark' ? t_color_white.value : t_color_gray_95.value,
       },
     },
   };
@@ -222,7 +225,6 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
 export function PersesWrapper({ children, project }: PersesWrapperProps) {
   const { theme } = usePatternFlyTheme();
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
-
   const muiTheme = getTheme(theme, {
     shape: {
       borderRadius: 6,
