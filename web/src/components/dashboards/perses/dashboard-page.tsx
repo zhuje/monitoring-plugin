@@ -9,8 +9,9 @@ import { DashboardSkeleton } from './dashboard-skeleton';
 import { DashboardEmptyState } from './emptystates/DashboardEmptyState';
 import { ProjectEmptyState } from './emptystates/ProjectEmptyState';
 import { useDashboardsData } from './hooks/useDashboardsData';
-import PersesBoard from './perses-dashboards';
+// import PersesBoard from './perses-dashboards';
 import { ProjectBar } from './project/ProjectBar';
+import { DashboardApp } from '@perses-dev/dashboards/dist/views/ViewDashboard/DashboardApp';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,21 +43,28 @@ const MonitoringDashboardsPage_: FC = () => {
 
   return (
     <>
-      <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
       <PersesWrapper project={activeProject}>
         {activeProjectDashboardsMetadata.length === 0 ? (
           <DashboardEmptyState />
         ) : (
-          <DashboardSkeleton
-            boardItems={activeProjectDashboardsMetadata}
-            changeBoard={changeBoard}
-            dashboardName={dashboardName}
-            activeProject={activeProject}
-          >
-            <Overview>
-              <PersesBoard />
-            </Overview>
-          </DashboardSkeleton>
+          <Overview>
+            <DashboardSkeleton
+              boardItems={activeProjectDashboardsMetadata}
+              changeBoard={changeBoard}
+              dashboardName={dashboardName}
+              activeProject={activeProject}
+            >
+              <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
+
+              {/* <PersesBoard /> */}
+              <DashboardApp
+                dashboardResource={activeProjectDashboardsMetadata[0].persesDashboard}
+                isReadonly={false}
+                isVariableEnabled={true}
+                isDatasourceEnabled={true}
+              />
+            </DashboardSkeleton>
+          </Overview>
         )}
       </PersesWrapper>
     </>

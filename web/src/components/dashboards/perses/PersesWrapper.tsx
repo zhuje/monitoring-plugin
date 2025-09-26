@@ -18,7 +18,9 @@ import {
 import {
   DashboardProvider,
   DatasourceStoreProvider,
+  // PanelDrawer,
   VariableProviderWithQueryParams,
+  // PanelEditorForm,
 } from '@perses-dev/dashboards';
 import {
   DataQueriesProvider,
@@ -310,6 +312,8 @@ function InnerWrapper({ children, project, dashboardName }) {
     clearedDashboardResource = persesDashboard;
   }
 
+  console.log('Hello World!');
+
   return (
     <TimeRangeProviderWithQueryParams
       initialTimeRange={initialTimeRange}
@@ -331,6 +335,21 @@ function InnerWrapper({ children, project, dashboardName }) {
                 dashboardResource: clearedDashboardResource,
               }}
             >
+              <h1> HELLO ?!!! </h1>
+              {/* <PanelDrawer /> */}
+              {/* <DashboardApp
+                dashboardResource={dashboardResource}
+                emptyDashboardProps={emptyDashboardProps}
+                isReadonly={isReadonly}
+                isVariableEnabled={isVariableEnabled}
+                isDatasourceEnabled={isDatasourceEnabled}
+                isCreating={isCreating}
+                isInitialVariableSticky={isInitialVariableSticky}
+                isLeavingConfirmDialogEnabled={isLeavingConfirmDialogEnabled}
+                dashboardTitleComponent={dashboardTitleComponent}
+                onSave={onSave}
+                onDiscard={onDiscard}
+              /> */}
               {children}
             </DashboardProvider>
           ) : (
