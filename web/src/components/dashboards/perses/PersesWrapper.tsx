@@ -29,6 +29,7 @@ import {
   useInitialRefreshInterval,
   useInitialTimeRange,
   usePluginBuiltinVariableDefinitions,
+  ValidationProvider,
 } from '@perses-dev/plugin-system';
 import React, { useMemo } from 'react';
 import { usePatternFlyTheme } from '../../hooks/usePatternflyTheme';
@@ -312,7 +313,7 @@ function InnerWrapper({ children, project, dashboardName }) {
     clearedDashboardResource = persesDashboard;
   }
 
-  console.log('Hello World!');
+  console.log('Hello World!', new Date());
 
   return (
     <TimeRangeProviderWithQueryParams
@@ -335,8 +336,9 @@ function InnerWrapper({ children, project, dashboardName }) {
                 dashboardResource: clearedDashboardResource,
               }}
             >
-              {/* <PanelDrawer /> */}
-              {/* <DashboardApp
+              <ValidationProvider>
+                {/* <PanelDrawer /> */}
+                {/* <DashboardApp
                 dashboardResource={dashboardResource}
                 emptyDashboardProps={emptyDashboardProps}
                 isReadonly={isReadonly}
@@ -349,7 +351,8 @@ function InnerWrapper({ children, project, dashboardName }) {
                 onSave={onSave}
                 onDiscard={onDiscard}
               /> */}
-              {children}
+                {children}
+              </ValidationProvider>
             </DashboardProvider>
           ) : (
             <>{children}</>
