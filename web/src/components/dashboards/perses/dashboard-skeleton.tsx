@@ -14,11 +14,11 @@ import {
   Title,
 } from '@patternfly/react-core';
 import {
-  DashboardStickyToolbar,
+  // DashboardStickyToolbar,
   useDashboardActions,
-  useVariableDefinitions,
+  // useVariableDefinitions,
 } from '@perses-dev/dashboards';
-import { TimeRangeControls } from '@perses-dev/plugin-system';
+// import { TimeRangeControls } from '@perses-dev/plugin-system';
 import { DashboardDropdown } from '../shared/dashboard-dropdown';
 import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
 
@@ -30,13 +30,13 @@ const HeaderTop: FC = memo(() => {
       <SplitItem isFilled>
         <Title headingLevel="h1">{t('Dashboards')}</Title>
       </SplitItem>
-      <SplitItem>
+      {/* <SplitItem>
         <Split hasGutter isWrappable>
           <SplitItem>
             <TimeRangeControls />
           </SplitItem>
         </Split>
-      </SplitItem>
+      </SplitItem> */}
     </Split>
   );
 });
@@ -52,7 +52,7 @@ export const DashboardSkeleton: FC<MonitoringDashboardsPageProps> = memo(
   ({ children, boardItems, changeBoard, dashboardName, activeProject }) => {
     const { t } = useTranslation(process.env.I18N_NAMESPACE);
     const { setDashboard } = useDashboardActions();
-    const variables = useVariableDefinitions();
+    // const variables = useVariableDefinitions();
 
     const onChangeBoard = useCallback(
       (selectedDashboard: string) => {
@@ -81,29 +81,25 @@ export const DashboardSkeleton: FC<MonitoringDashboardsPageProps> = memo(
           <title>{t('Metrics dashboards')}</title>
         </Helmet>
         <PageSection hasBodyWrapper={false}>
-          <HeaderTop />
-          <Stack hasGutter>
-            {!_.isEmpty(boardItems) && (
-              <StackItem>
-                <DashboardDropdown
-                  items={boardItems}
-                  onChange={onChangeBoard}
-                  selectedKey={dashboardName}
-                />
-              </StackItem>
-            )}
-            {variables.length > 0 ? (
-              <StackItem>
-                <b> {t('Dashboard Variables')} </b>
-                <DashboardStickyToolbar initialVariableIsSticky={false} key={dashboardName} />
-              </StackItem>
-            ) : null}
-            <StackItem>
+          <>
+            <HeaderTop />
+            <Stack hasGutter>
+              {!_.isEmpty(boardItems) && (
+                <StackItem>
+                  <DashboardDropdown
+                    items={boardItems}
+                    onChange={onChangeBoard}
+                    selectedKey={dashboardName}
+                  />
+                </StackItem>
+              )}
+              {/* <StackItem>
               <Split>
                 <SplitItem isFilled />
               </Split>
-            </StackItem>
-          </Stack>
+            </StackItem>*/}
+            </Stack>
+          </>
         </PageSection>
         <Divider />
         {children}

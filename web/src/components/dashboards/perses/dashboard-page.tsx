@@ -48,20 +48,20 @@ const MonitoringDashboardsPage_: FC = () => {
           <DashboardEmptyState />
         ) : (
           <Overview>
+            <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
             <DashboardSkeleton
               boardItems={activeProjectDashboardsMetadata}
               changeBoard={changeBoard}
               dashboardName={dashboardName}
               activeProject={activeProject}
             >
-              <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
-
               {/* <PersesBoard /> */}
               <DashboardApp
                 dashboardResource={activeProjectDashboardsMetadata[0].persesDashboard}
                 isReadonly={false}
                 isVariableEnabled={true}
                 isDatasourceEnabled={true}
+                dashboardTitleComponent={<h2>{}</h2>} // JZ TODO clean up this up
               />
             </DashboardSkeleton>
           </Overview>

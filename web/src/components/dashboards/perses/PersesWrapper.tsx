@@ -335,7 +335,6 @@ function InnerWrapper({ children, project, dashboardName }) {
                 dashboardResource: clearedDashboardResource,
               }}
             >
-              <h1> HELLO ?!!! </h1>
               {/* <PanelDrawer /> */}
               {/* <DashboardApp
                 dashboardResource={dashboardResource}
