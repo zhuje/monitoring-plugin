@@ -17,7 +17,7 @@ import { ProjectEmptyState } from './emptystates/ProjectEmptyState';
 import { useDashboardsData } from './hooks/useDashboardsData';
 // import PersesBoard from './perses-dashboards';
 import { ProjectBar } from './project/ProjectBar';
-import { DashboardApp } from '@perses-dev/dashboards/dist/views/ViewDashboard/DashboardApp';
+// import { DashboardApp } from '@perses-dev/dashboards/dist/views/ViewDashboard/DashboardApp';
 import {
   DashboardResource,
   EphemeralDashboardResource,
@@ -26,6 +26,7 @@ import {
 import { getCSRFToken } from '@openshift-console/dynamic-plugin-sdk/lib/utils/fetch/console-fetch-utils';
 import { useSnackbar } from '@perses-dev/components';
 import buildURL from './perses/url-builder';
+import { OCPDashboardApp } from './dashoard-app';
 // import { ocpPersesFetchJson } from './perses-client';
 
 const resource = 'dashboards';
@@ -145,7 +146,7 @@ const MonitoringDashboardsPage_: FC = () => {
               activeProject={activeProject}
             >
               {/* <PersesBoard /> */}
-              <DashboardApp
+              <OCPDashboardApp
                 dashboardResource={activeProjectDashboardsMetadata[0].persesDashboard}
                 isReadonly={false}
                 isVariableEnabled={true}

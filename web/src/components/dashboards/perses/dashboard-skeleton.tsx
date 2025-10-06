@@ -1,4 +1,4 @@
-import * as _ from 'lodash-es';
+// import * as _ from 'lodash-es';
 import type { FC, PropsWithChildren } from 'react';
 import { memo, useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
@@ -9,8 +9,8 @@ import {
   PageSection,
   Split,
   SplitItem,
-  Stack,
-  StackItem,
+  // Stack,
+  // StackItem,
   Title,
 } from '@patternfly/react-core';
 import {
@@ -19,8 +19,9 @@ import {
   // useVariableDefinitions,
 } from '@perses-dev/dashboards';
 // import { TimeRangeControls } from '@perses-dev/plugin-system';
-import { DashboardDropdown } from '../shared/dashboard-dropdown';
+// import { DashboardDropdown } from '../shared/dashboard-dropdown';
 import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
+// import { EditButton } from './dashboard-toolbar';
 
 const HeaderTop: FC = memo(() => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -30,6 +31,7 @@ const HeaderTop: FC = memo(() => {
       <SplitItem isFilled>
         <Title headingLevel="h1">{t('Dashboards')}</Title>
       </SplitItem>
+      {/* <EditButton /> */}
       {/* <SplitItem>
         <Split hasGutter isWrappable>
           <SplitItem>
@@ -83,7 +85,9 @@ export const DashboardSkeleton: FC<MonitoringDashboardsPageProps> = memo(
         <PageSection hasBodyWrapper={false}>
           <>
             <HeaderTop />
-            <Stack hasGutter>
+
+            {/* !Jz Previous Dashboard Dropdown */}
+            {/* <Stack hasGutter>
               {!_.isEmpty(boardItems) && (
                 <StackItem>
                   <DashboardDropdown
@@ -92,16 +96,16 @@ export const DashboardSkeleton: FC<MonitoringDashboardsPageProps> = memo(
                     selectedKey={dashboardName}
                   />
                 </StackItem>
-              )}
-              {/* <StackItem>
+              )} */}
+            {/* <StackItem>
               <Split>
                 <SplitItem isFilled />
               </Split>
             </StackItem>*/}
-            </Stack>
+            {/* </Stack> */}
           </>
         </PageSection>
-        <Divider />
+        {/* <Divider /> */}
         {children}
       </>
     );
