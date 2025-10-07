@@ -44,7 +44,8 @@ export interface DashboardAppProps {
   isDatasourceEnabled: boolean;
   isCreating?: boolean;
   isInitialVariableSticky?: boolean;
-  // If true, browser confirmation dialog will be shown when navigating away with unsaved changes (closing tab, ...).
+  // If true, browser confirmation dialog will be shown
+  // when navigating away with unsaved changes (closing tab, ...).
   isLeavingConfirmDialogEnabled?: boolean;
   dashboardTitleComponent?: ReactNode;
   onSave?: OnSaveDashboard;

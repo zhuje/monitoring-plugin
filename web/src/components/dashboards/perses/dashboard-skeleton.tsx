@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
 
 import {
-  Divider,
+  // Divider,
   PageSection,
   Split,
   SplitItem,
