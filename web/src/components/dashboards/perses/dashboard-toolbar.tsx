@@ -126,6 +126,8 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
     onChangeBoard(dashboardName);
   }, [dashboardName, onChangeBoard]);
 
+  console.log('hello world!');
+
   return (
     <>
       <Stack data-testid={testId}>
@@ -135,9 +137,19 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
           display="flex"
           sx={{
             backgroundColor: (theme) => theme.palette.primary.main + (isEditMode ? '30' : '0'),
+            alignItems: 'center',
           }}
         >
           {dashboardTitle}
+          {!_.isEmpty(boardItems) && (
+            <StackItem>
+              <DashboardDropdown
+                items={boardItems}
+                onChange={onChangeBoard}
+                selectedKey={dashboardName}
+              />
+            </StackItem>
+          )}
           {isEditMode ? (
             <Stack direction="row" gap={1} ml="auto">
               {isReadonly && (
@@ -181,22 +193,15 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
             <ErrorBoundary FallbackComponent={ErrorAlert}>
               {/* JZ DashboardDropdown  */}
               <Stack>
-                {!_.isEmpty(boardItems) && (
-                  <StackItem>
-                    <DashboardDropdown
-                      items={boardItems}
-                      onChange={onChangeBoard}
-                      selectedKey={dashboardName}
-                    />
-                  </StackItem>
-                )}
+                <StackItem>
+                  <DashboardStickyToolbar
+                    initialVariableIsSticky={initialVariableIsSticky}
+                    sx={{
+                      backgroundColor: ({ palette }) => palette.background.default,
+                    }}
+                  />
+                </StackItem>
               </Stack>
-              <DashboardStickyToolbar
-                initialVariableIsSticky={initialVariableIsSticky}
-                sx={{
-                  backgroundColor: ({ palette }) => palette.background.default,
-                }}
-              />
             </ErrorBoundary>
           </Box>
           <Stack direction="row" ml="auto" flexWrap="wrap" justifyContent="end">

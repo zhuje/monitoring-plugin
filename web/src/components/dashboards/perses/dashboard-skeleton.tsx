@@ -26,10 +26,13 @@ import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
 const HeaderTop: FC = memo(() => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
+  console.log('Hello World!!!!!!');
+
   return (
     <Split hasGutter isWrappable>
       <SplitItem isFilled>
         <Title headingLevel="h1">{t('Dashboards')}</Title>
+        {t('View and manage dashboards.')}
       </SplitItem>
       {/* <EditButton /> */}
       {/* <SplitItem>
