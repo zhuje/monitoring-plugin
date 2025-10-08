@@ -54,50 +54,59 @@ tmux has-session -t "$SESSION_NAME" 2>/dev/null && tmux kill-session -t "$SESSIO
 echo "🚀 Starting new tmux session: $SESSION_NAME"
 
 # --- Conditional Pane Creation ---
-# NOTE: We append "; exec ${SHELL:-zsh}" to each command.
-# This ensures that when the initial command finishes, the pane remains
-# open with an active shell prompt.
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     # --- TRUE: Create 6-PANE LAYOUT (Perses + Monitoring) ---
     echo "✅ Perses enabled. Creating 6-pane layout..."
 
+    # Panel 1: Perses backend (starts the session)
     tmux new-session -d -s "$SESSION_NAME" -c "$PERSSES_PATH" \
-      "./scripts/api_backend_dev.sh; exec ${SHELL:-zsh}"
+      "./scripts/api_backend_dev.sh"
 
+    # Panel 2: Perses frontend (split right)
     tmux split-window -h -t "$SESSION_NAME:0" -c "$PERSSES_PATH/ui" \
-      "npm run start; exec ${SHELL:-zsh}"
+      "npm run start"
 
+    # Panel 3: Monitoring-plugin frontend (split pane 1 down)
     tmux split-window -v -t "$SESSION_NAME:0.0" -c "$MONITORING_PATH" \
-      "make start-frontend; exec ${SHELL:-zsh}"
+      "make start-frontend"
 
+    # Panel 4: Monitoring-plugin feature console (split pane 2 down)
     tmux split-window -v -t "$SESSION_NAME:0.1" -c "$MONITORING_PATH" \
-      "make start-feature-console; exec ${SHELL:-zsh}"
+      "make start-feature-console"
 
+    # Panel 5: Monitoring-plugin backend (split pane 3 right)
     tmux split-window -h -t "$SESSION_NAME:0.2" -c "$MONITORING_PATH" \
-      "make start-feature-backend; exec ${SHELL:-zsh}"
+      "make start-feature-backend"
 
+    # Panel 6: Monitoring-plugin port-forward (split pane 4 right)
     tmux split-window -h -t "$SESSION_NAME:0.3" -c "$MONITORING_PATH" \
-      "oc port-forward -n openshift-monitoring service/prometheus-operated 9090:9090; exec ${SHELL:-zsh}"
+      "oc port-forward -n openshift-monitoring service/prometheus-operated 9090:9090"
 
 else
     # --- FALSE: Create 4-PANE LAYOUT (Monitoring Only) ---
     echo "👍 Skipping Perses. Creating 4-pane layout for monitoring..."
 
+    # Panel 1: Monitoring-plugin frontend (starts the session)
     tmux new-session -d -s "$SESSION_NAME" -c "$MONITORING_PATH" \
-      "make start-frontend; exec ${SHELL:-zsh}"
+      "make start-frontend"
 
+    # Panel 2: Monitoring-plugin feature console (split right)
     tmux split-window -h -t "$SESSION_NAME:0" -c "$MONITORING_PATH" \
-      "make start-feature-console; exec ${SHELL:-zsh}"
+      "make start-feature-console"
 
+    # Panel 3: Monitoring-plugin backend (split pane 1 down)
     tmux split-window -v -t "$SESSION_NAME:0.0" -c "$MONITORING_PATH" \
-      "make start-feature-backend; exec ${SHELL:-zsh}"
+      "make start-feature-backend"
 
+    # Panel 4: Monitoring-plugin port-forward (split pane 2 down)
     tmux split-window -v -t "$SESSION_NAME:0.1" -c "$MONITORING_PATH" \
-      "oc port-forward -n openshift-monitoring service/prometheus-operated 9090:9090; exec ${SHELL:-zsh}"
+      "oc port-forward -n openshift-monitoring service/prometheus-operated 9090:9090"
 fi
 
 # --- Finalization ---
+# Select a balanced layout. This works great for both 4 and 6 panes.
 tmux select-layout -t "$SESSION_NAME:0" tiled
 
+# Attach to the newly created session.
 echo "🎉 Session '$SESSION_NAME' is ready. Attaching now..."
 tmux attach-session -t "$SESSION_NAME"
