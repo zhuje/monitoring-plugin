@@ -6,7 +6,7 @@ import {
   UseMutationResult,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useCallback, type FC } from 'react';
+import { ReactElement, useCallback, useEffect, type FC } from 'react';
 import { QueryParamProvider } from 'use-query-params';
 import { ReactRouter5Adapter } from 'use-query-params/adapters/react-router-5';
 import { LoadingInline } from '../../console/console-shared/src/components/loading/LoadingInline';
@@ -26,6 +26,9 @@ import { useSnackbar } from '@perses-dev/components';
 import buildURL from './perses/url-builder';
 import { OCPDashboardApp } from './dashoard-app';
 import { t } from 'i18next';
+import { useDashboardActions } from '@perses-dev/dashboards';
+import { DashboardDropdown } from '../shared/dashboard-dropdown';
+import _ from 'lodash';
 
 const resource = 'dashboards';
 const HTTPMethodPUT = 'PUT';
@@ -129,6 +132,48 @@ const MonitoringDashboardsPage_: FC = () => {
     return <ProjectEmptyState />; // empty state
   }
 
+  const TestDashboardDropdown = (): ReactElement => {
+    // !JZ Upstream Impl. START: hooks needed for <DashboardDropdown />
+    const {
+      changeBoard,
+      activeProjectDashboardsMetadata: boardItems,
+      activeProject,
+      dashboardName,
+    } = useDashboardsData();
+
+    const { setDashboard } = useDashboardActions();
+
+    const onChangeBoard = useCallback(
+      (selectedDashboard: string) => {
+        changeBoard(selectedDashboard);
+
+        const selectedBoard = boardItems.find(
+          (item) =>
+            item.name.toLowerCase() === selectedDashboard.toLowerCase() &&
+            item.project?.toLowerCase() === activeProject?.toLowerCase(),
+        );
+
+        if (selectedBoard) {
+          setDashboard(selectedBoard.persesDashboard);
+        }
+      },
+      [activeProject, boardItems, changeBoard, setDashboard],
+    );
+
+    useEffect(() => {
+      onChangeBoard(dashboardName);
+    }, [dashboardName, onChangeBoard]);
+    // !JZ Upstream Impl. END: hooks needed for <DashboardDropdown />
+
+    if (_.isEmpty(boardItems)) {
+      return null;
+    }
+
+    return (
+      <DashboardDropdown items={boardItems} onChange={onChangeBoard} selectedKey={dashboardName} />
+    );
+  };
+
   return (
     <>
       <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
@@ -154,6 +199,7 @@ const MonitoringDashboardsPage_: FC = () => {
                   title: t('Empty Dashboard'),
                   description: t('To get started add something to your dashboard'),
                 }}
+                dashboardDropdown={<TestDashboardDropdown />}
               />
             </Overview>
           </DashboardSkeleton>

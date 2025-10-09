@@ -22,7 +22,6 @@ import {
   useEditMode,
 } from '@perses-dev/dashboards';
 import { OCPDashboardToolbar } from './dashboard-toolbar';
-
 export interface DashboardAppProps {
   dashboardResource: DashboardResource | EphemeralDashboardResource;
   emptyDashboardProps?: Partial<EmptyDashboardProps>;
@@ -37,6 +36,7 @@ export interface DashboardAppProps {
   dashboardTitleComponent?: ReactNode;
   onSave?: OnSaveDashboard;
   onDiscard?: (entity: DashboardResource) => void;
+  dashboardDropdown?: ReactElement;
 }
 
 export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
@@ -51,6 +51,7 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
     isLeavingConfirmDialogEnabled,
     onSave,
     onDiscard,
+    dashboardDropdown,
   } = props;
 
   const chartsTheme = useChartsTheme();
@@ -120,6 +121,7 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
         isDatasourceEnabled={isDatasourceEnabled}
         onEditButtonClick={onEditButtonClick}
         onCancelButtonClick={onCancelButtonClick}
+        dashboardDropdown={dashboardDropdown}
       />
       <Box sx={{ paddingTop: 2, paddingX: 2, height: '100%' }}>
         <ErrorBoundary FallbackComponent={ErrorAlert}>

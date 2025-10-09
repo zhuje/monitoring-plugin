@@ -1,8 +1,7 @@
 import { Stack, Button, Box, useTheme, useMediaQuery, Alert } from '@mui/material';
 import { ErrorBoundary, ErrorAlert } from '@perses-dev/components';
 import { TimeRangeControls } from '@perses-dev/plugin-system';
-import { ReactElement, ReactNode, useCallback, useEffect } from 'react';
-import { OnSaveDashboard, useDashboardActions, useEditMode } from '@perses-dev/dashboards';
+import { OnSaveDashboard, useEditMode } from '@perses-dev/dashboards';
 import { AddPanelButton } from '@perses-dev/dashboards';
 import { AddGroupButton } from '@perses-dev/dashboards';
 import { DownloadButton } from '@perses-dev/dashboards';
@@ -13,10 +12,7 @@ import { SaveDashboardButton } from '@perses-dev/dashboards';
 import { DashboardStickyToolbar } from '@perses-dev/dashboards';
 
 import PencilIcon from 'mdi-material-ui/PencilOutline';
-import { StackItem } from '@patternfly/react-core';
-import { DashboardDropdown } from '../shared/dashboard-dropdown';
-import * as _ from 'lodash-es';
-import { useDashboardsData } from './hooks/useDashboardsData';
+import { ReactElement, ReactNode } from 'react';
 
 export interface DashboardToolbarProps {
   dashboardName: string;
@@ -28,6 +24,7 @@ export interface DashboardToolbarProps {
   onEditButtonClick: () => void;
   onCancelButtonClick: () => void;
   onSave?: OnSaveDashboard;
+  dashboardDropdown?: ReactElement;
 }
 
 export interface EditButtonProps {
@@ -65,6 +62,7 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
     onEditButtonClick,
     onCancelButtonClick,
     onSave,
+    dashboardDropdown,
   } = props;
 
   const { isEditMode } = useEditMode();
@@ -73,38 +71,6 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
   const isBiggerThanMd = useMediaQuery(useTheme().breakpoints.up('md'));
 
   const testId = 'dashboard-toolbar';
-
-  // !JZ Upstream Impl. START: hooks needed for <DashboardDropdown />
-  const {
-    changeBoard,
-    activeProjectDashboardsMetadata: boardItems,
-    activeProject,
-    dashboardName,
-  } = useDashboardsData();
-
-  const { setDashboard } = useDashboardActions();
-
-  const onChangeBoard = useCallback(
-    (selectedDashboard: string) => {
-      changeBoard(selectedDashboard);
-
-      const selectedBoard = boardItems.find(
-        (item) =>
-          item.name.toLowerCase() === selectedDashboard.toLowerCase() &&
-          item.project?.toLowerCase() === activeProject?.toLowerCase(),
-      );
-
-      if (selectedBoard) {
-        setDashboard(selectedBoard.persesDashboard);
-      }
-    },
-    [activeProject, boardItems, changeBoard, setDashboard],
-  );
-
-  useEffect(() => {
-    onChangeBoard(dashboardName);
-  }, [dashboardName, onChangeBoard]);
-  // !JZ Upstream Impl. END: hooks needed for <DashboardDropdown />
 
   return (
     <>
@@ -121,15 +87,7 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
           {/* !JZ Upstream Impl: 
           Create conditional to insert <DashboarDropdown/> if param not null 
           */}
-          {!_.isEmpty(boardItems) && (
-            <StackItem>
-              <DashboardDropdown
-                items={boardItems}
-                onChange={onChangeBoard}
-                selectedKey={dashboardName}
-              />
-            </StackItem>
-          )}
+          {dashboardDropdown}
           {isEditMode ? (
             <Stack direction="row" gap={1} ml="auto">
               {isReadonly && (

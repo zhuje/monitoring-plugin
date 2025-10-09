@@ -80,7 +80,7 @@ export const DashboardDropdown: FC<DashboardDropdownProps> = ({ items, onChange,
   );
 };
 
-type DashboardDropdownProps = {
+export type DashboardDropdownProps = {
   items: CombinedDashboardMetadata[];
   onChange: (v: string) => void;
   selectedKey: string;
