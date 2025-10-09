@@ -27,6 +27,7 @@ import {
   useInitialRefreshInterval,
   useInitialTimeRange,
   usePluginBuiltinVariableDefinitions,
+  ValidationProvider,
 } from '@perses-dev/plugin-system';
 import React, { useMemo } from 'react';
 import { usePatternFlyTheme } from '../../hooks/usePatternflyTheme';
@@ -331,7 +332,7 @@ function InnerWrapper({ children, project, dashboardName }) {
                 dashboardResource: clearedDashboardResource,
               }}
             >
-              {children}
+              <ValidationProvider>{children}</ValidationProvider>
             </DashboardProvider>
           ) : (
             <>{children}</>
