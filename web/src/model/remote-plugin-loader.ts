@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
 
   // Also set PERSES_APP_CONFIG as fallback
   (window as any).PERSES_APP_CONFIG = {
-    api_prefix: '/api/proxy/plugin/monitoring-console-plugin/perses'
+    api_prefix: '/api/proxy/plugin/monitoring-console-plugin/perses',
   };
   console.log('🔧 Set PERSES_APP_CONFIG:', (window as any).PERSES_APP_CONFIG);
 }
@@ -223,11 +223,22 @@ const registerRemote = (name: string, baseURL?: string): void => {
 // Store the original fetch function to intercept manifest requests
 const originalFetch = window.fetch;
 
+// Store the original createElement function to intercept script loading
+const originalCreateElement = document.createElement;
+
 // Intercept manifest fetches to modify static publicPath
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
 
-  console.log('🌐 Fetch intercepted:', url);
+  // Only log plugin-related fetches to reduce noise
+  if (url.includes('/plugins/') || url.includes('perses/plugins/') || url.includes('__mf/')) {
+    // Highlight problematic paths that don't use proxy
+    if (url.includes('/plugins/') && !url.includes('/api/proxy/')) {
+      console.error('🚨 PROBLEMATIC FETCH - not using proxy:', url);
+    } else {
+      console.log('🌐 Plugin-related fetch intercepted:', url);
+    }
+  }
 
   // Check if this is a manifest request
   if (url.includes('/mf-manifest.json')) {
@@ -243,8 +254,12 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Res
         const pluginName = manifest.id || manifest.name;
         const proxyPath = `/api/proxy/plugin/monitoring-console-plugin/perses`;
 
-        console.log(`🔄 Transforming static publicPath for ${pluginName}:`,
-                   manifest.metaData.publicPath, '->', `${proxyPath}${manifest.metaData.publicPath}`);
+        console.log(
+          `🔄 Transforming static publicPath for ${pluginName}:`,
+          manifest.metaData.publicPath,
+          '->',
+          `${proxyPath}${manifest.metaData.publicPath}`,
+        );
 
         // Transform the publicPath to include proxy
         manifest.metaData.publicPath = `${proxyPath}${manifest.metaData.publicPath}`;
@@ -252,7 +267,10 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Res
 
       // Also check for getPublicPath function and log it
       if (manifest.metaData?.getPublicPath) {
-        console.log(`✅ Found getPublicPath function for ${manifest.id || manifest.name}:`, manifest.metaData.getPublicPath);
+        console.log(
+          `✅ Found getPublicPath function for ${manifest.id || manifest.name}:`,
+          manifest.metaData.getPublicPath,
+        );
       }
 
       console.log('📋 Modified manifest metaData:', manifest.metaData);
@@ -266,19 +284,150 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Res
     }
   }
 
+  // Check if this is ANY JavaScript file from plugins that might contain webpack publicPath
+  if ((url.includes('/plugins/') || url.includes('perses/plugins/')) && url.endsWith('.js')) {
+    console.log('📦 Processing remote entry file:', url);
+    const response = await originalFetch(input, init);
+
+    if (response.ok && response.headers.get('content-type')?.includes('javascript')) {
+      const jsCode = await response.text();
+      console.log(`📝 JS Code length: ${jsCode.length} chars`);
+
+      // Extract plugin name from URL - handle both proxy and direct paths
+      const pluginNameMatch =
+        url.match(/\/plugins\/([^/]+)\/__mf\/js\//) ||
+        url.match(/perses\/plugins\/([^/]+)\/__mf\/js\//);
+
+      if (pluginNameMatch) {
+        const pluginName = pluginNameMatch[1];
+        const proxyPath = `/api/proxy/plugin/monitoring-console-plugin/perses/plugins/${pluginName}/`;
+        console.log(`🔍 Looking for webpack publicPath for plugin: ${pluginName}`);
+
+        // Search for existing webpack publicPath patterns to understand what's in the file
+        const webpackPatterns = jsCode.match(/__webpack_require__\.p\s*=\s*['""][^'"]*['"]/g);
+        if (webpackPatterns) {
+          console.log(`📋 Found webpack publicPath patterns:`, webpackPatterns);
+        } else {
+          console.log(`❌ No webpack publicPath patterns found in ${pluginName} entry file`);
+        }
+
+        // Replace hardcoded webpack publicPath with proxy path
+        const modifiedCode = jsCode.replace(
+          new RegExp(`__webpack_require__\\.p\\s*=\\s*['"]/plugins/${pluginName}/['"]`, 'g'),
+          `__webpack_require__.p="${proxyPath}"`,
+        );
+
+        if (modifiedCode !== jsCode) {
+          console.log(`🔧 Modified webpack publicPath in remote entry for ${pluginName}`);
+          return new Response(modifiedCode, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
+        } else {
+          console.log(`ℹ️ No modifications needed for ${pluginName} entry file`);
+        }
+      } else {
+        console.log(`❌ Could not extract plugin name from URL: ${url}`);
+      }
+    } else {
+      console.log(`❌ Response not OK or not JavaScript:`, response.status, response.headers.get('content-type'));
+    }
+  }
+
   return originalFetch(input, init);
 };
+
+// Intercept script tag creation to fix async chunk loading
+document.createElement = function(tagName: string, options?: ElementCreationOptions): HTMLElement {
+  const element = originalCreateElement.call(this, tagName, options);
+
+  if (tagName.toLowerCase() === 'script') {
+    const script = element as HTMLScriptElement;
+
+    // Override the src setter to intercept script loading
+    const originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+    Object.defineProperty(script, 'src', {
+      get: function() {
+        return originalSrcDescriptor?.get?.call(this);
+      },
+      set: function(url: string) {
+        // Check if this is a problematic plugin URL that needs proxy fixing
+        if (url.includes('/plugins/') && url.includes('/__mf/js/') && !url.includes('/api/proxy/')) {
+          const proxyUrl = url.replace('/plugins/', '/api/proxy/plugin/monitoring-console-plugin/perses/plugins/');
+          console.log('🔧 Fixed script src for async chunk:', url, '->', proxyUrl);
+          originalSrcDescriptor?.set?.call(this, proxyUrl);
+        } else {
+          originalSrcDescriptor?.set?.call(this, url);
+        }
+      },
+      configurable: true,
+      enumerable: true
+    });
+  }
+
+  return element;
+} as any;
 
 export const loadPlugin = async (
   moduleName: string,
   pluginName: string,
   baseURL?: string,
 ): Promise<RemotePluginModule | null> => {
+  console.log(`🔌 Loading plugin: ${moduleName}/${pluginName} with baseURL: ${baseURL}`);
+
   registerRemote(moduleName, baseURL);
 
   const pluginRuntime = getPluginRuntime();
 
-  return pluginRuntime.loadRemote<RemotePluginModule>(`${moduleName}/${pluginName}`);
+  console.log(`⏳ About to load remote: ${moduleName}/${pluginName}`);
+  const result = await pluginRuntime.loadRemote<RemotePluginModule>(`${moduleName}/${pluginName}`);
+  console.log(`✅ Remote loaded successfully: ${moduleName}/${pluginName}`);
+
+  // After loading the remote, check if we need to override its webpack publicPath
+  if (baseURL && typeof window !== 'undefined') {
+    console.log(`🔍 Checking for remote global: ${moduleName}`);
+    const remoteGlobal = (window as any)[moduleName];
+
+    if (remoteGlobal) {
+      console.log(`✅ Found remote global for ${moduleName}`);
+      if (remoteGlobal.__webpack_require__) {
+        console.log(`✅ Found __webpack_require__ for ${moduleName}`);
+        if (remoteGlobal.__webpack_require__.p) {
+          const originalPublicPath = remoteGlobal.__webpack_require__.p;
+          console.log(`📍 Current webpack publicPath for ${moduleName}: ${originalPublicPath}`);
+
+          const proxyPublicPath = `${baseURL}/${moduleName}/`;
+
+          if (
+            originalPublicPath.startsWith('/plugins/') &&
+            !originalPublicPath.includes('/api/proxy/')
+          ) {
+            console.log(
+              `🔧 Overriding remote webpack publicPath for ${moduleName}:`,
+              originalPublicPath,
+              '->',
+              proxyPublicPath,
+            );
+            remoteGlobal.__webpack_require__.p = proxyPublicPath;
+            console.log(`✅ Successfully overrode webpack publicPath for ${moduleName}`);
+          } else {
+            console.log(`ℹ️ No override needed for ${moduleName} (already correct or not /plugins/ path)`);
+          }
+        } else {
+          console.log(`❌ No __webpack_require__.p found for ${moduleName}`);
+        }
+      } else {
+        console.log(`❌ No __webpack_require__ found for ${moduleName}`);
+      }
+    } else {
+      console.log(`❌ No remote global found for ${moduleName}`);
+    }
+  } else {
+    console.log(`ℹ️ Skipping webpack publicPath override (no baseURL or not in browser)`);
+  }
+
+  return result;
 };
 
 export interface PersesPlugin {
