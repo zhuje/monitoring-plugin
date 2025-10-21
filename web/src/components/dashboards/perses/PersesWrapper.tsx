@@ -46,7 +46,7 @@ import { QueryParams } from '../../query-params';
 import { StringParam, useQueryParam } from 'use-query-params';
 import { useTranslation } from 'react-i18next';
 import { LoadingBox } from '../../../components/console/console-shared/src/components/loading/LoadingBox';
-import { pluginLoader } from './persesPluginsLoader';
+import { remotePluginLoader } from '../../../model/remote-plugin-loader';
 
 // Override eChart defaults with PatternFly colors.
 const patternflyBlue100 = chart_color_blue_100.value;
@@ -267,6 +267,8 @@ export function PersesWrapper({ children, project }: PersesWrapperProps) {
       palette: defaultPaletteColors,
     },
   });
+
+  const pluginLoader = remotePluginLoader();
 
   return (
     <ThemeProvider theme={muiTheme}>
