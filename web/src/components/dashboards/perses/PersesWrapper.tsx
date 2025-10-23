@@ -1,3 +1,6 @@
+// Import config first to ensure global variables are set before Module Federation
+// import '../../../config';
+
 import { ThemeOptions, ThemeProvider } from '@mui/material';
 import { ChartThemeColor, getThemeColors } from '@patternfly/react-charts/victory';
 import {

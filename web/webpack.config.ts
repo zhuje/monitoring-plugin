@@ -1,7 +1,7 @@
 /* eslint-env node */
 
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { DefinePlugin, Configuration as WebpackConfiguration } from 'webpack';
+import { DefinePlugin, BannerPlugin, Configuration as WebpackConfiguration } from 'webpack';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
 import { ConsoleRemotePlugin } from '@openshift-console/dynamic-plugin-sdk-webpack';
@@ -93,6 +93,20 @@ const config: Configuration = {
     },
   },
   plugins: [
+    // Set global variables BEFORE ConsoleRemotePlugin initializes Module Federation
+    new BannerPlugin({
+      banner: `
+// Set global variables for Perses Module Federation before any other code runs
+if (typeof window !== 'undefined') {
+  window.PERSES_PLUGIN_ASSETS_PATH = '/api/proxy/plugin/monitoring-console-plugin/perses';
+  window.PERSES_APP_CONFIG = {
+    api_prefix: '/api/proxy/plugin/monitoring-console-plugin/perses'
+  };
+  console.log('🚀 [WEBPACK_BANNER] Set window.PERSES_PLUGIN_ASSETS_PATH:', window.PERSES_PLUGIN_ASSETS_PATH);
+}`,
+      raw: true,
+      entryOnly: false,
+    }),
     new ConsoleRemotePlugin({
       validateExtensionIntegrity: false,
     }),
@@ -102,6 +116,7 @@ const config: Configuration = {
     new DefinePlugin({
       'process.env': {
         I18N_NAMESPACE: JSON.stringify('plugin__monitoring-plugin'),
+        API_PREFIX: JSON.stringify('/api/proxy/plugin/monitoring-console-plugin/perses'),
       },
       // Define the proxy path for Perses plugins at build time
       PERSES_PROXY_BASE_URL: JSON.stringify('/api/proxy/plugin/monitoring-console-plugin/perses'),

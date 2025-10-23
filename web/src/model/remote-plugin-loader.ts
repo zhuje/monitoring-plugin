@@ -1,22 +1,11 @@
+// Import config first to set global variables before any Module Federation imports
+// import { PROXY_BASE_URL } from '../config';
+
 import { PluginLoader } from '@perses-dev/plugin-system';
 import { useMemo } from 'react';
 import { PluginMetadata, PluginModuleResource } from '@perses-dev/plugin-system';
 
 import { createInstance, ModuleFederation } from '@module-federation/enhanced/runtime';
-
-// Use build-time injected proxy URL for Perses plugins
-declare const PERSES_PROXY_BASE_URL: string;
-
-const PROXY_BASE_URL = PERSES_PROXY_BASE_URL;
-
-// Set global variable for Perses plugin getPublicPath function
-// This must be set before any Module Federation loading occurs
-if (typeof window !== 'undefined') {
-  (window as any).PERSES_PLUGIN_ASSETS_PATH = PROXY_BASE_URL;
-  (window as any).PERSES_APP_CONFIG = {
-    api_prefix: PROXY_BASE_URL,
-  };
-}
 
 import * as ReactQuery from '@tanstack/react-query';
 import React from 'react';
@@ -225,47 +214,67 @@ const registerRemote = (name: string, baseURL?: string): void => {
 // Most paths use webpack DefinePlugin, but some hardcoded chunks need runtime patching
 
 // Targeted script tag interception for remaining hardcoded /plugins/ paths
-const originalCreateElement = document.createElement;
-document.createElement = function (tagName: string, options?: ElementCreationOptions): HTMLElement {
-  const element = originalCreateElement.call(this, tagName, options);
+// const originalCreateElement = document.createElement;
+// document.createElement = function (tagName: string, options?: ElementCreationOptions): HTMLElement {
+//   const element = originalCreateElement.call(this, tagName, options);
 
-  if (tagName.toLowerCase() === 'script') {
-    const script = element as HTMLScriptElement;
+//   if (tagName.toLowerCase() === 'script') {
+//     const script = element as HTMLScriptElement;
 
-    // Override src setter to fix any remaining /plugins/ paths
-    const originalSrcDescriptor = Object.getOwnPropertyDescriptor(
-      HTMLScriptElement.prototype,
-      'src',
-    );
-    Object.defineProperty(script, 'src', {
-      get: function () {
-        return originalSrcDescriptor?.get?.call(this);
-      },
-      set: function (url: string) {
-        // Only intercept problematic /plugins/ URLs that don't use proxy
-        if (url.includes('/plugins/') && !url.includes('/api/proxy/')) {
-          const proxyUrl = url.replace('/plugins/', `${PROXY_BASE_URL}/plugins/`);
-          originalSrcDescriptor?.set?.call(this, proxyUrl);
-        } else {
-          originalSrcDescriptor?.set?.call(this, url);
-        }
-      },
-      configurable: true,
-      enumerable: true,
-    });
-  }
+//     // Override src setter to fix any remaining /plugins/ paths
+//     const originalSrcDescriptor = Object.getOwnPropertyDescriptor(
+//       HTMLScriptElement.prototype,
+//       'src',
+//     );
+//     Object.defineProperty(script, 'src', {
+//       get: function () {
+//         return originalSrcDescriptor?.get?.call(this);
+//       },
+//       set: function (url: string) {
+//         // Only intercept problematic /plugins/ URLs that don't use proxy
+//         if (url.includes('/plugins/') && !url.includes('/api/proxy/')) {
+//           const proxyUrl = url.replace('/plugins/', `${PROXY_BASE_URL}/plugins/`);
+//           originalSrcDescriptor?.set?.call(this, proxyUrl);
+//         } else {
+//           originalSrcDescriptor?.set?.call(this, url);
+//         }
+//       },
+//       configurable: true,
+//       enumerable: true,
+//     });
+//   }
 
-  return element;
-} as any;
+//   return element;
+// } as any;
 
 export const loadPlugin = async (
   moduleName: string,
   pluginName: string,
   baseURL?: string,
 ): Promise<RemotePluginModule | null> => {
+  console.log(
+    '🔧 [CONFIG] [LOAD_PLUGIN] Loading plugin:',
+    moduleName,
+    pluginName,
+    'baseURL:',
+    baseURL,
+  );
+  console.log(
+    '🔧 [CONFIG] [LOAD_PLUGIN] window.PERSES_PLUGIN_ASSETS_PATH:',
+    window.PERSES_PLUGIN_ASSETS_PATH,
+  );
+  console.log('🔧  [CONFIG] [LOAD_PLUGIN] window.PERSES_APP_CONFIG:', window.PERSES_APP_CONFIG);
+
   registerRemote(moduleName, baseURL);
   const pluginRuntime = getPluginRuntime();
-  return await pluginRuntime.loadRemote<RemotePluginModule>(`${moduleName}/${pluginName}`);
+
+  // Load the remote plugin
+  const result = await pluginRuntime.loadRemote<RemotePluginModule>(`${moduleName}/${pluginName}`);
+
+  // After loading, log for debugging
+  console.log('[CONFIG] 4. remotePluginModule >> plugins', result);
+
+  return result;
 };
 
 export interface PersesPlugin {
@@ -345,14 +354,36 @@ const DEFAULT_PLUGINS_ASSETS_PATH = '/plugins';
  * @param options - Optional configuration options for the remote plugin loader.
  */
 export function remotePluginLoader(_options?: RemotePluginLoaderOptions): PluginLoader {
-  const pluginsApiPath = PROXY_BASE_URL + DEFAULT_PLUGINS_API_PATH;
-  const pluginsAssetsPath = PROXY_BASE_URL + DEFAULT_PLUGINS_ASSETS_PATH;
+  const pluginsApiPath = window.PERSES_PLUGIN_ASSETS_PATH + DEFAULT_PLUGINS_API_PATH;
+  const pluginsAssetsPath = window.PERSES_PLUGIN_ASSETS_PATH + DEFAULT_PLUGINS_ASSETS_PATH;
+
+  /*
+  function getBaseModuleFederationConfig(name: string): ModuleFederationOptions {
+  return {
+    name,
+    dts: false,
+    runtime: false,
+    getPublicPath: `function() { const prefix = window.PERSES_PLUGIN_ASSETS_PATH || window.PERSES_APP_CONFIG?.api_prefix || ""; return prefix + "${getAssetPrefix(name)}"; }`,
+  };
+}
+  */
+
+  console.log(
+    '[CONFIG]  2. remotePluginLoader() >> window.PERSES_APP_CONFIG',
+    window.PERSES_APP_CONFIG,
+  );
+  console.log(
+    '[CONFIG] 2. remotePluginLoader >> window.PERSES_PLUGIN_ASSETS_PATH',
+    window.PERSES_PLUGIN_ASSETS_PATH,
+  );
 
   return {
     getInstalledPlugins: async (): Promise<PluginModuleResource[]> => {
       const pluginsResponse = await fetch(pluginsApiPath);
 
       const plugins = await pluginsResponse.json();
+
+      console.log('[CONFIG] 3. remotePluginLoader >> plugins', plugins);
 
       let pluginModules: PluginModuleResource[] = [];
 
@@ -380,6 +411,15 @@ export function remotePluginLoader(_options?: RemotePluginLoaderOptions): Plugin
           pluginsAssetsPath,
         );
 
+        console.log(
+          '[CONFIG] 4. remotePluginModule >> pluginsAssetsPath, pluginModuleName, plugin.spec.name',
+          pluginsAssetsPath,
+          pluginModuleName,
+          plugin.spec.name,
+        );
+
+        console.log('[CONFIG] 4. remotePluginModule >> plugins', remotePluginModule);
+
         const remotePlugin = remotePluginModule?.[plugin.spec.name];
         if (remotePlugin) {
           pluginModule[plugin.spec.name] = remotePlugin;
@@ -393,9 +433,9 @@ export function remotePluginLoader(_options?: RemotePluginLoaderOptions): Plugin
   };
 }
 
-export function useApiPrefix(): string {
-  return PROXY_BASE_URL;
-}
+// export function useApiPrefix(): string {
+//   return PROXY_BASE_URL;
+// }
 
 export function getBasePathName(): string {
   // Return the current window base pathname
@@ -404,7 +444,11 @@ export function getBasePathName(): string {
 
 export function useRemotePluginLoader(): PluginLoader {
   const pluginLoader = useMemo(
-    () => remotePluginLoader({ baseURL: PROXY_BASE_URL, apiPrefix: PROXY_BASE_URL }),
+    () =>
+      remotePluginLoader({
+        baseURL: window.PERSES_PLUGIN_ASSETS_PATH,
+        apiPrefix: window.PERSES_PLUGIN_ASSETS_PATH,
+      }),
     [],
   );
 
