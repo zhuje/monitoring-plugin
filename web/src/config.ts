@@ -17,12 +17,6 @@ const PERSES_APP_CONFIG = {
 window.PERSES_APP_CONFIG = PERSES_APP_CONFIG;
 window.PERSES_PLUGIN_ASSETS_PATH = PROXY_BASE_URL;
 
-// Debug logging to verify globals are set
-console.log('🔧 [CONFIG] Setting window globals:');
-console.log('🔧 [CONFIG] PROXY_BASE_URL:', PROXY_BASE_URL);
-console.log('🔧 [CONFIG] window.PERSES_APP_CONFIG:', window.PERSES_APP_CONFIG);
-console.log('🔧 [CONFIG] window.PERSES_PLUGIN_ASSETS_PATH:', window.PERSES_PLUGIN_ASSETS_PATH);
-
 // TypeScript declarations for global window variables
 declare global {
   interface Window {
