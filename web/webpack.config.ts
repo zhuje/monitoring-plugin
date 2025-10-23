@@ -94,6 +94,7 @@ const config: Configuration = {
   },
   plugins: [
     // Set global variables BEFORE ConsoleRemotePlugin initializes Module Federation
+    // This ensures Perses plugins can access the correct proxy path for dynamic loading
     new BannerPlugin({
       banner: `
 // Set global variables for Perses Module Federation before any other code runs
@@ -102,7 +103,6 @@ if (typeof window !== 'undefined') {
   window.PERSES_APP_CONFIG = {
     api_prefix: '/api/proxy/plugin/monitoring-console-plugin/perses'
   };
-  console.log('🚀 [WEBPACK_BANNER] Set window.PERSES_PLUGIN_ASSETS_PATH:', window.PERSES_PLUGIN_ASSETS_PATH);
 }`,
       raw: true,
       entryOnly: false,
@@ -118,7 +118,7 @@ if (typeof window !== 'undefined') {
         I18N_NAMESPACE: JSON.stringify('plugin__monitoring-plugin'),
         API_PREFIX: JSON.stringify('/api/proxy/plugin/monitoring-console-plugin/perses'),
       },
-      // Define the proxy path for Perses plugins at build time
+      // Build-time injection of proxy path for config module
       PERSES_PROXY_BASE_URL: JSON.stringify('/api/proxy/plugin/monitoring-console-plugin/perses'),
     }),
   ],

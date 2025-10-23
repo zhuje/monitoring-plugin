@@ -50,8 +50,6 @@ import { QueryParams } from '../../query-params';
 import { StringParam, useQueryParam } from 'use-query-params';
 import { useTranslation } from 'react-i18next';
 import { LoadingBox } from '../../../components/console/console-shared/src/components/loading/LoadingBox';
-// import { remotePluginLoader } from '../../../model/remote-plugin-loader';
-
 import { remotePluginLoader } from '@perses-dev/plugin-system';
 
 // Override eChart defaults with PatternFly colors.
