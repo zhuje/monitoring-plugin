@@ -19,7 +19,7 @@ import (
 	"k8s.io/apiserver/pkg/server/dynamiccertificates"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 )
 
@@ -116,17 +116,16 @@ func createHTTPServer(ctx context.Context, cfg *Config) (*http.Server, error) {
 		return nil, fmt.Errorf("cannot set default port to reserved port %d", cfg.Port)
 	}
 
-	// Uncomment the following line for local development:
-	// k8sconfig, err := clientcmd.BuildConfigFromFlags("", "$HOME/.kube/config")
-
 	// Comment the following line for local development:
 	var k8sclient *dynamic.DynamicClient
 	if acmMode {
+		// Uncomment the following line for local development:
+		k8sconfig, err := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
 
-		k8sconfig, err := rest.InClusterConfig()
+		// k8sconfig, err := rest.InClusterConfig()
 
 		if err != nil {
-			return nil, fmt.Errorf("cannot get in cluster config: %w", err)
+			return nil, fmt.Errorf("cannot get kubeconfig: %w", err)
 		}
 
 		k8sclient, err = dynamic.NewForConfig(k8sconfig)

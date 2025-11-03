@@ -3,7 +3,7 @@ PLATFORMS   ?= linux/arm64,linux/amd64
 ORG         ?= openshift-observability-ui
 PLUGIN_NAME ?=monitoring-plugin
 IMAGE       ?= quay.io/${ORG}/${PLUGIN_NAME}:${VERSION}
-FEATURES    ?=incidents,perses-dashboards,dev-config
+FEATURES    ?=incidents,perses-dashboards,dev-config,acm-alerting
 
 .PHONY: install-frontend
 install-frontend:
