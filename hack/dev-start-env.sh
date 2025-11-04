@@ -7,7 +7,7 @@
 # include panels for the Perses project based on user input.
 
 # --- Configuration ---
-readonly PERSSES_PATH="/Users/jezhu/Git/perses_core"
+readonly PERSES_PATH="/Users/jezhu/Git/perses_core"
 readonly MONITORING_PATH="/Users/jezhu/Git/monitoring-plugin"
 readonly SESSION_NAME="dev_combined"
 
@@ -39,8 +39,8 @@ echo "✅ OpenShift connection is valid."
 
 # 3. Check for project directories.
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-    if [[ ! -d "$PERSSES_PATH" ]]; then
-        echo "❌ Error: Perses path not found: $PERSSES_PATH" >&2
+    if [[ ! -d "$PERSES_PATH" ]]; then
+        echo "❌ Error: Perses path not found: $PERSES_PATH" >&2
         exit 1
     fi
 fi
@@ -61,10 +61,10 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     # --- TRUE: Create 6-PANE LAYOUT (Perses + Monitoring) ---
     echo "✅ Perses enabled. Creating 6-pane layout..."
 
-    tmux new-session -d -s "$SESSION_NAME" -c "$PERSSES_PATH" \
+    tmux new-session -d -s "$SESSION_NAME" -c "$PERSES_PATH" \
       "./scripts/api_backend_dev.sh; exec ${SHELL:-zsh}"
 
-    tmux split-window -h -t "$SESSION_NAME:0" -c "$PERSSES_PATH/ui" \
+    tmux split-window -h -t "$SESSION_NAME:0" -c "$PERSES_PATH/ui" \
       "npm run start; exec ${SHELL:-zsh}"
 
     tmux split-window -v -t "$SESSION_NAME:0.0" -c "$MONITORING_PATH" \
