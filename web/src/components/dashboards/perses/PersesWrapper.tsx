@@ -389,6 +389,10 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
             '&.MuiAccordion-root': {
               borderRadius: 'var(--pf-t--global--border--radius--medium) !important',
             },
+            // Hide the separator line above accordion
+            '&::before': {
+              opacity: '0 !important',
+            },
           },
         },
       },
