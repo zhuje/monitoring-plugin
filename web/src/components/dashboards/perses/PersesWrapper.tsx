@@ -66,17 +66,17 @@ function buildExternalVariableDefinition(source: string, variables: Variable[]) 
   };
 }
 
-function buildGlobalVariableDefinition(variables: Variable[]) {
-  return {
-    editLink: `/admin/variables`,
-    tooltip: {
-      title: 'Global scope variables',
-      description:
-        'Variables defined at global level. Can be overridden by any local/project variable of same name.',
-    },
-    ...buildExternalVariableDefinition('global', variables),
-  };
-}
+// function buildGlobalVariableDefinition(variables: Variable[]) {
+//   return {
+//     editLink: `/admin/variables`,
+//     tooltip: {
+//       title: 'Global scope variables',
+//       description:
+//         'Variables defined at global level. Can be overridden by any local/project variable of same name.',
+//     },
+//     ...buildExternalVariableDefinition('global', variables),
+//   };
+// }
 
 function buildProjectVariableDefinition(projectName: string, variables: Variable[]) {
   return {
@@ -91,58 +91,58 @@ function buildProjectVariableDefinition(projectName: string, variables: Variable
 }
 
 // Sample variables for testing
-const sampleGlobalVariables: Variable[] = [
-  {
-    kind: 'Variable',
-    metadata: {
-      name: 'environment',
-      project: '',
-    },
-    spec: {
-      kind: 'ListVariable',
-      spec: {
-        name: 'environment',
-        allowAllValue: true,
-        plugin: {
-          kind: 'StaticListVariable',
-          spec: {
-            values: ['dev', 'staging', 'prod'],
-          },
-        },
-        display: {
-          name: 'Environment',
-          description: 'Global environment selector',
-          hidden: false,
-        },
-      },
-    },
-  },
-  {
-    kind: 'Variable',
-    metadata: {
-      name: 'region',
-      project: '',
-    },
-    spec: {
-      kind: 'ListVariable',
-      spec: {
-        name: 'region',
-        allowAllValue: true,
-        plugin: {
-          kind: 'StaticListVariable',
-          spec: {
-            values: ['us-east-1', 'us-west-2', 'eu-central-1'],
-          },
-        },
-        display: {
-          name: 'Region',
-          description: 'Global region selector',
-          hidden: false,
-        },
-      },
-    },
-  },
-];
+// const sampleGlobalVariables: Variable[] = [
+//   {
+//     kind: 'Variable',
+//     metadata: {
+//       name: 'environment',
+//       project: '',
+//     },
+//     spec: {
+//       kind: 'ListVariable',
+//       spec: {
+//         name: 'environment',
+//         allowAllValue: true,
+//         plugin: {
+//           kind: 'StaticListVariable',
+//           spec: {
+//             values: ['dev', 'staging', 'prod'],
+//           },
+//         },
+//         display: {
+//           name: 'Environment',
+//           description: 'Global environment selector',
+//           hidden: false,
+//         },
+//       },
+//     },
+//   },
+//   {
+//     kind: 'Variable',
+//     metadata: {
+//       name: 'region',
+//       project: '',
+//     },
+//     spec: {
+//       kind: 'ListVariable',
+//       spec: {
+//         name: 'region',
+//         allowAllValue: true,
+//         plugin: {
+//           kind: 'StaticListVariable',
+//           spec: {
+//             values: ['us-east-1', 'us-west-2', 'eu-central-1'],
+//           },
+//         },
+//         display: {
+//           name: 'Region',
+//           description: 'Global region selector',
+//           hidden: false,
+//         },
+//       },
+//     },
+//   },
+// ];
 
 const sampleProjectVariables: Variable[] = [
   {
@@ -207,7 +207,7 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
       },
       h2: {
         // Panel Group Heading
-        color: 'var(--pf-t--global--text--color--brand--default)',
+        // color: 'var(--pf-t--global--text--color--brand--default)',
         fontWeight: 'var(--pf-t--global--font--weight--body--default)',
         fontSize: 'var(--pf-t--global--font--size--600)',
       },
@@ -393,6 +393,8 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
             '&::before': {
               opacity: '0 !important',
             },
+            backgroundColor:
+              'var(--pf-t--global--background--color--action--plain--default) !important',
           },
         },
       },
@@ -401,9 +403,14 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
           root: {
             // Dashboard Built-in Variables accordion summary
             borderRadius: 'var(--pf-t--global--border--radius--medium) !important',
-            '&.MuiAccordionSummary-root': {
-              borderRadius: 'var(--pf-t--global--border--radius--medium) !important',
-            },
+            // backgroundColor:
+            //   'var(--pf-t--global--background--color--secondary--default) !important',
+            backgroundColor: 'var(--pf-t--global--background--color--floating--default) !important',
+            // '&.MuiAccordionSummary-root': {
+            //   borderRadius: 'var(--pf-t--global--border--radius--medium) !important',
+            //   // backgroundColor:
+            //   // 'var(--pf-t--global--background--color--secondary--default) !important',
+            // },
             // When expanded, remove bottom border radius
             '&.Mui-expanded': {
               borderBottomLeftRadius: '0 !important',
@@ -417,6 +424,8 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
       MuiAccordionDetails: {
         styleOverrides: {
           root: {
+            backgroundColor: 'var(--pf-t--global--background--color--floating--default) !important',
+
             // Dashboard Built-in Variables accordion content - add bottom border radius
             borderBottomLeftRadius: 'var(--pf-t--global--border--radius--medium) !important',
             borderBottomRightRadius: 'var(--pf-t--global--border--radius--medium) !important',
@@ -428,6 +437,8 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
       MuiTableCell: {
         styleOverrides: {
           root: {
+            // backgroundColor: 'var(--pf-t--global--background--color--floating--default) !important',
+
             // Remove bold font weight from all table cells
             fontWeight: 'var(--pf-t--global--font--weight--body--default) !important',
           },
@@ -511,7 +522,7 @@ function InnerWrapper({ children, project, dashboardName }) {
   const externalVariableDefinitions = useMemo(
     () => [
       buildProjectVariableDefinition(project, sampleProjectVariables),
-      buildGlobalVariableDefinition(sampleGlobalVariables),
+      // buildGlobalVariableDefinition(sampleGlobalVariables),
     ],
     [project],
   );
