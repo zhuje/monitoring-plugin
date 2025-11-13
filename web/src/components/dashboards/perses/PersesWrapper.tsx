@@ -15,7 +15,6 @@ import {
   Definition,
   DurationString,
   UnknownSpec,
-  Variable,
 } from '@perses-dev/core';
 import {
   DashboardProvider,
@@ -50,121 +49,6 @@ import { StringParam, useQueryParam } from 'use-query-params';
 import { useTranslation } from 'react-i18next';
 import { LoadingBox } from '../../../components/console/console-shared/src/components/loading/LoadingBox';
 import { remotePluginLoader } from '@perses-dev/plugin-system';
-
-// Utility functions for building external variable definitions
-function buildExternalVariableDefinition(source: string, variables: Variable[]) {
-  return {
-    source: source,
-    definitions: variables.map((v) => {
-      const definition = { ...v.spec };
-      // Ensure the metadata.name is used if spec.name is missing
-      if (!definition.spec?.name) {
-        definition.spec = { ...definition.spec, name: v.metadata.name };
-      }
-      return definition;
-    }),
-  };
-}
-
-// function buildGlobalVariableDefinition(variables: Variable[]) {
-//   return {
-//     editLink: `/admin/variables`,
-//     tooltip: {
-//       title: 'Global scope variables',
-//       description:
-//         'Variables defined at global level. Can be overridden by any local/project variable of same name.',
-//     },
-//     ...buildExternalVariableDefinition('global', variables),
-//   };
-// }
-
-function buildProjectVariableDefinition(projectName: string, variables: Variable[]) {
-  return {
-    editLink: `/projects/${projectName}/variables`,
-    tooltip: {
-      title: 'Project scope variables',
-      description:
-        'Variables defined at project level. Can be overridden by any local variable of same name.',
-    },
-    ...buildExternalVariableDefinition('project', variables),
-  };
-}
-
-// Sample variables for testing
-// const sampleGlobalVariables: Variable[] = [
-//   {
-//     kind: 'Variable',
-//     metadata: {
-//       name: 'environment',
-//       project: '',
-//     },
-//     spec: {
-//       kind: 'ListVariable',
-//       spec: {
-//         name: 'environment',
-//         allowAllValue: true,
-//         plugin: {
-//           kind: 'StaticListVariable',
-//           spec: {
-//             values: ['dev', 'staging', 'prod'],
-//           },
-//         },
-//         display: {
-//           name: 'Environment',
-//           description: 'Global environment selector',
-//           hidden: false,
-//         },
-//       },
-//     },
-//   },
-//   {
-//     kind: 'Variable',
-//     metadata: {
-//       name: 'region',
-//       project: '',
-//     },
-//     spec: {
-//       kind: 'ListVariable',
-//       spec: {
-//         name: 'region',
-//         allowAllValue: true,
-//         plugin: {
-//           kind: 'StaticListVariable',
-//           spec: {
-//             values: ['us-east-1', 'us-west-2', 'eu-central-1'],
-//           },
-//         },
-//         display: {
-//           name: 'Region',
-//           description: 'Global region selector',
-//           hidden: false,
-//         },
-//       },
-//     },
-//   },
-// ];
-
-const sampleProjectVariables: Variable[] = [
-  {
-    kind: 'Variable',
-    metadata: {
-      name: 'service',
-      project: 'openshift-monitoring',
-    },
-    spec: {
-      kind: 'TextVariable',
-      spec: {
-        name: 'service',
-        value: 'prometheus',
-        display: {
-          name: 'Service',
-          description: 'Project-level service variable',
-          hidden: false,
-        },
-      },
-    },
-  },
-];
 
 // Override eChart defaults with PatternFly colors.
 const patternflyBlue100 = chart_color_blue_100.value;
@@ -403,14 +287,7 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
           root: {
             // Dashboard Built-in Variables accordion summary
             borderRadius: 'var(--pf-t--global--border--radius--medium) !important',
-            // backgroundColor:
-            //   'var(--pf-t--global--background--color--secondary--default) !important',
             backgroundColor: 'var(--pf-t--global--background--color--floating--default) !important',
-            // '&.MuiAccordionSummary-root': {
-            //   borderRadius: 'var(--pf-t--global--border--radius--medium) !important',
-            //   // backgroundColor:
-            //   // 'var(--pf-t--global--background--color--secondary--default) !important',
-            // },
             // When expanded, remove bottom border radius
             '&.Mui-expanded': {
               borderBottomLeftRadius: '0 !important',
@@ -425,7 +302,6 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
         styleOverrides: {
           root: {
             backgroundColor: 'var(--pf-t--global--background--color--floating--default) !important',
-
             // Dashboard Built-in Variables accordion content - add bottom border radius
             borderBottomLeftRadius: 'var(--pf-t--global--border--radius--medium) !important',
             borderBottomRightRadius: 'var(--pf-t--global--border--radius--medium) !important',
@@ -437,8 +313,6 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
       MuiTableCell: {
         styleOverrides: {
           root: {
-            // backgroundColor: 'var(--pf-t--global--background--color--floating--default) !important',
-
             // Remove bold font weight from all table cells
             fontWeight: 'var(--pf-t--global--font--weight--body--default) !important',
           },
@@ -518,15 +392,6 @@ function InnerWrapper({ children, project, dashboardName }) {
   const initialTimeRange = useInitialTimeRange(DEFAULT_DASHBOARD_DURATION);
   const initialRefreshInterval = useInitialRefreshInterval(DEFAULT_REFRESH_INTERVAL);
 
-  // Build external variable definitions for Global and Project variables
-  const externalVariableDefinitions = useMemo(
-    () => [
-      buildProjectVariableDefinition(project, sampleProjectVariables),
-      // buildGlobalVariableDefinition(sampleGlobalVariables),
-    ],
-    [project],
-  );
-
   const builtinVariables = useMemo(() => {
     const result = [
       {
@@ -585,7 +450,7 @@ function InnerWrapper({ children, project, dashboardName }) {
       <VariableProviderWithQueryParams
         builtinVariableDefinitions={builtinVariables}
         initialVariableDefinitions={clearedDashboardResource?.spec?.variables}
-        externalVariableDefinitions={externalVariableDefinitions}
+        // externalVariableDefinitions={externalVariableDefinitions}
         key={clearedDashboardResource?.metadata.name}
       >
         <PersesPrometheusDatasourceWrapper
