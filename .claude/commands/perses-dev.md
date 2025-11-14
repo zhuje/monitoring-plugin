@@ -17,7 +17,7 @@ parameters:
 - If not a linux machine, validate that podman or docker is running (e.g. `which podman || which docker`) -->
 
 1. Start a tmux sessions in this terminal with 8 equally sized panels 
-- In bold output, tell the user the name of the session and tmux session tips like how to attach to sessions, detach a session, how to move around the panels using prefix + arrows, how to delete a session 
+- In bold output, tell the user the name of the session and tmux session tips like how to attach to sessions, how to move around the panels using prefix + arrows, how to delete a session, how to list sessionsgit s 
 - Pane Layout: 
 Pane 1 | Pane 2 | Pane 3 | Pane 4 
 Pane 5 | Pane 6 | Pane 7 | Pane 8
