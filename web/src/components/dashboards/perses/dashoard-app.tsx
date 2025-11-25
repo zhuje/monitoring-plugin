@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode, useMemo, useState } from 'react';
+import { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { Box } from '@mui/material';
 import { ChartsProvider, ErrorAlert, ErrorBoundary, useChartsTheme } from '@perses-dev/components';
 import { DashboardResource, EphemeralDashboardResource } from '@perses-dev/core';
@@ -32,6 +32,8 @@ import { DataViewTextFilter } from '@patternfly/react-data-view/dist/dynamic/Dat
 import { useDataViewPagination } from '@patternfly/react-data-view/dist/dynamic/Hooks';
 import { DataView } from '@patternfly/react-data-view/dist/dynamic/DataView';
 import { DataViewTable } from '@patternfly/react-data-view/dist/dynamic/DataViewTable';
+import { usePerses } from './hooks/usePerses';
+import { useTranslation } from 'react-i18next';
 
 const TableToolBar = () => {
   return (
@@ -60,91 +62,167 @@ interface Repository {
   lastCommit: string;
 }
 
-const repositories: Repository[] = [
-  {
-    name: 'Repository one',
-    branches: 'Branch one',
-    prs: 'Pull request one',
-    workspaces: 'Workspace one',
-    lastCommit: 'Timestamp one',
-  },
-  {
-    name: 'Repository two',
-    branches: 'Branch two',
-    prs: 'Pull request two',
-    workspaces: 'Workspace two',
-    lastCommit: 'Timestamp two',
-  },
-  {
-    name: 'Repository three',
-    branches: 'Branch three',
-    prs: 'Pull request three',
-    workspaces: 'Workspace three',
-    lastCommit: 'Timestamp three',
-  },
-  {
-    name: 'Repository four',
-    branches: 'Branch four',
-    prs: 'Pull request four',
-    workspaces: 'Workspace four',
-    lastCommit: 'Timestamp four',
-  },
-  {
-    name: 'Repository five',
-    branches: 'Branch five',
-    prs: 'Pull request five',
-    workspaces: 'Workspace five',
-    lastCommit: 'Timestamp five',
-  },
-  {
-    name: 'Repository six',
-    branches: 'Branch six',
-    prs: 'Pull request six',
-    workspaces: 'Workspace six',
-    lastCommit: 'Timestamp six',
-  },
-];
+// const repositories: Repository[] = [
+//   {
+//     name: 'Repository one',
+//     branches: 'Branch one',
+//     prs: 'Pull request one',
+//     workspaces: 'Workspace one',
+//     lastCommit: 'Timestamp one',
+//   },
+//   {
+//     name: 'Repository two',
+//     branches: 'Branch two',
+//     prs: 'Pull request two',
+//     workspaces: 'Workspace two',
+//     lastCommit: 'Timestamp two',
+//   },
+//   {
+//     name: 'Repository three',
+//     branches: 'Branch three',
+//     prs: 'Pull request three',
+//     workspaces: 'Workspace three',
+//     lastCommit: 'Timestamp three',
+//   },
+//   {
+//     name: 'Repository four',
+//     branches: 'Branch four',
+//     prs: 'Pull request four',
+//     workspaces: 'Workspace four',
+//     lastCommit: 'Timestamp four',
+//   },
+//   {
+//     name: 'Repository five',
+//     branches: 'Branch five',
+//     prs: 'Pull request five',
+//     workspaces: 'Workspace five',
+//     lastCommit: 'Timestamp five',
+//   },
+//   {
+//     name: 'Repository six',
+//     branches: 'Branch six',
+//     prs: 'Pull request six',
+//     workspaces: 'Workspace six',
+//     lastCommit: 'Timestamp six',
+//   },
+// ];
 
-const rows = repositories.map((item) => Object.values(item));
+// const rows = repositories.map((item) => Object.values(item));
 
-const columns = ['Repositories', 'Branches', 'Pull requests', 'Workspaces', 'Last commit'];
+// const columns = ['Repositories', 'Branches', 'Pull requests', 'Workspaces', 'Last commit'];
 
-const ouiaId = 'LayoutExample';
+// const ouiaId = 'LayoutExample';
 
-const MyTable: React.FunctionComponent = () => {
+// const MyTable: React.FunctionComponent = () => {
+//   const pagination = useDataViewPagination({ perPage: 5 });
+//   const { page, perPage } = pagination;
+
+//   const pageRows = useMemo(
+//     () => rows.slice((page - 1) * perPage, (page - 1) * perPage + perPage),
+//     [page, perPage],
+//   );
+//   return (
+//     <DataView>
+//       <TableToolBar />
+//       <DataViewToolbar
+//         ouiaId="DataViewHeader"
+//         pagination={
+//           <Pagination
+//             perPageOptions={perPageOptions}
+//             itemCount={repositories.length}
+//             {...pagination}
+//           />
+//         }
+//       />
+//       <DataViewTable
+//         aria-label="Repositories table"
+//         ouiaId={ouiaId}
+//         columns={columns}
+//         rows={pageRows}
+//       />
+//       <DataViewToolbar
+//         ouiaId="DataViewFooter"
+//         pagination={
+//           <Pagination
+//             isCompact
+//             perPageOptions={perPageOptions}
+//             itemCount={repositories.length}
+//             {...pagination}
+//           />
+//         }
+//       />
+//     </DataView>
+//   );
+// };
+
+const DashboardsTable: React.FunctionComponent = () => {
   const pagination = useDataViewPagination({ perPage: 5 });
   const { page, perPage } = pagination;
 
-  const pageRows = useMemo(
-    () => rows.slice((page - 1) * perPage, (page - 1) * perPage + perPage),
-    [page, perPage],
-  );
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
+
+  const { persesProjects, persesProjectsLoading, persesDashboards, persesDashboardsLoading } =
+    usePerses();
+
+  const dashboardCol = [t('Dashboard Name'), t('Project'), t('Created on'), t('Last Modified')];
+  interface DashboardRow {
+    name: string;
+    project: string;
+    created: string;
+    modified: string;
+  }
+
+  const dashboardRows: DashboardRow[] = useMemo(() => {
+    if (persesDashboardsLoading) {
+      return [];
+    }
+    return persesDashboards.map((board) => ({
+      name: board?.metadata?.name,
+      project: board?.metadata?.project,
+      created: board?.metadata?.createdAt,
+      modified: board?.metadata?.updatedAt,
+    }));
+  }, [persesDashboards, persesDashboardsLoading]);
+
+  const pageRows = useMemo(() => {
+    const numRows = dashboardRows.map((item) => Object.values(item));
+    return numRows.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
+  }, [dashboardRows, page, perPage]);
+
+  console.log('!JZ usePerses', {
+    dashboardRows,
+    persesProjects,
+    persesProjectsLoading,
+    persesDashboards,
+    persesDashboardsLoading,
+  });
+
   return (
     <DataView>
       <TableToolBar />
       <DataViewToolbar
-        ouiaId="DataViewHeader"
+        ouiaId="PersesDashList-DataViewHeader"
         pagination={
           <Pagination
             perPageOptions={perPageOptions}
-            itemCount={repositories.length}
+            itemCount={dashboardRows.length}
             {...pagination}
           />
         }
       />
       <DataViewTable
-        aria-label="Repositories table"
-        ouiaId={ouiaId}
-        columns={columns}
+        aria-label="Perses Dashboards List"
+        ouiaId={'PersesDashList-DataViewTable'}
+        columns={dashboardCol}
         rows={pageRows}
       />
       <DataViewToolbar
-        ouiaId="DataViewFooter"
+        ouiaId="PersesDashList-DataViewFooter"
         pagination={
           <Pagination
             isCompact
             perPageOptions={perPageOptions}
-            itemCount={repositories.length}
+            itemCount={dashboardRows.length}
             {...pagination}
           />
         }
@@ -186,6 +264,10 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
     onSave,
     onDiscard,
   } = props;
+
+  // ---------- Table Creation for Dashboard List
+
+  // ---------- Table Creation for Dashboard List
 
   const chartsTheme = useChartsTheme();
 
@@ -233,6 +315,8 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
     }
   };
 
+  // Create Table for Dashboards List
+
   return (
     <Box
       sx={{
@@ -244,13 +328,15 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
       }}
     >
       <h1> --------- TESTING ----------- </h1>
+      {/* 
+      <MyTable /> */}
 
-      <MyTable />
+      <DashboardsTable />
 
       <h1> Hello World !! </h1>
       <h1> --------- TESTING ----------- </h1>
 
-      {/* <OCPDashboardToolbar
+      <OCPDashboardToolbar
         dashboardName={dashboardResource.metadata.name}
         initialVariableIsSticky={isInitialVariableSticky}
         onSave={onSave}
@@ -281,7 +367,7 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
         {isLeavingConfirmDialogEnabled &&
           isEditMode &&
           (LeaveDialog({ original: originalDashboard, current: dashboard }) as ReactElement)}
-      </Box> */}
+      </Box>
     </Box>
   );
 };
