@@ -1,4 +1,3 @@
-import { Overview } from '@openshift-console/dynamic-plugin-sdk';
 import {
   QueryClient,
   QueryClientProvider,
@@ -10,12 +9,9 @@ import { useCallback, type FC } from 'react';
 import { QueryParamProvider } from 'use-query-params';
 import { ReactRouter5Adapter } from 'use-query-params/adapters/react-router-5';
 import { LoadingInline } from '../../console/console-shared/src/components/loading/LoadingInline';
-import { PersesWrapper } from './PersesWrapper';
-import { DashboardSkeleton } from './dashboard-skeleton';
-import { DashboardEmptyState } from './emptystates/DashboardEmptyState';
 import { ProjectEmptyState } from './emptystates/ProjectEmptyState';
 import { useDashboardsData } from './hooks/useDashboardsData';
-import { ProjectBar } from './project/ProjectBar';
+import { DashboardLayout } from './dashboard-layout';
 import {
   DashboardResource,
   EphemeralDashboardResource,
@@ -26,6 +22,7 @@ import { useSnackbar } from '@perses-dev/components';
 import buildURL from './perses/url-builder';
 import { OCPDashboardApp } from './dashoard-app';
 import { t } from 'i18next';
+import { DashboardListPage } from './dashboard-list-page';
 
 const resource = 'dashboards';
 const HTTPMethodPUT = 'PUT';
@@ -130,35 +127,26 @@ const MonitoringDashboardsPage_: FC = () => {
   }
 
   return (
-    <>
-      <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
-      <PersesWrapper project={activeProject}>
-        {activeProjectDashboardsMetadata.length === 0 ? (
-          <DashboardEmptyState />
-        ) : (
-          <DashboardSkeleton
-            boardItems={activeProjectDashboardsMetadata}
-            changeBoard={changeBoard}
-            dashboardName={dashboardName}
-            activeProject={activeProject}
-          >
-            <Overview>
-              <OCPDashboardApp
-                dashboardResource={activeProjectDashboardsMetadata[0].persesDashboard}
-                isReadonly={false}
-                isVariableEnabled={true}
-                isDatasourceEnabled={true}
-                onSave={handleDashboardSave}
-                emptyDashboardProps={{
-                  title: t('Empty Dashboard'),
-                  description: t('To get started add something to your dashboard'),
-                }}
-              />
-            </Overview>
-          </DashboardSkeleton>
-        )}
-      </PersesWrapper>
-    </>
+    <DashboardLayout
+      activeProject={activeProject}
+      setActiveProject={setActiveProject}
+      activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
+      changeBoard={changeBoard}
+      dashboardName={dashboardName}
+    >
+      {/* <OCPDashboardApp
+        dashboardResource={activeProjectDashboardsMetadata[0].persesDashboard}
+        isReadonly={false}
+        isVariableEnabled={true}
+        isDatasourceEnabled={true}
+        onSave={handleDashboardSave}
+        emptyDashboardProps={{
+          title: t('Empty Dashboard'),
+          description: t('To get started add something to your dashboard'),
+        }}
+      /> */}
+      <DashboardListPage />
+    </DashboardLayout>
   );
 };
 

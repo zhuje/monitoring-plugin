@@ -280,12 +280,6 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
         flexDirection: 'column',
       }}
     >
-      <h1> --------- TESTING ----------- </h1>
-
-      <DashboardsTable />
-
-      <h1> --------- TESTING ----------- </h1>
-
       <OCPDashboardToolbar
         dashboardName={dashboardResource.metadata.name}
         initialVariableIsSticky={isInitialVariableSticky}
