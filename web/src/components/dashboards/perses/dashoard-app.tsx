@@ -37,126 +37,10 @@ import { DataViewTr, DataViewTh } from '@patternfly/react-data-view/dist/dynamic
 import { ThProps } from '@patternfly/react-table';
 import { useSearchParams } from 'react-router-dom-v5-compat';
 
-// const TableToolBar = () => {
-//   return (
-//     <DataViewToolbar
-//       clearAllFilters={() => console.log('clearAllFilters called')}
-//       filters={
-//         <DataViewFilters onChange={() => console.log('onSetFilters calles')} values={{}}>
-//           <DataViewTextFilter filterId="name" title="Name" placeholder="Filter by name" />
-//           <DataViewTextFilter filterId="branch" title="Branch" placeholder="Filter by branch" />
-//         </DataViewFilters>
-//       }
-//     />
-//   );
-// };
-
 const perPageOptions = [
   { title: '10', value: 10 },
   { title: '20', value: 20 },
 ];
-
-// interface Repository {
-//   name: string;
-//   branches: string | null;
-//   prs: string | null;
-//   workspaces: string;
-//   lastCommit: string;
-// }
-
-// const repositories: Repository[] = [
-//   {
-//     name: 'Repository one',
-//     branches: 'Branch one',
-//     prs: 'Pull request one',
-//     workspaces: 'Workspace one',
-//     lastCommit: 'Timestamp one',
-//   },
-//   {
-//     name: 'Repository two',
-//     branches: 'Branch two',
-//     prs: 'Pull request two',
-//     workspaces: 'Workspace two',
-//     lastCommit: 'Timestamp two',
-//   },
-//   {
-//     name: 'Repository three',
-//     branches: 'Branch three',
-//     prs: 'Pull request three',
-//     workspaces: 'Workspace three',
-//     lastCommit: 'Timestamp three',
-//   },
-//   {
-//     name: 'Repository four',
-//     branches: 'Branch four',
-//     prs: 'Pull request four',
-//     workspaces: 'Workspace four',
-//     lastCommit: 'Timestamp four',
-//   },
-//   {
-//     name: 'Repository five',
-//     branches: 'Branch five',
-//     prs: 'Pull request five',
-//     workspaces: 'Workspace five',
-//     lastCommit: 'Timestamp five',
-//   },
-//   {
-//     name: 'Repository six',
-//     branches: 'Branch six',
-//     prs: 'Pull request six',
-//     workspaces: 'Workspace six',
-//     lastCommit: 'Timestamp six',
-//   },
-// ];
-
-// const rows = repositories.map((item) => Object.values(item));
-
-// const columns = ['Repositories', 'Branches', 'Pull requests', 'Workspaces', 'Last commit'];
-
-// const ouiaId = 'LayoutExample';
-
-// const MyTable: React.FunctionComponent = () => {
-//   const pagination = useDataViewPagination({ perPage: 5 });
-//   const { page, perPage } = pagination;
-
-//   const pageRows = useMemo(
-//     () => rows.slice((page - 1) * perPage, (page - 1) * perPage + perPage),
-//     [page, perPage],
-//   );
-//   return (
-//     <DataView>
-//       <TableToolBar />
-//       <DataViewToolbar
-//         ouiaId="DataViewHeader"
-//         pagination={
-//           <Pagination
-//             perPageOptions={perPageOptions}
-//             itemCount={repositories.length}
-//             {...pagination}
-//           />
-//         }
-//       />
-//       <DataViewTable
-//         aria-label="Repositories table"
-//         ouiaId={ouiaId}
-//         columns={columns}
-//         rows={pageRows}
-//       />
-//       <DataViewToolbar
-//         ouiaId="DataViewFooter"
-//         pagination={
-//           <Pagination
-//             isCompact
-//             perPageOptions={perPageOptions}
-//             itemCount={repositories.length}
-//             {...pagination}
-//           />
-//         }
-//       />
-//     </DataView>
-//   );
-// };
-
 interface DashboardRow {
   name: string;
   project: string;
@@ -211,8 +95,7 @@ const DashboardsTable: React.FunctionComponent = () => {
   const pagination = useDataViewPagination({ perPage: 5 });
   const { page, perPage } = pagination;
 
-  const { persesProjects, persesProjectsLoading, persesDashboards, persesDashboardsLoading } =
-    usePerses();
+  const { persesDashboards, persesDashboardsLoading } = usePerses();
 
   const sortByIndex = useMemo(
     () => DASHBOARD_COLUMNS.findIndex((item) => item.key === sortBy),
@@ -271,18 +154,22 @@ const DashboardsTable: React.FunctionComponent = () => {
     [page, perPage, sortedAndFilteredData],
   );
 
+  const PaginationTool = () => {
+    return (
+      <Pagination
+        perPageOptions={perPageOptions}
+        itemCount={sortedAndFilteredData.length}
+        {...pagination}
+      />
+    );
+  };
+
   return (
     <DataView>
       <DataViewToolbar
         ouiaId="PersesDashList-DataViewHeader"
         clearAllFilters={clearAllFilters}
-        pagination={
-          <Pagination
-            perPageOptions={perPageOptions}
-            itemCount={sortedAndFilteredData.length}
-            {...pagination}
-          />
-        }
+        pagination={<PaginationTool />}
         filters={
           <DataViewFilters onChange={(_e, values) => onSetFilters(values)} values={filters}>
             <DataViewTextFilter filterId="name" title="Name" placeholder="Filter by name" />
@@ -294,32 +181,13 @@ const DashboardsTable: React.FunctionComponent = () => {
           </DataViewFilters>
         }
       />
-      {/* <DataViewToolbar
-        ouiaId="PersesDashList-DataViewHeader"
-        pagination={
-          <Pagination
-            perPageOptions={perPageOptions}
-            itemCount={tableRows.length}
-            {...pagination}
-          />
-        }
-      /> */}
       <DataViewTable
         aria-label="Perses Dashboards List"
         ouiaId={'PersesDashList-DataViewTable'}
         columns={tableColumns}
         rows={pageRows}
       />
-      <DataViewToolbar
-        ouiaId="PersesDashList-DataViewFooter"
-        pagination={
-          <Pagination
-            perPageOptions={perPageOptions}
-            itemCount={sortedAndFilteredData.length}
-            {...pagination}
-          />
-        }
-      />
+      <DataViewToolbar ouiaId="PersesDashList-DataViewFooter" pagination={PaginationTool} />
     </DataView>
   );
 };
@@ -353,10 +221,6 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
     onSave,
     onDiscard,
   } = props;
-
-  // ---------- Table Creation for Dashboard List
-
-  // ---------- Table Creation for Dashboard List
 
   const chartsTheme = useChartsTheme();
 
