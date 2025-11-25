@@ -83,5 +83,41 @@
         "insertAfter": "dashboards-virt"
       }
     }
+  },
+  {
+    "op": "add",
+    "path": "/extensions/1",
+    "value": {
+      "type": "console.page/route",
+      "properties": {
+        "exact": false,
+        "path": ["/monitoring/v2/dashboards/view"],
+        "component": { "$codeRef": "DashboardViewerPage.MpCmoDashboardViewerPage" }
+      }
+    }
+  },
+  {
+    "op": "add",
+    "path": "/extensions/1",
+    "value": {
+      "type": "console.page/route",
+      "properties": {
+        "exact": false,
+        "path": ["/virt-monitoring/v2/dashboards/view"],
+        "component": { "$codeRef": "DashboardViewerPage.MpCmoDashboardViewerPage" }
+      }
+    }
+  },
+  {
+    "op": "add",
+    "path": "/extensions/1",
+    "value": {
+      "type": "console.page/route",
+      "properties": {
+        "exact": false,
+        "path": ["/multicloud/monitoring/v2/dashboards/view"],
+        "component": { "$codeRef": "DashboardViewerPage.MpCmoDashboardViewerPage" }
+      }
+    }
   }
 ]

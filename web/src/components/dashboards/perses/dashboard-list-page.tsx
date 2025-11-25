@@ -160,7 +160,7 @@ export const DashboardsTable: React.FunctionComponent = () => {
 
   return (
     <DataView>
-      <h1> DASHBOARD-LIST-PAGE.TSX Hello world! </h1>
+      <h1> DASHBOARD-LIST-PAGE.TSX Hello world!! </h1>
 
       <DataViewToolbar
         ouiaId="PersesDashList-DataViewHeader"
