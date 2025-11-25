@@ -1,0 +1,105 @@
+apiVersion: perses.dev/v1alpha1
+kind: PersesDashboard
+metadata:
+  name: simple-resource-dashboard
+spec:
+  display:
+    name: Simple Resource Monitoring
+  duration: 1h # Set the default time range to 1 hour
+  variables:
+    # Variable to select a job
+    - kind: ListVariable
+      spec:
+        name: job
+        display:
+          name: Job
+          hidden: false
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: job
+            matchers:
+              - 'up' # A common metric to find all jobs
+
+    # Variable to select an instance, filtered by the selected job
+    - kind: ListVariable
+      spec:
+        name: instance
+        display:
+          name: Instance
+          hidden: false
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: instance
+            matchers:
+              - 'up{job="$job"}' # Uses the 'job' variable to filter instances
+
+  panels:
+    # First panel for CPU Usage
+    cpu_usage:
+      kind: Panel
+      spec:
+        display:
+          name: CPU Usage (Rate)
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: Bottom
+            yAxis:
+              label: "CPU Cores"
+            queries:
+              - kind: TimeSeriesQuery
+                spec:
+                  plugin:
+                    kind: PrometheusTimeSeriesQuery
+                    spec:
+                      query: 'rate(process_cpu_seconds_total{job="$job", instance="$instance"}[5m])'
+                      seriesNameFormat: "{{instance}}"
+
+    # Second panel for Memory Usage
+    memory_usage:
+      kind: Panel
+      spec:
+        display:
+          name: Memory Usage (Bytes)
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: Bottom
+            yAxis:
+              label: "Memory"
+              format:
+                unit: Bytes
+            queries:
+              - kind: TimeSeriesQuery
+                spec:
+                  plugin:
+                    kind: PrometheusTimeSeriesQuery
+                    spec:
+                      query: 'process_resident_memory_bytes{job="$job", instance="$instance"}'
+                      seriesNameFormat: "{{instance}}"
+
+  layouts:
+    - kind: Grid
+      spec:
+        items:
+          # Position for the CPU panel
+          - x: 0
+            y: 0
+            width: 12 # Half the width of the grid (total is 24)
+            height: 8
+            content:
+              $ref: "#/spec/panels/cpu_usage"
+
+          # Position for the Memory panel
+          - x: 12
+            y: 0
+            width: 12 # The other half of the width
+            height: 8
+            content:
+              $ref: "#/spec/panels/memory_usage"
