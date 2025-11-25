@@ -1,5 +1,7 @@
 import React, { ReactNode, useMemo, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DashboardLayout } from './dashboard-layout';
+import { useDashboardsData } from './hooks/useDashboardsData';
 
 import { Pagination } from '@patternfly/react-core';
 import { DataViewToolbar } from '@patternfly/react-data-view/dist/dynamic/DataViewToolbar';
@@ -189,5 +191,23 @@ export const DashboardsTable: React.FunctionComponent = () => {
 };
 
 export const DashboardListPage: FC = () => {
-  return <DashboardsTable />;
+  const {
+    activeProjectDashboardsMetadata,
+    changeBoard,
+    dashboardName,
+    setActiveProject,
+    activeProject,
+  } = useDashboardsData();
+
+  return (
+    <DashboardLayout
+      activeProject={activeProject}
+      setActiveProject={setActiveProject}
+      activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
+      changeBoard={changeBoard}
+      dashboardName={dashboardName}
+    >
+      <DashboardsTable />
+    </DashboardLayout>
+  );
 };
