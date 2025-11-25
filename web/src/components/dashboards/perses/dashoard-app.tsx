@@ -32,7 +32,9 @@ import { DataView } from '@patternfly/react-data-view/dist/dynamic/DataView';
 import { DataViewTable } from '@patternfly/react-data-view/dist/dynamic/DataViewTable';
 import { usePerses } from './hooks/usePerses';
 import { useTranslation } from 'react-i18next';
-import { useDataViewFilters } from '@patternfly/react-data-view';
+import { useDataViewFilters, useDataViewSort } from '@patternfly/react-data-view';
+import { DataViewTr, DataViewTh } from '@patternfly/react-data-view/dist/dynamic/DataViewTable';
+import { ThProps } from '@patternfly/react-table';
 import { useSearchParams } from 'react-router-dom-v5-compat';
 
 // const TableToolBar = () => {
@@ -167,10 +169,40 @@ type FilterableFields<T> = {
 };
 type DashboardRowFilters = FilterableFields<Pick<DashboardRow, 'name' | 'project'>>;
 
+const DASHBOARD_COLUMNS = [
+  { label: 'Dashboard Name', key: 'name' as keyof DashboardRow, index: 0 },
+  { label: 'Project', key: 'project' as keyof DashboardRow, index: 1 },
+  { label: 'Created on', key: 'created' as keyof DashboardRow, index: 2 },
+  { label: 'Last Modified', key: 'modified' as keyof DashboardRow, index: 3 },
+];
+
+const sortDashboardData = (
+  data: DashboardRow[],
+  sortBy: keyof DashboardRow | undefined,
+  direction: 'asc' | 'desc' | undefined,
+): DashboardRow[] =>
+  sortBy && direction
+    ? [...data].sort((a, b) =>
+        direction === 'asc'
+          ? a[sortBy] < b[sortBy]
+            ? -1
+            : a[sortBy] > b[sortBy]
+            ? 1
+            : 0
+          : a[sortBy] > b[sortBy]
+          ? -1
+          : a[sortBy] < b[sortBy]
+          ? 1
+          : 0,
+      )
+    : data;
+
 const DashboardsTable: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const { sortBy, direction, onSort } = useDataViewSort({ searchParams, setSearchParams });
+
   const { filters, onSetFilters, clearAllFilters } = useDataViewFilters<DashboardRowFilters>({
     initialFilters: { name: '', project: '' },
     searchParams,
@@ -182,7 +214,26 @@ const DashboardsTable: React.FunctionComponent = () => {
   const { persesProjects, persesProjectsLoading, persesDashboards, persesDashboardsLoading } =
     usePerses();
 
-  const tableCol = [t('Dashboard Name'), t('Project'), t('Created on'), t('Last Modified')];
+  const sortByIndex = useMemo(
+    () => DASHBOARD_COLUMNS.findIndex((item) => item.key === sortBy),
+    [sortBy],
+  );
+
+  const getSortParams = (columnIndex: number): ThProps['sort'] => ({
+    sortBy: {
+      index: sortByIndex,
+      direction,
+      defaultDirection: 'asc',
+    },
+    onSort: (_event, index, direction) => onSort(_event, DASHBOARD_COLUMNS[index].key, direction),
+    columnIndex,
+  });
+
+  const tableColumns: DataViewTh[] = DASHBOARD_COLUMNS.map((column, index) => ({
+    cell: t(column.label),
+    props: { sort: getSortParams(index) },
+  }));
+
   const tableRows: DashboardRow[] = useMemo(() => {
     if (persesDashboardsLoading) {
       return [];
@@ -207,27 +258,18 @@ const DashboardsTable: React.FunctionComponent = () => {
     [filters.name, filters.project, tableRows],
   );
 
-  // const pageRows = useMemo(() => {
-  //   const numRows = tableRows.map((item) => Object.values(item));
-  //   return numRows.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
-  // }, [tableRows, page, perPage]);
-
-  const pageRows = useMemo(
-    () =>
-      filteredData
-        .slice((page - 1) * perPage, (page - 1) * perPage + perPage)
-        .map((item) => Object.values(item)),
-    [page, perPage, filteredData],
+  const sortedAndFilteredData = useMemo(
+    () => sortDashboardData(filteredData, sortBy as keyof DashboardRow, direction),
+    [filteredData, sortBy, direction],
   );
 
-  console.log('!JZ usePerses', {
-    filteredData,
-    dashboardRows: tableRows,
-    persesProjects,
-    persesProjectsLoading,
-    persesDashboards,
-    persesDashboardsLoading,
-  });
+  const pageRows: DataViewTr[] = useMemo(
+    () =>
+      sortedAndFilteredData
+        .slice((page - 1) * perPage, (page - 1) * perPage + perPage)
+        .map(({ name, project, created, modified }) => [name, project, created, modified]),
+    [page, perPage, sortedAndFilteredData],
+  );
 
   return (
     <DataView>
@@ -237,7 +279,7 @@ const DashboardsTable: React.FunctionComponent = () => {
         pagination={
           <Pagination
             perPageOptions={perPageOptions}
-            itemCount={filteredData.length}
+            itemCount={sortedAndFilteredData.length}
             {...pagination}
           />
         }
@@ -265,7 +307,7 @@ const DashboardsTable: React.FunctionComponent = () => {
       <DataViewTable
         aria-label="Perses Dashboards List"
         ouiaId={'PersesDashList-DataViewTable'}
-        columns={tableCol}
+        columns={tableColumns}
         rows={pageRows}
       />
       <DataViewToolbar
@@ -273,17 +315,13 @@ const DashboardsTable: React.FunctionComponent = () => {
         pagination={
           <Pagination
             perPageOptions={perPageOptions}
-            itemCount={filteredData.length}
+            itemCount={sortedAndFilteredData.length}
             {...pagination}
           />
         }
       />
     </DataView>
   );
-};
-
-const HelloWorld = () => {
-  return <h1> Hello world!!! </h1>;
 };
 
 export interface DashboardAppProps {
@@ -379,12 +417,9 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
       }}
     >
       <h1> --------- TESTING ----------- </h1>
-      {/* 
-      <MyTable /> */}
 
       <DashboardsTable />
 
-      <h1> Hello World !! </h1>
       <h1> --------- TESTING ----------- </h1>
 
       <OCPDashboardToolbar
