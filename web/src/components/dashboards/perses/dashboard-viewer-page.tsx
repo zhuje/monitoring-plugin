@@ -1,18 +1,12 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom-v5-compat';
-import {
-  QueryClient,
-  QueryClientProvider,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { QueryParamProvider } from 'use-query-params';
 import { ReactRouter5Adapter } from 'use-query-params/adapters/react-router-5';
 import { DashboardLayout } from './dashboard-layout';
 import { useDashboardsData } from './hooks/useDashboardsData';
 import { ProjectEmptyState } from './emptystates/ProjectEmptyState';
-import { DashboardResource, EphemeralDashboardResource } from '@perses-dev/core';
 import { LoadingInline } from '../../console/console-shared/src/components/loading/LoadingInline';
 import { OCPDashboardApp } from './dashoard-app';
 
@@ -28,7 +22,6 @@ const queryClient = new QueryClient({
 const DashboardViewerPage_: FC = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const [searchParams] = useSearchParams();
-  const queryClient = useQueryClient();
 
   const {
     activeProjectDashboardsMetadata,
@@ -52,17 +45,6 @@ const DashboardViewerPage_: FC = () => {
   if (urlDashboard && urlDashboard !== dashboardName) {
     changeBoard(urlDashboard);
   }
-
-  const { mutate: handleDashboardSave } = useMutation({
-    mutationFn: async (dashboard: DashboardResource | EphemeralDashboardResource) => {
-      console.log('Saving dashboard:', dashboard);
-      // Add your dashboard save logic here
-      return dashboard;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries();
-    },
-  });
 
   if (combinedInitialLoad) {
     return <LoadingInline />;
