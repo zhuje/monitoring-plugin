@@ -37,7 +37,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     <>
       <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
       <PersesWrapper project={activeProject}>
-        {activeProjectDashboardsMetadata.length === 0 ? (
+        {activeProjectDashboardsMetadata?.length === 0 ? (
           <DashboardEmptyState />
         ) : (
           <DashboardSkeleton

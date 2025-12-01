@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 
 import { DashboardResource } from '@perses-dev/core';
 import { useNavigate } from 'react-router-dom-v5-compat';
@@ -88,20 +88,20 @@ export const useDashboardsData = () => {
     [perspective, dashboardName, navigate, activeProject],
   );
 
-  // If a dashboard hasn't been selected yet, or if the current project doesn't have a
-  // matching board name then display the board present in the URL parameters or the first
-  // board in the dropdown list
-  useEffect(() => {
-    const metadataMatch = activeProjectDashboardsMetadata.find((activeProjectDashboardMetadata) => {
-      return (
-        activeProjectDashboardMetadata.project === activeProject &&
-        activeProjectDashboardMetadata.name === dashboardName
-      );
-    });
-    if (!dashboardName || !metadataMatch) {
-      changeBoard(activeProjectDashboardsMetadata?.[0]?.name);
-    }
-  }, [dashboardName, changeBoard, activeProject, activeProjectDashboardsMetadata]);
+  // // If a dashboard hasn't been selected yet, or if the current project doesn't have a
+  // // matching board name then display the board present in the URL parameters or the first
+  // // board in the dropdown list
+  // useEffect(() => {
+  //   const metadataMatch = activeProjectDashboardsMetadata.find((activeProjectDashboardMetadata) => {
+  //     return (
+  //       activeProjectDashboardMetadata.project === activeProject &&
+  //       activeProjectDashboardMetadata.name === dashboardName
+  //     );
+  //   });
+  //   if (!dashboardName || !metadataMatch) {
+  //     changeBoard(activeProjectDashboardsMetadata?.[0]?.name);
+  //   }
+  // }, [dashboardName, changeBoard, activeProject, activeProjectDashboardsMetadata]);
 
   return {
     persesAvailable,

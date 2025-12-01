@@ -50,7 +50,7 @@ const DashboardViewerPage_: FC = () => {
     return <LoadingInline />;
   }
 
-  if (activeProjectDashboardsMetadata.length === 0) {
+  if (activeProjectDashboardsMetadata?.length === 0) {
     return <ProjectEmptyState />;
   }
 

@@ -106,8 +106,9 @@ export const DashboardsTable: React.FunctionComponent = () => {
     return persesDashboards.map((board) => {
       const dashboardName: DashboardName = {
         link: (
+          // JZ TODO: update the url so its dynamic like from useDashboardURL() something like that
           <Link
-            to={`/monitoring/v2/dashboards/view?dashboard=${board?.metadata?.name}&project=${board?.metadata?.project}`}
+            to={`/monitoring/v2/dashboards/view?dashboard=${board?.metadata?.name}&project=${board?.metadata?.project}`} // eslint-disable-line max-len
             data-test={`perseslistpage-${board?.metadata?.name}`}
           >
             {board?.metadata?.name}
@@ -151,6 +152,7 @@ export const DashboardsTable: React.FunctionComponent = () => {
   );
 
   const PaginationTool = () => {
+    console.log('!JZ sortedAndFilteredData.length', sortedAndFilteredData.length);
     return (
       <Pagination
         perPageOptions={perPageOptions}
@@ -162,7 +164,7 @@ export const DashboardsTable: React.FunctionComponent = () => {
 
   return (
     <DataView>
-      <h1> DASHBOARD-LIST-PAGE.TSX Hello world!! </h1>
+      <h1> DASHBOARD-LIST-PAGE.TSX Hello world!!!! </h1>
 
       <DataViewToolbar
         ouiaId="PersesDashList-DataViewHeader"
@@ -185,27 +187,27 @@ export const DashboardsTable: React.FunctionComponent = () => {
         columns={tableColumns}
         rows={pageRows}
       />
-      <DataViewToolbar ouiaId="PersesDashList-DataViewFooter" pagination={PaginationTool} />
+      <DataViewToolbar ouiaId="PersesDashList-DataViewFooter" pagination={<PaginationTool />} />
     </DataView>
   );
 };
 
 export const DashboardListPage: FC = () => {
-  const {
-    activeProjectDashboardsMetadata,
-    changeBoard,
-    dashboardName,
-    setActiveProject,
-    activeProject,
-  } = useDashboardsData();
+  // const {
+  //   activeProjectDashboardsMetadata,
+  //   changeBoard,
+  //   dashboardName,
+  //   setActiveProject,
+  //   activeProject,
+  // } = useDashboardsData();
 
   return (
     <DashboardLayout
-      activeProject={activeProject}
-      setActiveProject={setActiveProject}
-      activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
-      changeBoard={changeBoard}
-      dashboardName={dashboardName}
+      activeProject={null}
+      setActiveProject={null}
+      activeProjectDashboardsMetadata={null}
+      changeBoard={null}
+      dashboardName={null}
     >
       <DashboardsTable />
     </DashboardLayout>
