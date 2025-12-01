@@ -16,6 +16,8 @@ import { DataViewTr, DataViewTh } from '@patternfly/react-data-view/dist/dynamic
 import { ThProps } from '@patternfly/react-table';
 import { Link, useSearchParams } from 'react-router-dom-v5-compat';
 
+import { getDashboardUrl, usePerspective } from '../../hooks/usePerspective';
+
 const perPageOptions = [
   { title: '10', value: 10 },
   { title: '20', value: 20 },
@@ -66,6 +68,9 @@ const sortDashboardData = (
 export const DashboardsTable: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
+  const { perspective } = usePerspective();
+  const dashboardBaseURL = getDashboardUrl(perspective);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const { sortBy, direction, onSort } = useDataViewSort({ searchParams, setSearchParams });
 
@@ -103,13 +108,13 @@ export const DashboardsTable: React.FunctionComponent = () => {
     if (persesDashboardsLoading) {
       return [];
     }
-    const dashboardBaseURL = '/monitoring/v2/dashboards/view?dashboard';
+    // const dashboardBaseURL = '/monitoring/v2/dashboards/view?dashboard';
     return persesDashboards.map((board) => {
       const dashboardName: DashboardName = {
         link: (
           // JZ TODO: update the url so its dynamic like from useDashboardURL() something like that
           <Link
-            to={`${dashboardBaseURL}=${board?.metadata?.name}&project=${board?.metadata?.project}`}
+            to={`${dashboardBaseURL}?dashboard=${board?.metadata?.name}&project=${board?.metadata?.project}`}
             data-test={`perseslistpage-${board?.metadata?.name}`}
           >
             {board?.metadata?.name}
@@ -125,7 +130,7 @@ export const DashboardsTable: React.FunctionComponent = () => {
         modified: board?.metadata?.updatedAt || '',
       };
     });
-  }, [persesDashboards, persesDashboardsLoading]);
+  }, [dashboardBaseURL, persesDashboards, persesDashboardsLoading]);
 
   const filteredData = useMemo(
     () =>
@@ -153,7 +158,6 @@ export const DashboardsTable: React.FunctionComponent = () => {
   );
 
   const PaginationTool = () => {
-    console.log('!JZ sortedAndFilteredData.length', sortedAndFilteredData.length);
     return (
       <Pagination
         perPageOptions={perPageOptions}
@@ -165,8 +169,6 @@ export const DashboardsTable: React.FunctionComponent = () => {
 
   return (
     <DataView>
-      <h1> DASHBOARD-LIST-PAGE.TSX Hello world!!!! </h1>
-
       <DataViewToolbar
         ouiaId="PersesDashList-DataViewHeader"
         clearAllFilters={clearAllFilters}

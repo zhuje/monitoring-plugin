@@ -294,7 +294,8 @@ export const getLegacyDashboardsUrl = (
   }
 };
 
-export const getDashboardsUrl = (perspective: Perspective) => {
+// JZ NOTE!   `params: URLSearchParams` add this to fx sig
+export const getDashboardUrl = (perspective: Perspective) => {
   switch (perspective) {
     case 'virtualization-perspective':
       return `/virt-monitoring/v2/dashboards/view`;
@@ -302,6 +303,19 @@ export const getDashboardsUrl = (perspective: Perspective) => {
       return `/monitoring/v2/dashboards/view`;
     case 'acm':
       return `/multicloud/monitoring/v2/dashboards/view`;
+    default:
+      return '';
+  }
+};
+
+export const getDashboardsListUrl = (perspective: Perspective) => {
+  switch (perspective) {
+    case 'virtualization-perspective':
+      return `/virt-monitoring/v2/dashboards`;
+    case 'admin':
+      return `/monitoring/v2/dashboards`;
+    case 'acm':
+      return `/multicloud/monitoring/v2/dashboards`;
     default:
       return '';
   }

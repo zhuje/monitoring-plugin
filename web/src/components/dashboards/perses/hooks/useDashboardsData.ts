@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom-v5-compat';
 import { StringParam, useQueryParam } from 'use-query-params';
 import { getAllQueryArguments } from '../../../console/utils/router';
 import { useBoolean } from '../../../hooks/useBoolean';
-import { getDashboardsUrl, usePerspective } from '../../../hooks/usePerspective';
+import { getDashboardUrl, usePerspective } from '../../../hooks/usePerspective';
 import { QueryParams } from '../../../query-params';
 import { useActiveProject } from '../project/useActiveProject';
 import { usePerses } from './usePerses';
@@ -78,7 +78,7 @@ export const useDashboardsData = () => {
       params.set(QueryParams.Project, activeProject);
       params.set(QueryParams.Dashboard, newBoard);
 
-      let url = getDashboardsUrl(perspective);
+      let url = getDashboardUrl(perspective);
       url = `${url}?${params.toString()}`;
 
       if (newBoard !== dashboardName) {
@@ -87,21 +87,6 @@ export const useDashboardsData = () => {
     },
     [perspective, dashboardName, navigate, activeProject],
   );
-
-  // // If a dashboard hasn't been selected yet, or if the current project doesn't have a
-  // // matching board name then display the board present in the URL parameters or the first
-  // // board in the dropdown list
-  // useEffect(() => {
-  //   const metadataMatch = activeProjectDashboardsMetadata.find((activeProjectDashboardMetadata) => {
-  //     return (
-  //       activeProjectDashboardMetadata.project === activeProject &&
-  //       activeProjectDashboardMetadata.name === dashboardName
-  //     );
-  //   });
-  //   if (!dashboardName || !metadataMatch) {
-  //     changeBoard(activeProjectDashboardsMetadata?.[0]?.name);
-  //   }
-  // }, [dashboardName, changeBoard, activeProject, activeProjectDashboardsMetadata]);
 
   return {
     persesAvailable,
