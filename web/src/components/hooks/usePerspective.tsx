@@ -297,11 +297,11 @@ export const getLegacyDashboardsUrl = (
 export const getDashboardsUrl = (perspective: Perspective) => {
   switch (perspective) {
     case 'virtualization-perspective':
-      return `/virt-monitoring/v2/dashboards`;
+      return `/virt-monitoring/v2/dashboards/view`;
     case 'admin':
-      return `/monitoring/v2/dashboards`;
+      return `/monitoring/v2/dashboards/view`;
     case 'acm':
-      return `/multicloud/monitoring/v2/dashboards`;
+      return `/multicloud/monitoring/v2/dashboards/view`;
     default:
       return '';
   }

@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from './dashboard-layout';
-import { useDashboardsData } from './hooks/useDashboardsData';
+// import { useDashboardsData } from './hooks/useDashboardsData';
 
 import { Pagination } from '@patternfly/react-core';
 import { DataViewToolbar } from '@patternfly/react-data-view/dist/dynamic/DataViewToolbar';
@@ -74,7 +74,7 @@ export const DashboardsTable: React.FunctionComponent = () => {
     searchParams,
     setSearchParams,
   });
-  const pagination = useDataViewPagination({ perPage: 5 });
+  const pagination = useDataViewPagination({ perPage: perPageOptions[0].value });
   const { page, perPage } = pagination;
 
   const { persesDashboards, persesDashboardsLoading } = usePerses();
@@ -103,12 +103,13 @@ export const DashboardsTable: React.FunctionComponent = () => {
     if (persesDashboardsLoading) {
       return [];
     }
+    const dashboardBaseURL = '/monitoring/v2/dashboards/view?dashboard';
     return persesDashboards.map((board) => {
       const dashboardName: DashboardName = {
         link: (
           // JZ TODO: update the url so its dynamic like from useDashboardURL() something like that
           <Link
-            to={`/monitoring/v2/dashboards/view?dashboard=${board?.metadata?.name}&project=${board?.metadata?.project}`} // eslint-disable-line max-len
+            to={`${dashboardBaseURL}=${board?.metadata?.name}&project=${board?.metadata?.project}`}
             data-test={`perseslistpage-${board?.metadata?.name}`}
           >
             {board?.metadata?.name}
