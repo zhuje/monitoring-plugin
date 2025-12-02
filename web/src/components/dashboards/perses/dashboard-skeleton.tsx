@@ -10,21 +10,25 @@ import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
 import { getDashboardsListUrl, usePerspective } from '../../hooks/usePerspective';
 import { StringParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../query-params';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
 export const DashboardBreadCrumb: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   const { perspective } = usePerspective();
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
+  const navigate = useNavigate();
+
+  const handleDashboardsClick = () => {
+    navigate(getDashboardsListUrl(perspective));
+  };
 
   return (
     <Breadcrumb ouiaId="perses-dashboards-breadcrumb">
-      <BreadcrumbItem to={getDashboardsListUrl(perspective)}> {t('Dashboards')} </BreadcrumbItem>
-      {dashboardName && (
-        <BreadcrumbItem to="#" isActive>
-          {dashboardName}
-        </BreadcrumbItem>
-      )}
+      <BreadcrumbItem onClick={handleDashboardsClick} style={{ cursor: 'pointer' }}>
+        {t('Dashboards ! ')}
+      </BreadcrumbItem>
+      {dashboardName && <BreadcrumbItem isActive>{dashboardName}</BreadcrumbItem>}
     </Breadcrumb>
   );
 };

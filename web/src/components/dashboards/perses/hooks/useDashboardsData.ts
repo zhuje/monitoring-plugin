@@ -61,6 +61,10 @@ export const useDashboardsData = () => {
 
   // Retrieve dashboard metadata for the currently selected project
   const activeProjectDashboardsMetadata = useMemo<CombinedDashboardMetadata[]>(() => {
+    // If no active project is selected (null), show all projects
+    if (!activeProject) {
+      return combinedDashboardsMetadata;
+    }
     return combinedDashboardsMetadata.filter((combinedDashboardMetadata) => {
       return combinedDashboardMetadata.project === activeProject;
     });
@@ -75,7 +79,17 @@ export const useDashboardsData = () => {
       const queryArguments = getAllQueryArguments();
 
       const params = new URLSearchParams(queryArguments);
-      params.set(QueryParams.Project, activeProject);
+
+      // If no active project is selected, find the project for this dashboard
+      let projectToUse = activeProject;
+      if (!activeProject) {
+        const dashboardMetadata = combinedDashboardsMetadata.find((item) => item.name === newBoard);
+        projectToUse = dashboardMetadata?.project;
+      }
+
+      if (projectToUse) {
+        params.set(QueryParams.Project, projectToUse);
+      }
       params.set(QueryParams.Dashboard, newBoard);
 
       let url = getDashboardUrl(perspective);
@@ -85,7 +99,7 @@ export const useDashboardsData = () => {
         navigate(url, { replace: true });
       }
     },
-    [perspective, dashboardName, navigate, activeProject],
+    [perspective, dashboardName, navigate, activeProject, combinedDashboardsMetadata],
   );
 
   return {

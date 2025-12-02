@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from './dashboard-layout';
-// import { useDashboardsData } from './hooks/useDashboardsData';
+import { useDashboardsData } from './hooks/useDashboardsData';
 
 import { Pagination } from '@patternfly/react-core';
 import { DataViewToolbar } from '@patternfly/react-data-view/dist/dynamic/DataViewToolbar';
@@ -10,7 +10,6 @@ import { DataViewTextFilter } from '@patternfly/react-data-view/dist/dynamic/Dat
 import { useDataViewPagination } from '@patternfly/react-data-view/dist/dynamic/Hooks';
 import { DataView } from '@patternfly/react-data-view/dist/dynamic/DataView';
 import { DataViewTable } from '@patternfly/react-data-view/dist/dynamic/DataViewTable';
-import { usePerses } from './hooks/usePerses';
 import { useDataViewFilters, useDataViewSort } from '@patternfly/react-data-view';
 import { DataViewTr, DataViewTh } from '@patternfly/react-data-view/dist/dynamic/DataViewTable';
 import { ThProps } from '@patternfly/react-table';
@@ -65,7 +64,15 @@ const sortDashboardData = (
       })
     : data;
 
-export const DashboardsTable: React.FunctionComponent = () => {
+interface DashboardsTableProps {
+  persesDashboards: any[];
+  persesDashboardsLoading: boolean;
+}
+
+export const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
+  persesDashboards,
+  persesDashboardsLoading,
+}) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   const { perspective } = usePerspective();
@@ -81,8 +88,6 @@ export const DashboardsTable: React.FunctionComponent = () => {
   });
   const pagination = useDataViewPagination({ perPage: perPageOptions[0].value });
   const { page, perPage } = pagination;
-
-  const { persesDashboards, persesDashboardsLoading } = usePerses();
 
   const sortByIndex = useMemo(
     () => DASHBOARD_COLUMNS.findIndex((item) => item.key === sortBy),
@@ -108,19 +113,20 @@ export const DashboardsTable: React.FunctionComponent = () => {
     if (persesDashboardsLoading) {
       return [];
     }
-    // const dashboardBaseURL = '/monitoring/v2/dashboards/view?dashboard';
     return persesDashboards.map((board) => {
+      const metadata = board?.metadata;
+      const dashboardsParams = `?dashboard=${metadata?.name}&project=${metadata?.project}`;
       const dashboardName: DashboardName = {
         link: (
           // JZ TODO: update the url so its dynamic like from useDashboardURL() something like that
           <Link
-            to={`${dashboardBaseURL}?dashboard=${board?.metadata?.name}&project=${board?.metadata?.project}`}
+            to={`${dashboardBaseURL}${dashboardsParams}`}
             data-test={`perseslistpage-${board?.metadata?.name}`}
           >
-            {board?.metadata?.name}
+            {metadata?.name}
           </Link>
         ),
-        label: board?.metadata?.name || '',
+        label: metadata?.name || '',
       };
 
       return {
@@ -196,23 +202,28 @@ export const DashboardsTable: React.FunctionComponent = () => {
 };
 
 export const DashboardListPage: FC = () => {
-  // const {
-  //   activeProjectDashboardsMetadata,
-  //   changeBoard,
-  //   dashboardName,
-  //   setActiveProject,
-  //   activeProject,
-  // } = useDashboardsData();
+  const {
+    // activeProjectDashboardsMetadata,
+    changeBoard,
+    dashboardName,
+    setActiveProject,
+    activeProject,
+    persesDashboards,
+    combinedInitialLoad,
+  } = useDashboardsData();
 
   return (
     <DashboardLayout
-      activeProject={null}
-      setActiveProject={null}
+      activeProject={activeProject}
+      setActiveProject={setActiveProject}
       activeProjectDashboardsMetadata={null}
-      changeBoard={null}
-      dashboardName={null}
+      changeBoard={changeBoard}
+      dashboardName={dashboardName}
     >
-      <DashboardsTable />
+      <DashboardsTable
+        persesDashboards={persesDashboards}
+        persesDashboardsLoading={combinedInitialLoad}
+      />
     </DashboardLayout>
   );
 };

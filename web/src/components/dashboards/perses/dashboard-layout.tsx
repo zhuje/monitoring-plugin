@@ -8,9 +8,9 @@ import { Overview } from '@openshift-console/dynamic-plugin-sdk';
 
 export interface DashboardLayoutProps {
   /** Active project name */
-  activeProject: string;
+  activeProject: string | null;
   /** Function to change active project */
-  setActiveProject: (project: string) => void;
+  setActiveProject: (project: string | null) => void;
   /** Array of dashboard metadata for the active project */
   activeProjectDashboardsMetadata: CombinedDashboardMetadata[];
   /** Function to change selected dashboard */
