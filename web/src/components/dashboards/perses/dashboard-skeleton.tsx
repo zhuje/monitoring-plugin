@@ -12,21 +12,38 @@ import { StringParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../query-params';
 import { useNavigate } from 'react-router-dom-v5-compat';
 
+import { chart_color_blue_100, chart_color_blue_300 } from '@patternfly/react-tokens';
+import { usePatternFlyTheme } from '../../hooks/usePatternflyTheme';
+
 export const DashboardBreadCrumb: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   const { perspective } = usePerspective();
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
+  const { theme } = usePatternFlyTheme();
   const navigate = useNavigate();
 
   const handleDashboardsClick = () => {
     navigate(getDashboardsListUrl(perspective));
   };
 
+  const patternflyBlue100 = chart_color_blue_100.value;
+
+  const patternflyBlue300 = chart_color_blue_300.value;
+
+  const linkColor = theme == 'dark' ? patternflyBlue100 : patternflyBlue300;
+
   return (
     <Breadcrumb ouiaId="perses-dashboards-breadcrumb">
-      <BreadcrumbItem onClick={handleDashboardsClick} style={{ cursor: 'pointer' }}>
-        {t('Dashboards ! ')}
+      <BreadcrumbItem
+        onClick={handleDashboardsClick}
+        style={{
+          cursor: 'pointer',
+          color: linkColor,
+          textDecoration: 'underline',
+        }}
+      >
+        {t('Dashboards')}
       </BreadcrumbItem>
       {dashboardName && <BreadcrumbItem isActive>{dashboardName}</BreadcrumbItem>}
     </Breadcrumb>

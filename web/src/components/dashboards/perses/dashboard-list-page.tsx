@@ -34,13 +34,13 @@ interface DashboardRow {
   modified: string;
 }
 
-type FilterableFields<T> = {
-  [K in keyof T]?: string;
-};
-type DashboardRowFilters = FilterableFields<Pick<DashboardRow, 'name' | 'project'>>;
+interface DashboardRowFilters {
+  name?: string;
+  'project-filter'?: string;
+}
 
 const DASHBOARD_COLUMNS = [
-  { label: 'Dashboard Name', key: 'name' as keyof DashboardRow, index: 0 },
+  { label: 'Dashboard', key: 'name' as keyof DashboardRow, index: 0 },
   { label: 'Project', key: 'project' as keyof DashboardRow, index: 1 },
   { label: 'Created on', key: 'created' as keyof DashboardRow, index: 2 },
   { label: 'Last Modified', key: 'modified' as keyof DashboardRow, index: 3 },
@@ -82,7 +82,7 @@ export const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   const { sortBy, direction, onSort } = useDataViewSort({ searchParams, setSearchParams });
 
   const { filters, onSetFilters, clearAllFilters } = useDataViewFilters<DashboardRowFilters>({
-    initialFilters: { name: '', project: '' },
+    initialFilters: { name: '', 'project-filter': '' },
     searchParams,
     setSearchParams,
   });
@@ -144,10 +144,12 @@ export const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
         (item) =>
           (!filters.name ||
             item.name?.label?.toLocaleLowerCase().includes(filters.name?.toLocaleLowerCase())) &&
-          (!filters.project ||
-            item.project?.toLocaleLowerCase().includes(filters.project?.toLocaleLowerCase())),
+          (!filters['project-filter'] ||
+            item.project
+              ?.toLocaleLowerCase()
+              .includes(filters['project-filter']?.toLocaleLowerCase())),
       ),
-    [filters.name, filters.project, tableRows],
+    [filters, tableRows],
   );
 
   const sortedAndFilteredData = useMemo(
@@ -183,7 +185,7 @@ export const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
           <DataViewFilters onChange={(_e, values) => onSetFilters(values)} values={filters}>
             <DataViewTextFilter filterId="name" title="Name" placeholder="Filter by name" />
             <DataViewTextFilter
-              filterId="project"
+              filterId="project-filter"
               title="Project"
               placeholder="Filter by project"
             />
