@@ -9,6 +9,8 @@ import { ProjectEmptyState } from './emptystates/ProjectEmptyState';
 import { useDashboardsData } from './hooks/useDashboardsData';
 import PersesBoard from './perses-dashboards';
 import { ProjectBar } from './project/ProjectBar';
+import { QueryParamProvider } from 'use-query-params';
+import { ReactRouter5Adapter } from 'use-query-params/adapters/react-router-5';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,7 +66,9 @@ const MonitoringDashboardsPage_: FC = () => {
 const MonitoringDashboardsPageWrapper: FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <MonitoringDashboardsPage_ />
+      <QueryParamProvider adapter={ReactRouter5Adapter}>
+        <MonitoringDashboardsPage_ />
+      </QueryParamProvider>
     </QueryClientProvider>
   );
 };

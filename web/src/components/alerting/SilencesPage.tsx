@@ -159,7 +159,7 @@ const SilencesPage_: FC = () => {
 
   return (
     <>
-      <DocumentTitle>{t('Alerting')}</DocumentTitle>
+      <DocumentTitle>{t('Alerting!!!!!')}</DocumentTitle>
       <PageSection hasBodyWrapper={false}>
         <SelectedSilencesContext.Provider value={{ selectedSilences, setSelectedSilences }}>
           <Flex>

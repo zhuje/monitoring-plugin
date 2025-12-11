@@ -1,0 +1,43 @@
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: logging-loki
+  namespace: openshift-logging
+spec:
+  managementState: Managed
+  rules:
+    enabled: true
+    namespaceSelector:
+      matchLabels:
+        openshift.io/log-alerting: 'true'
+    selector:
+      matchLabels:
+        openshift.io/log-alerting: 'true'
+  size: 1x.extra-small
+  storage:
+    schemas:
+    - version: v13
+      effectiveDate: "2024-03-01"
+    secret:
+      name: logging-loki-s3
+      type: s3
+  storageClassName: gp2-csi
+  tenants:
+    mode: openshift-logging
+---
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogging
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  collection:
+    type: vector
+  logStore:
+    lokistack:
+      name: logging-loki
+    retentionPolicy:
+      application:
+        maxAge: 7d
+    type: lokistack
+  managementState: Managed

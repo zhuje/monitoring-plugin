@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns-testapp-logalert
+  labels:
+    openshift.io/log-alerting: 'true'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: testapp-logalerting
+    openshift.io/log-alerting: 'true'
+  name: testapp-logalerting
+  namespace: ns-testapp-logalert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: testapp-logalerting
+  template:
+    metadata:
+      labels:
+        app: testapp-logalerting
+    spec:
+      containers:
+      - image: quay.io/rhobs/testapp-logalerting:latest
+        imagePullPolicy: IfNotPresent
+        name: testapp-logalerting
+---
+apiVersion: loki.grafana.com/v1
+kind: AlertingRule
+metadata:
+  name: test-logging-alert
+  namespace: ns-testapp-logalert
+  labels: 
+    openshift.io/log-alerting: 'true'
+spec:
+  groups:
+    - interval: 1m
+      name: Testloggingalert
+      rules:
+        - alert: TestappHighErrorRate
+          annotations:
+            description: testing1,2
+            summary: testing1,2
+          expr: >
+            sum(rate({kubernetes_namespace_name="ns-testapp-logalert", kubernetes_pod_name=~"testapp-logalerting.*"} |= "error" [1m])) > 0.01 
+          for: 1m
+          labels:
+            severity: critical
+  tenantID: application
