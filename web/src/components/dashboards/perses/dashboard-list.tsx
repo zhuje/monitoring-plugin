@@ -3,7 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from './dashboard-layout';
 import { useDashboardsData } from './hooks/useDashboardsData';
 
-import { Pagination } from '@patternfly/react-core';
+import {
+  Button,
+  EmptyState,
+  EmptyStateBody,
+  EmptyStateVariant,
+  Pagination,
+  Title,
+} from '@patternfly/react-core';
 import { DataView } from '@patternfly/react-data-view/dist/dynamic/DataView';
 import { DataViewFilters } from '@patternfly/react-data-view/dist/dynamic/DataViewFilters';
 import {
@@ -19,7 +26,7 @@ import { ThProps } from '@patternfly/react-table';
 import { Link, useSearchParams } from 'react-router-dom-v5-compat';
 
 import { getDashboardUrl, usePerspective } from '../../hooks/usePerspective';
-
+import { Timestamp } from '@openshift-console/dynamic-plugin-sdk';
 const perPageOptions = [
   { title: '10', value: 10 },
   { title: '20', value: 20 },
@@ -33,8 +40,11 @@ interface DashboardName {
 interface DashboardRow {
   name: DashboardName;
   project: string;
-  created: string;
-  modified: string;
+  created: ReactNode;
+  modified: ReactNode;
+  // Raw values for sorting
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface DashboardRowFilters {
@@ -49,8 +59,22 @@ const sortDashboardData = (
 ): DashboardRow[] =>
   sortBy && direction
     ? [...data].sort((a, b) => {
-        const aValue = sortBy === 'name' ? a.name.label : a[sortBy];
-        const bValue = sortBy === 'name' ? b.name.label : b[sortBy];
+        let aValue: any;
+        let bValue: any;
+
+        if (sortBy === 'name') {
+          aValue = a.name.label;
+          bValue = b.name.label;
+        } else if (sortBy === 'created') {
+          aValue = a.createdAt;
+          bValue = b.createdAt;
+        } else if (sortBy === 'modified') {
+          aValue = a.updatedAt;
+          bValue = b.updatedAt;
+        } else {
+          aValue = a[sortBy];
+          bValue = b[sortBy];
+        }
 
         if (direction === 'asc') {
           return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
@@ -144,8 +168,10 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
       return {
         name: dashboardName,
         project: board?.metadata?.project || '',
-        created: board?.metadata?.createdAt || '',
-        modified: board?.metadata?.updatedAt || '',
+        created: <Timestamp timestamp={metadata?.createdAt} />,
+        modified: <Timestamp timestamp={metadata?.updatedAt} />,
+        createdAt: metadata?.createdAt,
+        updatedAt: metadata?.updatedAt,
       };
     });
   }, [dashboardBaseURL, persesDashboards, persesDashboardsLoading]);
@@ -188,6 +214,9 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
     );
   };
 
+  const hasFiltersApplied = filters.name || filters['project-filter'];
+  const hasData = sortedAndFilteredData.length > 0;
+
   return (
     <DataView>
       <DataViewToolbar
@@ -209,12 +238,30 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
           </DataViewFilters>
         }
       />
-      <DataViewTable
-        aria-label="Perses Dashboards List"
-        ouiaId={'PersesDashList-DataViewTable'}
-        columns={tableColumns}
-        rows={pageRows}
-      />
+      {hasData ? (
+        <DataViewTable
+          aria-label="Perses Dashboards List"
+          ouiaId={'PersesDashList-DataViewTable'}
+          columns={tableColumns}
+          rows={pageRows}
+        />
+      ) : (
+        <EmptyState variant={EmptyStateVariant.sm}>
+          <Title headingLevel="h4" size="lg">
+            {hasFiltersApplied ? t('No results found') : t('No dashboards found')}
+          </Title>
+          <EmptyStateBody>
+            {hasFiltersApplied
+              ? t('No results match the filter criteria. Clear filters to show results.')
+              : t('No Perses dashboards are currently available in this project.')}
+          </EmptyStateBody>
+          {hasFiltersApplied && (
+            <Button onClick={clearAllFilters} className="pf-c-button pf-m-link">
+              {t('Clear all filters')}
+            </Button>
+          )}
+        </EmptyState>
+      )}
       <DataViewToolbar ouiaId="PersesDashList-DataViewFooter" pagination={<PaginationTool />} />
     </DataView>
   );
