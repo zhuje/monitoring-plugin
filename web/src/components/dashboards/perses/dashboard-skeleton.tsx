@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom-v5-compat';
 
 import { chart_color_blue_100, chart_color_blue_300 } from '@patternfly/react-tokens';
 import { usePatternFlyTheme } from '../../hooks/usePatternflyTheme';
+import { ListPageHeader } from '@openshift-console/dynamic-plugin-sdk';
 
 const DashboardBreadCrumb: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -53,14 +54,21 @@ const DashboardBreadCrumb: React.FunctionComponent = () => {
 const HeaderTop: FC = memo(() => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
+  const currentUrl = window.location.href;
+  const hideFavBtn = currentUrl.includes('v2/dashboards/view');
+
   return (
     <Stack hasGutter>
       <StackItem>
         <DashboardBreadCrumb />
       </StackItem>
       <StackItem>
-        <Title headingLevel="h1">{t('Dashboards')}</Title>
-        {t('View and manage dashboards.')}
+        {/* If /monitoring/v2/dashboards/view" hide the favorite */}
+        <ListPageHeader
+          title={t('Dashboards')}
+          helpText={t('View and manage dashboards.')}
+          hideFavoriteButton={hideFavBtn}
+        />
       </StackItem>
     </Stack>
   );
