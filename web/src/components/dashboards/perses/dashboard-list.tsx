@@ -218,7 +218,7 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   const hasData = sortedAndFilteredData.length > 0;
 
   return (
-    <DataView>
+    <DataView className="pf-v6-u-m-lg">
       <DataViewToolbar
         ouiaId="PersesDashList-DataViewHeader"
         clearAllFilters={clearAllFilters}
