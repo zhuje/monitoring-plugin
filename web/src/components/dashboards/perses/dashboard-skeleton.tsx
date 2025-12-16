@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Helmet } from 'react-helmet';
 import { useTranslation } from 'react-i18next';
 
-import { PageSection, Stack, StackItem, Title } from '@patternfly/react-core';
+import { PageSection, Stack, StackItem } from '@patternfly/react-core';
 import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
 
 import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
@@ -63,7 +63,6 @@ const HeaderTop: FC = memo(() => {
         <DashboardBreadCrumb />
       </StackItem>
       <StackItem>
-        {/* If /monitoring/v2/dashboards/view" hide the favorite */}
         <ListPageHeader
           title={t('Dashboards')}
           helpText={t('View and manage dashboards.')}
