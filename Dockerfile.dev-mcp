@@ -27,6 +27,11 @@ COPY Makefile Makefile
 COPY go.mod go.mod
 COPY go.sum go.sum
 
+# Set cross-compilation variables for x86_64 target
+ENV GOOS=linux
+ENV GOARCH=amd64
+ENV CGO_ENABLED=0
+
 RUN go mod download
 
 COPY cmd/ cmd/
@@ -34,7 +39,7 @@ COPY pkg/ pkg/
 
 RUN go build -mod=mod -o plugin-backend cmd/plugin-backend.go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal
+FROM --platform=linux/amd64 registry.access.redhat.com/ubi9/ubi-minimal
 
 USER 1001
 

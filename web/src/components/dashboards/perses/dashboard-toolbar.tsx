@@ -1,4 +1,4 @@
-import { Stack, Button, Box, useTheme, useMediaQuery, Alert } from '@mui/material';
+import { Stack, Button, Box, useTheme, useMediaQuery, Alert, Tooltip } from '@mui/material';
 import { ErrorBoundary, ErrorAlert } from '@perses-dev/components';
 import { TimeRangeControls } from '@perses-dev/plugin-system';
 import { ReactElement, ReactNode, useCallback, useEffect } from 'react';
@@ -17,6 +17,7 @@ import { StackItem } from '@patternfly/react-core';
 import { DashboardDropdown } from '../shared/dashboard-dropdown';
 import * as _ from 'lodash-es';
 import { useDashboardsData } from './hooks/useDashboardsData';
+import { useAccessReview } from '@openshift-console/dynamic-plugin-sdk';
 
 export interface DashboardToolbarProps {
   dashboardName: string;
@@ -40,20 +41,84 @@ export interface EditButtonProps {
    * Handler that puts the dashboard into editing mode.
    */
   onClick: () => void;
+
+  /**
+   * Whether the button is disabled.
+   */
+  disabled?: boolean;
+
+  /**
+   * Tooltip text to show when button is disabled.
+   */
+  disabledTooltip?: string;
+
+  /**
+   * Whether permissions are still loading.
+   */
+  loading?: boolean;
 }
 
-export const EditButton = ({ label = 'Edit', onClick }: EditButtonProps): ReactElement => {
-  return (
+export const EditButton = ({
+  label = 'Edit',
+  onClick,
+  disabled = false,
+  disabledTooltip = "You don't have permission to edit this dashboard",
+  loading = false,
+}: EditButtonProps): ReactElement => {
+  const button = (
     <Button
       onClick={onClick}
       startIcon={<PencilIcon />}
       variant="outlined"
       color="secondary"
+      disabled={disabled || loading}
       sx={{ whiteSpace: 'nowrap', minWidth: 'auto' }}
     >
-      {label}
+      {loading ? 'Loading...' : label}
     </Button>
   );
+
+  if (disabled && !loading) {
+    return (
+      <Tooltip title={disabledTooltip} arrow>
+        <span>{button}</span>
+      </Tooltip>
+    );
+  }
+
+  return button;
+};
+
+const usePersesEditPermissions = (namespace?: string) => {
+  const [canCreate, createLoading] = useAccessReview({
+    group: 'perses.dev',
+    resource: 'persesdashboards',
+    verb: 'create',
+    namespace,
+  });
+
+  const [canUpdate, updateLoading] = useAccessReview({
+    group: 'perses.dev',
+    resource: 'persesdashboards',
+    verb: 'update',
+    namespace,
+  });
+
+  const [canDelete, deleteLoading] = useAccessReview({
+    group: 'perses.dev',
+    resource: 'persesdashboards',
+    verb: 'delete',
+    namespace,
+  });
+
+  const loading = createLoading || updateLoading || deleteLoading;
+  const isViewOnly = !canCreate && !canUpdate && !canDelete;
+  const hasElevatedPrivs = canCreate || canUpdate || canDelete;
+  const canEdit = canUpdate && canCreate && canDelete;
+
+  console.log('!JZ dashboardToolsbar :', { canUpdate, canCreate, canDelete });
+
+  return { canCreate, canUpdate, canDelete, canEdit, isViewOnly, hasElevatedPrivs, loading };
 };
 
 export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement => {
@@ -68,6 +133,9 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
   } = props;
 
   const { isEditMode } = useEditMode();
+
+  // Check RBAC permissions for editing perses dashboards
+  const { canEdit, isViewOnly, loading } = usePersesEditPermissions();
 
   const isBiggerThanSm = useMediaQuery(useTheme().breakpoints.up('sm'));
   const isBiggerThanMd = useMediaQuery(useTheme().breakpoints.up('md'));
@@ -147,7 +215,16 @@ export const OCPDashboardToolbar = (props: DashboardToolbarProps): ReactElement 
             <>
               {isBiggerThanSm && (
                 <Stack direction="row" gap={1} ml="auto">
-                  <EditButton onClick={onEditButtonClick} />
+                  <EditButton
+                    onClick={onEditButtonClick}
+                    disabled={!canEdit}
+                    loading={loading}
+                    disabledTooltip={
+                      isViewOnly
+                        ? 'You have view-only permissions for perses dashboards'
+                        : "You don't have permission to edit this dashboard"
+                    }
+                  />
                 </Stack>
               )}
             </>
