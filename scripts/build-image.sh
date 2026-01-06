@@ -53,7 +53,7 @@ echo -e "${GREEN} Linting... ${ENDCOLOR}"
 make lint-backend
 
 echo -e "${GREEN} Building image '${IMAGE}' with ${OCI_BIN} ${ENDCOLOR}"
-$OCI_BIN build -t $IMAGE --platform=linux/amd64 -f $DOCKER_FILE_NAME .
+$OCI_BIN build -t $IMAGE -f $DOCKER_FILE_NAME .
 
 if [[ $PUSH == 1 ]]; then 
     $OCI_BIN push $IMAGE
