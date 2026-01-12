@@ -12,7 +12,7 @@ const updateDashboard = async (entity: DashboardResource): Promise<DashboardReso
     name: entity.metadata.name,
   });
 
-  return await consoleFetchJSON.put(url, entity);
+  return consoleFetchJSON.put(url, entity);
 };
 
 export const useUpdateDashboardMutation = (): UseMutationResult<

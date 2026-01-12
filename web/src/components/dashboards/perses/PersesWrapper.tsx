@@ -460,7 +460,6 @@ function InnerWrapper({ children, project, dashboardName }) {
           {clearedDashboardResource ? (
             <DashboardProvider
               initialState={{
-                isEditMode: false,
                 dashboardResource: clearedDashboardResource,
               }}
             >
