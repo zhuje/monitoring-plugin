@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { DashboardEmptyState } from './emptystates/DashboardEmptyState';
-import { DashboardHeader } from './dashboard-skeleton';
+import { DashboardHeader } from './dashboard-header';
 import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
 import { ProjectBar } from './project/ProjectBar';
 import { PersesWrapper } from './PersesWrapper';

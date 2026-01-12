@@ -2,7 +2,7 @@ import type { FC, PropsWithChildren } from 'react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { PageSection, Stack, StackItem } from '@patternfly/react-core';
+import { Divider, Grid, GridItem, PageSection, Stack, StackItem } from '@patternfly/react-core';
 
 import { DocumentTitle, ListPageHeader } from '@openshift-console/dynamic-plugin-sdk';
 import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
@@ -16,6 +16,7 @@ import { QueryParams } from '../../query-params';
 import { chart_color_blue_100, chart_color_blue_300 } from '@patternfly/react-tokens';
 import { listPersesDashboardsDataTestIDs } from '../../data-test';
 import { usePatternFlyTheme } from '../../hooks/usePatternflyTheme';
+import { DashboardCreateDialog } from './dashboard-create-dialog';
 
 const DashboardBreadCrumb: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -60,9 +61,8 @@ const DashboardBreadCrumb: React.FunctionComponent = () => {
   );
 };
 
-const HeaderTop: FC = memo(() => {
+const DashboardPageHeader: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
-
   const currentUrl = window.location.href;
   const hideFavBtn = currentUrl.includes('v2/dashboards/view');
 
@@ -80,7 +80,35 @@ const HeaderTop: FC = memo(() => {
       </StackItem>
     </Stack>
   );
-});
+};
+
+const DashboardListPageHeader: React.FunctionComponent = () => {
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
+  const currentUrl = window.location.href;
+  const hideFavBtn = currentUrl.includes('v2/dashboards/view');
+
+  return (
+    <Grid hasGutter>
+      <GridItem span={9}>
+        <ListPageHeader
+          title={t('Dashboards')}
+          helpText={t('View and manage dashboards.!!!')}
+          hideFavoriteButton={hideFavBtn}
+        />
+      </GridItem>
+      <GridItem
+        span={3}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}
+      >
+        <DashboardCreateDialog />
+      </GridItem>
+    </Grid>
+  );
+};
 
 type MonitoringDashboardsPageProps = PropsWithChildren<{
   boardItems: CombinedDashboardMetadata[];
@@ -96,8 +124,23 @@ export const DashboardHeader: FC<MonitoringDashboardsPageProps> = memo(({ childr
     <>
       <DocumentTitle>{t('Metrics dashboards')}</DocumentTitle>
       <PageSection hasBodyWrapper={false}>
-        <HeaderTop />
+        <DashboardPageHeader />
       </PageSection>
+      {children}
+    </>
+  );
+});
+
+export const DashboardListHeader: FC<MonitoringDashboardsPageProps> = memo(({ children }) => {
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
+
+  return (
+    <>
+      <DocumentTitle>{t('Metrics dashboards')}</DocumentTitle>
+      <PageSection hasBodyWrapper={false}>
+        <DashboardListPageHeader />
+      </PageSection>
+      <Divider inset={{ default: 'insetMd' }} />
       {children}
     </>
   );
