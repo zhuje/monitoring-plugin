@@ -6,7 +6,7 @@ import { QueryParamProvider } from 'use-query-params';
 import { ReactRouter5Adapter } from 'use-query-params/adapters/react-router-5';
 import { LoadingInline } from '../../console/console-shared/src/components/loading/LoadingInline';
 import { OCPDashboardApp } from './dashboard-app';
-import { DashboardLayout } from './dashboard-layout';
+import { DashboardFrame } from './dashboard-frame';
 import { ProjectEmptyState } from './emptystates/ProjectEmptyState';
 import { useDashboardsData } from './hooks/useDashboardsData';
 
@@ -75,7 +75,7 @@ const DashboardPage_: FC = () => {
   }
 
   return (
-    <DashboardLayout
+    <DashboardFrame
       activeProject={activeProject}
       setActiveProject={setActiveProject}
       activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
@@ -86,13 +86,13 @@ const DashboardPage_: FC = () => {
         dashboardResource={currentDashboard.persesDashboard}
         isReadonly={false}
         isVariableEnabled={true}
-        isDatasourceEnabled={true}
+        isDatasourceEnabled={false}
         emptyDashboardProps={{
           title: t('Empty Dashboard'),
           description: t('To get started add something to your dashboard'),
         }}
       />
-    </DashboardLayout>
+    </DashboardFrame>
   );
 };
 
