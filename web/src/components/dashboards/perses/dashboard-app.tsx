@@ -67,24 +67,13 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
   const { isEditMode, setEditMode } = useEditMode();
   const { dashboard, setDashboard } = useDashboard();
 
-  console.log('🔍 Dashboard App isEditMode:', isEditMode);
-
   const [originalDashboard, setOriginalDashboard] = useState<
     DashboardResource | EphemeralDashboardResource | undefined
   >(undefined);
   const [saveErrorOccurred, setSaveErrorOccurred] = useState(false);
 
-  // Track edit mode changes
-  useEffect(() => {
-    console.log('🔍 Edit mode changed to:', isEditMode);
-  }, [isEditMode]);
-
-  // Override automatic edit mode exit on save errors
   useEffect(() => {
     if (saveErrorOccurred && !isEditMode) {
-      console.log(
-        '🔍 OVERRIDE: Save error occurred but edit mode was set to false - restoring edit mode',
-      );
       setEditMode(true);
       setSaveErrorOccurred(false); // Reset flag
     }
@@ -139,41 +128,24 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
       try {
         const result = await updateDashboardMutation.mutateAsync(data, {
           onSuccess: (updatedDashboard: DashboardResource) => {
-            console.log('🔍 Save SUCCESS - exiting edit mode');
             successSnackbar(
               `Dashboard ${getResourceExtendedDisplayName(
                 updatedDashboard,
               )} has been successfully updated`,
             );
-            // Reset error flag and exit edit mode on successful save
             setSaveErrorOccurred(false);
             setEditMode(false);
             return updatedDashboard;
           },
-          // onError: (err) => {
-          //   console.log('🔍 Save ERROR in onError callback - should NOT exit edit mode');
-          //   exceptionSnackbar(err);
-          //   // Don't throw here - let outer catch handle it
-          // },
         });
         return result;
       } catch (error) {
-        // Handle error internally to prevent unhandled promise rejection
         exceptionSnackbar(error);
-
-        console.log('🔍 Save failed - current isEditMode:', isEditMode);
-
-        // Set flag to override any automatic edit mode exit
         setSaveErrorOccurred(true);
-
-        console.log('🔍 Set saveErrorOccurred flag to prevent automatic edit mode exit');
-
-        // Return null to prevent promise rejection (stay in edit mode)
         return null;
       }
     },
     [
-      isEditMode,
       updateDashboardMutation,
       successSnackbar,
       setEditMode,
@@ -192,7 +164,6 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
         flexDirection: 'column',
       }}
     >
-      <h1> Hello !!! </h1>
       <OCPDashboardToolbar
         dashboardName={dashboardResource.metadata.name}
         initialVariableIsSticky={isInitialVariableSticky}

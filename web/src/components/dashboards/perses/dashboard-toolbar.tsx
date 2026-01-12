@@ -73,12 +73,11 @@ export const EditButton = ({ onClick }: EditButtonProps): ReactElement => {
       startIcon={<PencilIcon />}
       variant="outlined"
       color="secondary"
-      // !JZ Notes: uncomment this!
-      // disabled={disabled || loading}
+      disabled={disabled || loading}
       sx={{ whiteSpace: 'nowrap', minWidth: 'auto' }}
       data-test={persesDashboardDataTestIDs.editDashboardButtonToolbar}
     >
-      {loading ? t('Loading...') : t('Edit!!')}
+      {loading ? t('Loading...') : t('Edit')}
     </Button>
   );
 
