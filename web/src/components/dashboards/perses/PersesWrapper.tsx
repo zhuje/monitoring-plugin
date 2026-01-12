@@ -363,9 +363,7 @@ export function PersesWrapper({ children, project }: PersesWrapperProps) {
     <ThemeProvider theme={muiTheme}>
       <ChartsProvider chartsTheme={chartsTheme}>
         <SnackbarProvider
-          maxSnack={3}
-          autoHideDuration={6000}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           variant="default"
         >
           <PluginRegistry pluginLoader={pluginLoader}>

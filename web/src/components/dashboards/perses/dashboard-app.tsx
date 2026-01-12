@@ -31,10 +31,11 @@ import {
   useEditMode,
 } from '@perses-dev/dashboards';
 import { OCPDashboardToolbar } from './dashboard-toolbar';
+import { useUpdateDashboardMutation } from './dashboard-api';
 
-import buildURL from './perses/url-builder';
-import { useMutation, UseMutationResult, useQueryClient } from '@tanstack/react-query';
-import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
+// import buildURL from './perses/url-builder';
+// import { useMutation, UseMutationResult, useQueryClient } from '@tanstack/react-query';
+// import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
 
 export interface DashboardAppProps {
   dashboardResource: DashboardResource | EphemeralDashboardResource;
@@ -66,38 +67,6 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
 
   const chartsTheme = useChartsTheme();
   const { successSnackbar, exceptionSnackbar } = useSnackbar();
-
-  const resource = 'dashboards';
-  const updateDashboard = async (entity: DashboardResource): Promise<DashboardResource> => {
-    const url = buildURL({
-      resource: resource,
-      project: entity.metadata.project,
-      name: entity.metadata.name,
-    });
-
-    // try {
-    return await consoleFetchJSON.put(url, entity);
-    // } catch (error) {
-    //   console.error('Dashboard update failed:', error);
-    //   throw error;
-    // }
-  };
-
-  const useUpdateDashboardMutation = (): UseMutationResult<
-    DashboardResource,
-    Error,
-    DashboardResource
-  > => {
-    const queryClient = useQueryClient();
-
-    return useMutation<DashboardResource, Error, DashboardResource>({
-      mutationKey: [resource],
-      mutationFn: updateDashboard,
-      onSuccess: () => {
-        return queryClient.invalidateQueries({ queryKey: [resource] });
-      },
-    });
-  };
 
   const { isEditMode, setEditMode } = useEditMode();
   const { dashboard, setDashboard } = useDashboard();
@@ -161,16 +130,11 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
             );
             return updatedDashboard;
           },
-          onError: (err) => {
-            exceptionSnackbar(err);
-            // Don't throw here - let outer catch handle it
-          },
         });
         return result;
       } catch (error) {
-        // Handle error internally to prevent unhandled promise rejection
         exceptionSnackbar(error);
-        return null; // Return resolved promise to prevent rejection
+        return null;
       }
     },
     [exceptionSnackbar, successSnackbar, updateDashboardMutation],
