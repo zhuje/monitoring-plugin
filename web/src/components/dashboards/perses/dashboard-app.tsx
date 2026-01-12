@@ -33,10 +33,6 @@ import {
 import { OCPDashboardToolbar } from './dashboard-toolbar';
 import { useUpdateDashboardMutation } from './dashboard-api';
 
-// import buildURL from './perses/url-builder';
-// import { useMutation, UseMutationResult, useQueryClient } from '@tanstack/react-query';
-// import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
-
 export interface DashboardAppProps {
   dashboardResource: DashboardResource | EphemeralDashboardResource;
   emptyDashboardProps?: Partial<EmptyDashboardProps>;
