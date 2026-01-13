@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { DashboardHeader, DashboardListHeader } from './dashboard-header';
+import { DashboardListHeader } from './dashboard-header';
 import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
 import { ProjectBar } from './project/ProjectBar';
 import { Overview } from '@openshift-console/dynamic-plugin-sdk';

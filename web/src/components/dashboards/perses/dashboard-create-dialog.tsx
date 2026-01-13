@@ -224,7 +224,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     event: React.MouseEvent<Element, MouseEvent> | undefined,
     value: string | number | undefined,
   ) => {
-    console.log('Selected value:', value);
     setSelectedValue(value || null);
     setIsDropdownOpen(false);
     onFocus();
