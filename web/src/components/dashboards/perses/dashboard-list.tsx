@@ -28,6 +28,7 @@ import { getDashboardUrl, usePerspective } from '../../hooks/usePerspective';
 import { Timestamp } from '@openshift-console/dynamic-plugin-sdk';
 import { listPersesDashboardsDataTestIDs } from '../../../components/data-test';
 import { DashboardListFrame } from './dashboard-list-frame';
+import { TextInputGroupWithStatus } from './text-input-validation';
 const perPageOptions = [
   { title: '10', value: 10 },
   { title: '20', value: 20 },
@@ -298,6 +299,7 @@ export const DashboardList: FC = () => {
       changeBoard={changeBoard}
       dashboardName={dashboardName}
     >
+      <TextInputGroupWithStatus />
       <DashboardsTable
         persesDashboards={persesDashboards}
         persesDashboardsLoading={combinedInitialLoad}

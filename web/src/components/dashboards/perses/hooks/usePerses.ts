@@ -1,9 +1,13 @@
-import { fetchPersesProjects, fetchPersesDashboardsMetadata } from '../perses-client';
+import {
+  fetchPersesProjects,
+  fetchPersesDashboardsMetadata,
+  fetchPersesDashboardsByProject,
+} from '../perses-client';
 import { useQuery } from '@tanstack/react-query';
 import { NumberParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../../query-params';
 
-export const usePerses = () => {
+export const usePerses = (project?: string | number) => {
   const [refreshInterval] = useQueryParam(QueryParams.RefreshInterval, NumberParam);
 
   const {
@@ -28,12 +32,29 @@ export const usePerses = () => {
     refetchInterval: refreshInterval,
   });
 
+  const {
+    isLoading: persesProjectDashboardsLoading,
+    error: persesProjectDashboardsError,
+    data: persesProjectDashboards,
+  } = useQuery({
+    queryKey: ['dashboards', 'project', project],
+    queryFn: () => fetchPersesDashboardsByProject(project!),
+    enabled: !!project,
+    refetchInterval: refreshInterval,
+  });
+
   return {
+    // All Dashboards
     persesDashboards: persesDashboards ?? [],
     persesDashboardsError,
     persesDashboardsLoading,
+    // All Projects
     persesProjectsLoading,
     persesProjects: persesProjects ?? [],
     persesProjectsError,
+    // Dashboards of a given project
+    persesProjectDashboards: persesProjectDashboards ?? [],
+    persesProjectDashboardsError,
+    persesProjectDashboardsLoading,
   };
 };

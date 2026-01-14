@@ -1,170 +1,4 @@
-// import { useState } from 'react';
-// import {
-//   Button,
-//   Dropdown,
-//   DropdownList,
-//   DropdownItem,
-//   MenuToggle,
-//   MenuToggleElement,
-//   Modal,
-//   ModalBody,
-//   ModalHeader,
-//   ModalFooter,
-//   ModalVariant,
-// } from '@patternfly/react-core';
-// import { useTranslation } from 'react-i18next';
-
-// import { Form, FormGroup, TextInput } from '@patternfly/react-core';
-// import { usePerses } from './hooks/usePerses';
-
-// const onFocus = () => {
-//   const element = document.getElementById('modal-dropdown-toggle');
-//   (element as HTMLElement).focus();
-// };
-
-// export const FormBasic: React.FunctionComponent = () => {
-//   const [phone, setPhone] = useState('');
-//   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-//   const { persesProjects } = usePerses();
-//   const [selectedValue, setSelectedValue] = useState<string>('');
-
-//   console.log('!JZ ', { persesProjects });
-
-//   // const dropdownOptions = () => {
-//   //   const options = [];
-//   //   for (const project of persesProjects) {
-//   //     options.push(<DropdownItem> {project.metadata.name} </DropdownItem>);
-//   //   }
-//   //   return options;
-//   // };
-
-//   const handlePhoneChange = (_event, phone: string) => {
-//     setPhone(phone);
-//   };
-
-//   const handleDropdownToggle = () => {
-//     setIsDropdownOpen(!isDropdownOpen);
-//   };
-
-//   const onSelect = (event: React.MouseEvent<Element, MouseEvent> | undefined, value: string) => {
-//     console.log('Selected value:', value);
-//     setSelectedValue(value);
-//     setIsDropdownOpen(false);
-//     onFocus();
-//   };
-
-//   return (
-//     <Form>
-//       <FormGroup label="Select project" isRequired fieldId="simple-form-email-01">
-//         <Dropdown
-//           isOpen={isDropdownOpen}
-//           onSelect={onSelect}
-//           onOpenChange={(isOpen: boolean) => setIsDropdownOpen(isOpen)}
-//           toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-//             <MenuToggle ref={toggleRef} onClick={handleDropdownToggle} isExpanded={isDropdownOpen}>
-//               Dropdown
-//             </MenuToggle>
-//           )}
-//         >
-//           <DropdownList>
-//             {persesProjects.map((project, i) => (
-//               <DropdownItem
-//                 value={`${project.metadata.name}`}
-//                 key={`${i}-${project.metadata.name}`}
-//               >
-//                 {project.metadata.name}
-//               </DropdownItem>
-//             ))}
-//             {/* <DropdownItem value={0} key="action">
-//               Action
-//             </DropdownItem>
-//             <DropdownItem
-//               value={1}
-//               key="link"
-//               to="#default-link2"
-//               // Prevent the default onClick functionality for example purposes
-//               onClick={(ev: any) => ev.preventDefault()}
-//             >
-//               Link
-//             </DropdownItem>
-//             <DropdownItem value={2} isDisabled key="disabled action">
-//               Disabled Action
-//             </DropdownItem>
-//             <DropdownItem value={3} isDisabled key="disabled link" to="#default-link4">
-//               Disabled Link
-//             </DropdownItem> */}
-//           </DropdownList>
-//         </Dropdown>
-//       </FormGroup>
-//       <FormGroup label="Dashboard name" isRequired fieldId="simple-form-phone-01">
-//         <TextInput
-//           isRequired
-//           type="text"
-//           id="simple-form-phone-01"
-//           name="simple-form-phone-01"
-//           placeholder="555-555-5555"
-//           value={phone}
-//           onChange={handlePhoneChange}
-//         />
-//       </FormGroup>
-//     </Form>
-//   );
-// };
-
-// export const ModalWithDropdown: React.FunctionComponent = () => {
-//   const { t } = useTranslation(process.env.I18N_NAMESPACE);
-
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-//   const handleModalToggle = () => {
-//     setIsModalOpen(!isModalOpen);
-//     setIsDropdownOpen(false);
-//   };
-
-//   const onEscapePress = () => {
-//     if (isDropdownOpen) {
-//       setIsDropdownOpen(!isDropdownOpen);
-//       onFocus();
-//     } else {
-//       handleModalToggle();
-//     }
-//   };
-
-//   return (
-//     <>
-//       <Button variant="primary" onClick={handleModalToggle}>
-//         {t('Create')}
-//       </Button>
-//       <Modal
-//         variant={ModalVariant.small}
-//         isOpen={isModalOpen}
-//         onClose={handleModalToggle}
-//         onEscapePress={onEscapePress}
-//         aria-labelledby="modal-with-dropdown"
-//         aria-describedby="modal-box-body-with-dropdown"
-//       >
-//         <ModalHeader
-//           title={t('Create dashboard')}
-//           labelId="dashboard-list-create-dashboard-dialog-header"
-//         />
-//         <ModalBody id="dashboard-list-create-dashboard-dialog-body">
-//           <FormBasic />
-//         </ModalBody>
-//         <ModalFooter>
-//           <Button key="confirm" variant="primary" onClick={handleModalToggle}>
-//             Save
-//           </Button>
-//           <Button key="cancel" variant="link" onClick={handleModalToggle}>
-//             Cancel
-//           </Button>
-//         </ModalFooter>
-//       </Modal>
-//     </>
-//   );
-// };
-
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Dropdown,
@@ -184,17 +18,118 @@ import {
 import { usePerses } from './hooks/usePerses';
 import { useTranslation } from 'react-i18next';
 
+import { z } from 'zod';
+import { DashboardResource, nameSchema } from '@perses-dev/core';
+import { useCreateDashboardMutation } from './dashboard-api';
+
+interface DashboardValidationSchema {
+  schema?: z.ZodSchema;
+  isSchemaLoading: boolean;
+  hasSchemaError: boolean; // TODO: Later use it with a goog error handling design
+}
+
+export const dashboardDisplayNameValidationSchema = z
+  .string()
+  .min(1, 'Required')
+  .max(75, 'Must be 75 or fewer characters long');
+
+const createDashboardDialogValidationSchema = z.object({
+  projectName: nameSchema,
+  dashboardName: dashboardDisplayNameValidationSchema,
+});
+
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
-  const { persesProjects } = usePerses();
+  const {
+    persesProjects,
+    persesProjectDashboards,
+    persesProjectDashboardsError,
+    persesProjectDashboardsLoading,
+  } = usePerses();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState<string | number | null>(null);
+  const [selectedProject, setSelectedProject] = useState<string | number | null>(null);
   const [dashboardName, setDashboardName] = useState<string>('');
 
+  const createDashboardMutation = useCreateDashboardMutation();
+
+  useEffect(() => {
+    if (persesProjects && persesProjects.length > 0 && selectedProject === null) {
+      setSelectedProject(persesProjects[0].metadata.name);
+    }
+  }, [persesProjects, selectedProject]);
+
+  const {
+    persesProjectDashboards: dashboards,
+    persesProjectDashboardsError: isDashboardsLoading,
+    persesProjectDashboardsLoading: isError,
+  } = usePerses(selectedProject);
+
+  const useDashboardValidationSchema = (): DashboardValidationSchema => {
+    const generateMetadataName = (name: string): string => {
+      return name
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/[^a-zA-Z0-9_.-]/g, '_');
+    };
+
+    return useMemo((): DashboardValidationSchema => {
+      if (isDashboardsLoading)
+        return {
+          schema: undefined,
+          isSchemaLoading: true,
+          hasSchemaError: false,
+        };
+
+      if (isError) {
+        return {
+          hasSchemaError: true,
+          isSchemaLoading: false,
+          schema: undefined,
+        };
+      }
+
+      if (!dashboards?.length)
+        return {
+          schema: createDashboardDialogValidationSchema,
+          isSchemaLoading: true,
+          hasSchemaError: false,
+        };
+
+      const refinedSchema = createDashboardDialogValidationSchema.refine(
+        (schema) => {
+          return !(dashboards ?? []).some((dashboard) => {
+            return (
+              dashboard.metadata.project.toLowerCase() === schema.projectName.toLowerCase() &&
+              dashboard.metadata.name.toLowerCase() ===
+                generateMetadataName(schema.dashboardName).toLowerCase()
+            );
+          });
+        },
+        (schema) => ({
+          message: `Dashboard name '${schema.dashboardName}' already exists in '${schema.projectName}' project!`,
+          path: ['dashboardName'],
+        }),
+      );
+
+      return { schema: refinedSchema, isSchemaLoading: true, hasSchemaError: false };
+    }, []);
+  };
+
   const handleSetDashboardName = (_event, dashboardName: string) => {
-    setDashboardName(dashboardName);
+    // add validation
+    if (dashboardName) {
+      setDashboardName(dashboardName);
+      // useDashboardValidationSchema(dashboardName);
+    } else {
+      // useToast
+    }
+  };
+
+  const handleAdd = () => {
+    // const newDashbaord: DashboardResource = [{ kind: 'Project', metadata: { name: targetedDashboard.metadata.project }, spec: {} }]
+    // createDashboardMutation.mutateAsync(
   };
 
   const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
@@ -224,25 +159,19 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     event: React.MouseEvent<Element, MouseEvent> | undefined,
     value: string | number | undefined,
   ) => {
-    setSelectedValue(value || null);
+    setSelectedProject(value || null);
     setIsDropdownOpen(false);
     onFocus();
-
-    // Do something with the selected value
-    handleSelection(value);
   };
 
-  const handleSelection = (value: string | number | undefined) => {
-    switch (value) {
-      case 0:
-        console.log('Action selected');
-        break;
-      case 1:
-        console.log('Link selected');
-        break;
-      // Add your logic here
-    }
-  };
+  // const isValidDashboardName = (value: string | number | undefined) => {
+  //   if (value && !persesProjectDashboardsError) {
+  //     const projectDashboards: string[] = [];
+  //     persesProjectDashboards.map((dashboard) => {
+  //       projectDashboards.push(dashboard.metadata.name);
+  //     });
+  //   }
+  // };
 
   return (
     <Fragment>
@@ -257,7 +186,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
         aria-labelledby="modal-with-dropdown"
       >
         <ModalHeader title="Create Dashboard" />
-
         <ModalBody>
           <Form>
             <FormGroup
@@ -276,7 +204,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
                     isExpanded={isDropdownOpen}
                     isFullWidth
                   >
-                    {selectedValue !== null ? `Selected: ${selectedValue}` : 'Select an option'}
+                    {selectedProject}
                   </MenuToggle>
                 )}
               >
@@ -309,9 +237,9 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
             </FormGroup>
           </Form>
 
-          {selectedValue && (
+          {selectedProject && (
             <div style={{ marginTop: '16px' }}>
-              Selected: <strong>{selectedValue}</strong>
+              Selected: <strong>{selectedProject}</strong>
             </div>
           )}
         </ModalBody>
@@ -320,7 +248,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
             key="create"
             variant="primary"
             onClick={handleModalToggle}
-            isDisabled={!selectedValue}
+            isDisabled={!dashboardName || !selectedProject}
           >
             Create
           </Button>
