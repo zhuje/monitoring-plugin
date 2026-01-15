@@ -25,12 +25,16 @@ import { createTemporaryDashboard } from './dashboard-utils';
 import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 import { t_color_red_50 } from '@patternfly/react-tokens';
+import { usePersesEditPermissions } from './dashboard-toolbar';
+import { persesDashboardDataTestIDs } from '../../data-test';
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
+  const { canEdit, loading } = usePersesEditPermissions();
+  const disabled = !canEdit;
 
   const { persesProjects } = usePerses();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -157,8 +161,13 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
 
   return (
     <Fragment>
-      <Button variant="primary" onClick={handleModalToggle}>
-        Create Dashboard
+      <Button
+        variant="primary"
+        onClick={handleModalToggle}
+        isDisabled={disabled || loading}
+        data-test={persesDashboardDataTestIDs.createDashboardButtonToolbar}
+      >
+        {loading ? t('Loading...') : t('Create')}
       </Button>
       <Modal
         variant={ModalVariant.small}
@@ -239,12 +248,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               )}
             </FormGroup>
           </Form>
-
-          {selectedProject && (
-            <div style={{ marginTop: '16px' }}>
-              Selected: <strong>{selectedProject}</strong>
-            </div>
-          )}
         </ModalBody>
         <ModalFooter>
           <Button
