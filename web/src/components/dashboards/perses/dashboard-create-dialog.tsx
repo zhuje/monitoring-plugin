@@ -174,7 +174,12 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               {formErrors.general}
             </div>
           )}
-          <Form>
+          <Form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAdd();
+            }}
+          >
             <FormGroup
               label="Select project"
               isRequired
