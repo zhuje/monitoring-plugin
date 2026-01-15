@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
   Button,
   Dropdown,
@@ -17,40 +17,26 @@ import {
 } from '@patternfly/react-core';
 import { usePerses } from './hooks/usePerses';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
-import { z } from 'zod';
-import { DashboardResource, nameSchema } from '@perses-dev/core';
+import { DashboardResource } from '@perses-dev/core';
 import { useCreateDashboardMutation } from './dashboard-api';
-
-interface DashboardValidationSchema {
-  schema?: z.ZodSchema;
-  isSchemaLoading: boolean;
-  hasSchemaError: boolean; // TODO: Later use it with a goog error handling design
-}
-
-export const dashboardDisplayNameValidationSchema = z
-  .string()
-  .min(1, 'Required')
-  .max(75, 'Must be 75 or fewer characters long');
-
-const createDashboardDialogValidationSchema = z.object({
-  projectName: nameSchema,
-  dashboardName: dashboardDisplayNameValidationSchema,
-});
+import { createTemporaryDashboard } from './dashboard-utils';
+import { useToast } from './ToastProvider';
+import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
+  const navigate = useNavigate();
+  const { perspective } = usePerspective();
+  const { addAlert } = useToast();
 
-  const {
-    persesProjects,
-    persesProjectDashboards,
-    persesProjectDashboardsError,
-    persesProjectDashboardsLoading,
-  } = usePerses();
+  const { persesProjects } = usePerses();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<string | number | null>(null);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [dashboardName, setDashboardName] = useState<string>('');
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   const createDashboardMutation = useCreateDashboardMutation();
 
@@ -60,81 +46,84 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     }
   }, [persesProjects, selectedProject]);
 
-  const {
-    persesProjectDashboards: dashboards,
-    persesProjectDashboardsError: isDashboardsLoading,
-    persesProjectDashboardsLoading: isError,
-  } = usePerses(selectedProject);
-
-  const useDashboardValidationSchema = (): DashboardValidationSchema => {
-    const generateMetadataName = (name: string): string => {
-      return name
-        .normalize('NFD')
-        .replace(/\p{Diacritic}/gu, '')
-        .replace(/[^a-zA-Z0-9_.-]/g, '_');
-    };
-
-    return useMemo((): DashboardValidationSchema => {
-      if (isDashboardsLoading)
-        return {
-          schema: undefined,
-          isSchemaLoading: true,
-          hasSchemaError: false,
-        };
-
-      if (isError) {
-        return {
-          hasSchemaError: true,
-          isSchemaLoading: false,
-          schema: undefined,
-        };
-      }
-
-      if (!dashboards?.length)
-        return {
-          schema: createDashboardDialogValidationSchema,
-          isSchemaLoading: true,
-          hasSchemaError: false,
-        };
-
-      const refinedSchema = createDashboardDialogValidationSchema.refine(
-        (schema) => {
-          return !(dashboards ?? []).some((dashboard) => {
-            return (
-              dashboard.metadata.project.toLowerCase() === schema.projectName.toLowerCase() &&
-              dashboard.metadata.name.toLowerCase() ===
-                generateMetadataName(schema.dashboardName).toLowerCase()
-            );
-          });
-        },
-        (schema) => ({
-          message: `Dashboard name '${schema.dashboardName}' already exists in '${schema.projectName}' project!`,
-          path: ['dashboardName'],
-        }),
-      );
-
-      return { schema: refinedSchema, isSchemaLoading: true, hasSchemaError: false };
-    }, []);
-  };
+  const { persesProjectDashboards: dashboards } = usePerses(selectedProject || undefined);
 
   const handleSetDashboardName = (_event, dashboardName: string) => {
-    // add validation
-    if (dashboardName) {
-      setDashboardName(dashboardName);
-      // useDashboardValidationSchema(dashboardName);
-    } else {
-      // useToast
+    setDashboardName(dashboardName);
+    // Clear any existing validation errors when user starts typing
+    if (formErrors.dashboardName) {
+      setFormErrors((prev) => ({ ...prev, dashboardName: '' }));
     }
   };
 
-  const handleAdd = () => {
-    // const newDashbaord: DashboardResource = [{ kind: 'Project', metadata: { name: targetedDashboard.metadata.project }, spec: {} }]
-    // createDashboardMutation.mutateAsync(
+  const handleAdd = async () => {
+    // Clear previous errors
+    setFormErrors({});
+
+    // Validate form
+    if (!selectedProject || !dashboardName.trim()) {
+      const errors: { [key: string]: string } = {};
+      if (!selectedProject) errors.project = 'Project is required';
+      if (!dashboardName.trim()) errors.dashboardName = 'Dashboard name is required';
+      setFormErrors(errors);
+      return;
+    }
+
+    try {
+      // Check for duplicate dashboard names
+      if (
+        dashboards &&
+        dashboards.some(
+          (d) =>
+            d.metadata.project === selectedProject &&
+            d.metadata.name.toLowerCase() === dashboardName.trim().toLowerCase(),
+        )
+      ) {
+        setFormErrors({
+          dashboardName: `Dashboard name "${dashboardName}" already exists in this project`,
+        });
+        return;
+      }
+
+      // Create temporary dashboard resource
+      const newDashboard: DashboardResource = createTemporaryDashboard(
+        dashboardName.trim(),
+        selectedProject as string,
+      );
+
+      // Create the dashboard
+      const createdDashboard = await createDashboardMutation.mutateAsync(newDashboard);
+
+      // Show success notification
+      addAlert(`Dashboard "${dashboardName}" created successfully`, 'success');
+
+      // Close modal and reset form
+      setIsModalOpen(false);
+      setDashboardName('');
+      setFormErrors({});
+
+      // Navigate to the newly created dashboard
+      const dashboardUrl = getDashboardUrl(perspective);
+      navigate(
+        `${dashboardUrl}?dashboard=${createdDashboard.metadata.name}&project=${createdDashboard.metadata.project}`,
+      );
+    } catch (error) {
+      // Handle creation error
+      console.error('Dashboard creation failed:', error);
+      const errorMessage = error?.message || 'Failed to create dashboard. Please try again.';
+      addAlert(`Error creating dashboard: ${errorMessage}`, 'danger');
+      setFormErrors({ general: errorMessage });
+    }
   };
 
   const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
     setIsModalOpen(!isModalOpen);
     setIsDropdownOpen(false);
+    // Reset form when closing modal
+    if (isModalOpen) {
+      setDashboardName('');
+      setFormErrors({});
+    }
   };
 
   const handleDropdownToggle = () => {
@@ -159,19 +148,10 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     event: React.MouseEvent<Element, MouseEvent> | undefined,
     value: string | number | undefined,
   ) => {
-    setSelectedProject(value || null);
+    setSelectedProject(typeof value === 'string' ? value : null);
     setIsDropdownOpen(false);
     onFocus();
   };
-
-  // const isValidDashboardName = (value: string | number | undefined) => {
-  //   if (value && !persesProjectDashboardsError) {
-  //     const projectDashboards: string[] = [];
-  //     persesProjectDashboards.map((dashboard) => {
-  //       projectDashboards.push(dashboard.metadata.name);
-  //     });
-  //   }
-  // };
 
   return (
     <Fragment>
@@ -187,6 +167,11 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       >
         <ModalHeader title="Create Dashboard" />
         <ModalBody>
+          {formErrors.general && (
+            <div style={{ marginBottom: '16px', color: 'var(--pf-global--danger-color--100)' }}>
+              {formErrors.general}
+            </div>
+          )}
           <Form>
             <FormGroup
               label="Select project"
@@ -234,6 +219,17 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
                 value={dashboardName}
                 onChange={handleSetDashboardName}
               />
+              {formErrors.dashboardName && (
+                <div
+                  style={{
+                    color: 'var(--pf-global--danger-color--100)',
+                    fontSize: '14px',
+                    marginTop: '4px',
+                  }}
+                >
+                  {formErrors.dashboardName}
+                </div>
+              )}
             </FormGroup>
           </Form>
 
@@ -247,10 +243,13 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
           <Button
             key="create"
             variant="primary"
-            onClick={handleModalToggle}
-            isDisabled={!dashboardName || !selectedProject}
+            onClick={handleAdd}
+            isDisabled={
+              !dashboardName?.trim() || !selectedProject || createDashboardMutation.isPending
+            }
+            isLoading={createDashboardMutation.isPending}
           >
-            Create
+            {createDashboardMutation.isPending ? 'Creating...' : 'Create'}
           </Button>
           <Button key="cancel" variant="link" onClick={handleModalToggle}>
             Cancel

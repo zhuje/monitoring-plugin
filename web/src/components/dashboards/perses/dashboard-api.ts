@@ -44,7 +44,7 @@ const createDashboard = async (entity: DashboardResource): Promise<DashboardReso
   const url = buildURL({
     resource: resource,
     project: entity.metadata.project,
-    name: entity.metadata.name,
+    // Don't include name in URL for POST (create) - only for PUT (update)
   });
 
   return consoleFetchJSON.post(url, entity);

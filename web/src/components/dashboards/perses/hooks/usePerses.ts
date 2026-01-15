@@ -38,7 +38,7 @@ export const usePerses = (project?: string | number) => {
     data: persesProjectDashboards,
   } = useQuery({
     queryKey: ['dashboards', 'project', project],
-    queryFn: () => fetchPersesDashboardsByProject(project!),
+    queryFn: () => fetchPersesDashboardsByProject(String(project!)),
     enabled: !!project,
     refetchInterval: refreshInterval,
   });
