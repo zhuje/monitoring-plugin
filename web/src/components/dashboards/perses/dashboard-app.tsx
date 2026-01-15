@@ -28,6 +28,7 @@ import { OCPDashboardToolbar } from './dashboard-toolbar';
 import { useUpdateDashboardMutation } from './dashboard-api';
 import { useTranslation } from 'react-i18next';
 import { useToast } from './ToastProvider';
+import { useSearchParams } from 'react-router-dom-v5-compat';
 
 export interface DashboardAppProps {
   dashboardResource: DashboardResource | EphemeralDashboardResource;
@@ -64,6 +65,7 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
 
   const { isEditMode, setEditMode } = useEditMode();
   const { dashboard, setDashboard } = useDashboard();
+  // setEditMode(isEdit);
 
   const [originalDashboard, setOriginalDashboard] = useState<
     DashboardResource | EphemeralDashboardResource | undefined
@@ -80,6 +82,14 @@ export const OCPDashboardApp = (props: DashboardAppProps): ReactElement => {
 
   const { openDiscardChangesConfirmationDialog, closeDiscardChangesConfirmationDialog } =
     useDiscardChangesConfirmationDialog();
+
+  const [searchParams] = useSearchParams();
+  const isEdit = searchParams.get('edit');
+  useEffect(() => {
+    if (isEdit === 'true') {
+      setEditMode(true);
+    }
+  }, [isEdit, setEditMode]);
 
   const handleDiscardChanges = (): void => {
     // Reset to the original spec and exit edit mode

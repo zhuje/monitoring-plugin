@@ -100,16 +100,17 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       // Show success notification
       addAlert(`Dashboard "${dashboardName}" created successfully`, 'success');
 
-      // Close modal and reset form
-      setIsModalOpen(false);
-      setDashboardName('');
-      setFormErrors({});
-
-      // Navigate to the newly created dashboard
+      // Navigate to the newly created dashboard in edit mode first
       const dashboardUrl = getDashboardUrl(perspective);
       const dashboardParam = `dashboard=${createdDashboard.metadata.name}`;
       const projectParam = `project=${createdDashboard.metadata.project}`;
-      navigate(`${dashboardUrl}?${dashboardParam}&${projectParam}`);
+      const editModeParam = `edit=true`;
+      navigate(`${dashboardUrl}?${dashboardParam}&${projectParam}&${editModeParam}`);
+
+      // Close modal and reset form after navigation
+      setIsModalOpen(false);
+      setDashboardName('');
+      setFormErrors({});
     } catch (error) {
       const errorMessage = error?.message || 'Failed to create dashboard. Please try again.';
       addAlert(`Error creating dashboard: ${errorMessage}`, 'danger');
