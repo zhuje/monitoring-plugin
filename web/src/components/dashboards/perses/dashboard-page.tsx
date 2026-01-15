@@ -76,24 +76,26 @@ const DashboardPage_: FC = () => {
   }
 
   return (
-    <DashboardFrame
-      activeProject={activeProject}
-      setActiveProject={setActiveProject}
-      activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
-      changeBoard={changeBoard}
-      dashboardName={currentDashboard.name}
-    >
-      <OCPDashboardApp
-        dashboardResource={currentDashboard.persesDashboard}
-        isReadonly={false}
-        isVariableEnabled={true}
-        isDatasourceEnabled={false}
-        emptyDashboardProps={{
-          title: t('Empty Dashboard'),
-          description: t('To get started add something to your dashboard'),
-        }}
-      />
-    </DashboardFrame>
+    <>
+      <DashboardFrame
+        activeProject={activeProject}
+        setActiveProject={setActiveProject}
+        activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
+        changeBoard={changeBoard}
+        dashboardName={currentDashboard.name}
+      >
+        <OCPDashboardApp
+          dashboardResource={currentDashboard.persesDashboard}
+          isReadonly={false}
+          isVariableEnabled={true}
+          isDatasourceEnabled={false}
+          emptyDashboardProps={{
+            title: t('Empty Dashboard'),
+            description: t('To get started add something to your dashboard'),
+          }}
+        />
+      </DashboardFrame>
+    </>
   );
 };
 

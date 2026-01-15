@@ -4,8 +4,8 @@ import { DashboardHeader } from './dashboard-header';
 import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
 import { ProjectBar } from './project/ProjectBar';
 import { PersesWrapper } from './PersesWrapper';
-import { Overview } from '@openshift-console/dynamic-plugin-sdk';
 import { ToastProvider } from './ToastProvider';
+import { PageSection } from '@patternfly/react-core';
 
 interface DashboardFrameProps {
   activeProject: string | null;
@@ -32,14 +32,23 @@ export const DashboardFrame: React.FC<DashboardFrameProps> = ({
           {activeProjectDashboardsMetadata?.length === 0 ? (
             <DashboardEmptyState />
           ) : (
-            <DashboardHeader
-              boardItems={activeProjectDashboardsMetadata}
-              changeBoard={changeBoard}
-              dashboardName={dashboardName}
-              activeProject={activeProject}
-            >
-              <Overview>{children}</Overview>
-            </DashboardHeader>
+            <>
+              <DashboardHeader
+                boardItems={activeProjectDashboardsMetadata}
+                changeBoard={changeBoard}
+                dashboardName={dashboardName}
+                activeProject={activeProject}
+              >
+                <PageSection
+                  hasBodyWrapper={false}
+                  style={{
+                    paddingTop: 0,
+                  }}
+                >
+                  {children}
+                </PageSection>
+              </DashboardHeader>
+            </>
           )}
         </PersesWrapper>
       </ToastProvider>

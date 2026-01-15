@@ -13,7 +13,12 @@ import { StringParam, useQueryParam } from 'use-query-params';
 import { getDashboardsListUrl, usePerspective } from '../../hooks/usePerspective';
 import { QueryParams } from '../../query-params';
 
-import { chart_color_blue_100, chart_color_blue_300 } from '@patternfly/react-tokens';
+import {
+  chart_color_blue_100,
+  chart_color_blue_300,
+  t_global_spacer_md,
+  t_global_spacer_sm,
+} from '@patternfly/react-tokens';
 import { listPersesDashboardsDataTestIDs } from '../../data-test';
 import { usePatternFlyTheme } from '../../hooks/usePatternflyTheme';
 import { DashboardCreateDialog } from './dashboard-create-dialog';
@@ -44,6 +49,7 @@ const DashboardBreadCrumb: React.FunctionComponent = () => {
           cursor: 'pointer',
           color: linkColor,
           textDecoration: 'underline',
+          paddingLeft: t_global_spacer_md.value,
         }}
         data-test={listPersesDashboardsDataTestIDs.PersesBreadcrumbDashboardItem}
       >
@@ -67,16 +73,17 @@ const DashboardPageHeader: React.FunctionComponent = () => {
   const hideFavBtn = currentUrl.includes('v2/dashboards/view');
 
   return (
-    <Stack hasGutter>
+    <Stack>
       <StackItem>
         <DashboardBreadCrumb />
-      </StackItem>
-      <StackItem>
         <ListPageHeader
           title={t('Dashboards')}
           helpText={t('View and manage dashboards.')}
           hideFavoriteButton={hideFavBtn}
         />
+      </StackItem>
+      <StackItem>
+        <Divider inset={{ default: 'insetMd' }} />
       </StackItem>
     </Stack>
   );
@@ -123,7 +130,10 @@ export const DashboardHeader: FC<MonitoringDashboardsPageProps> = memo(({ childr
   return (
     <>
       <DocumentTitle>{t('Metrics dashboards')}</DocumentTitle>
-      <PageSection hasBodyWrapper={false}>
+      <PageSection
+        hasBodyWrapper={false}
+        style={{ paddingBottom: t_global_spacer_sm.value, paddingTop: t_global_spacer_md.value }}
+      >
         <DashboardPageHeader />
       </PageSection>
       {children}
@@ -137,7 +147,10 @@ export const DashboardListHeader: FC<MonitoringDashboardsPageProps> = memo(({ ch
   return (
     <>
       <DocumentTitle>{t('Metrics dashboards')}</DocumentTitle>
-      <PageSection hasBodyWrapper={false}>
+      <PageSection
+        hasBodyWrapper={false}
+        style={{ paddingBottom: t_global_spacer_sm.value, paddingTop: t_global_spacer_sm.value }}
+      >
         <DashboardListPageHeader />
       </PageSection>
       <Divider inset={{ default: 'insetMd' }} />
