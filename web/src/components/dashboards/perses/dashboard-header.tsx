@@ -92,7 +92,7 @@ const DashboardListPageHeader: React.FunctionComponent = () => {
       <GridItem span={9}>
         <ListPageHeader
           title={t('Dashboards')}
-          helpText={t('View and manage dashboards.!!!')}
+          helpText={t('View and manage dashboards.')}
           hideFavoriteButton={hideFavBtn}
         />
       </GridItem>

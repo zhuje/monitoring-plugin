@@ -24,6 +24,7 @@ import { useCreateDashboardMutation } from './dashboard-api';
 import { createTemporaryDashboard } from './dashboard-utils';
 import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
+import { t_color_red_50 } from '@patternfly/react-tokens';
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -47,6 +48,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   }, [persesProjects, selectedProject]);
 
   const { persesProjectDashboards: dashboards } = usePerses(selectedProject || undefined);
+
+  const warningColor = t_color_red_50.value;
 
   const handleSetDashboardName = (_event, dashboardName: string) => {
     setDashboardName(dashboardName);
@@ -104,19 +107,17 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
 
       // Navigate to the newly created dashboard
       const dashboardUrl = getDashboardUrl(perspective);
-      navigate(
-        `${dashboardUrl}?dashboard=${createdDashboard.metadata.name}&project=${createdDashboard.metadata.project}`,
-      );
+      const dashboardParam = `dashboard=${createdDashboard.metadata.name}`;
+      const projectParam = `project=${createdDashboard.metadata.project}`;
+      navigate(`${dashboardUrl}?${dashboardParam}&${projectParam}`);
     } catch (error) {
-      // Handle creation error
-      console.error('Dashboard creation failed:', error);
       const errorMessage = error?.message || 'Failed to create dashboard. Please try again.';
       addAlert(`Error creating dashboard: ${errorMessage}`, 'danger');
       setFormErrors({ general: errorMessage });
     }
   };
 
-  const handleModalToggle = (_event: KeyboardEvent | React.MouseEvent) => {
+  const handleModalToggle = () => {
     setIsModalOpen(!isModalOpen);
     setIsDropdownOpen(false);
     // Reset form when closing modal
@@ -135,12 +136,12 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     (element as HTMLElement)?.focus();
   };
 
-  const onEscapePress = (event: KeyboardEvent) => {
+  const onEscapePress = () => {
     if (isDropdownOpen) {
       setIsDropdownOpen(!isDropdownOpen);
       onFocus();
     } else {
-      handleModalToggle(event);
+      handleModalToggle();
     }
   };
 
@@ -222,7 +223,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               {formErrors.dashboardName && (
                 <div
                   style={{
-                    color: 'var(--pf-global--danger-color--100)',
+                    color: warningColor,
                     fontSize: '14px',
                     marginTop: '4px',
                   }}
