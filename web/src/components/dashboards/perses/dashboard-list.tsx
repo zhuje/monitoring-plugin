@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo, type FC } from 'react';
+import React, { ReactNode, useCallback, useMemo, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDashboardsData } from './hooks/useDashboardsData';
 
@@ -9,6 +9,7 @@ import {
   EmptyStateVariant,
   Pagination,
   Title,
+  Tooltip,
 } from '@patternfly/react-core';
 import { DataView } from '@patternfly/react-data-view/dist/dynamic/DataView';
 import { DataViewFilters } from '@patternfly/react-data-view/dist/dynamic/DataViewFilters';
@@ -21,13 +22,15 @@ import { DataViewTextFilter } from '@patternfly/react-data-view/dist/dynamic/Dat
 import { DataViewToolbar } from '@patternfly/react-data-view/dist/dynamic/DataViewToolbar';
 import { useDataViewFilters, useDataViewSort } from '@patternfly/react-data-view';
 import { useDataViewPagination } from '@patternfly/react-data-view/dist/dynamic/Hooks';
-import { ThProps } from '@patternfly/react-table';
+import { ActionsColumn, ThProps } from '@patternfly/react-table';
 import { Link, useSearchParams } from 'react-router-dom-v5-compat';
 
 import { getDashboardUrl, usePerspective } from '../../hooks/usePerspective';
 import { Timestamp } from '@openshift-console/dynamic-plugin-sdk';
 import { listPersesDashboardsDataTestIDs } from '../../../components/data-test';
 import { DashboardListFrame } from './dashboard-list-frame';
+import { usePersesEditPermissions } from './dashboard-toolbar';
+
 const perPageOptions = [
   { title: '10', value: 10 },
   { title: '20', value: 20 },
@@ -105,6 +108,9 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   activeProject,
 }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
+
+  const { canEdit, loading } = usePersesEditPermissions();
+  const disabled = !canEdit;
 
   const { perspective } = usePerspective();
   const dashboardBaseURL = getDashboardUrl(perspective);
@@ -198,12 +204,57 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
     [filteredData, sortBy, direction],
   );
 
+  const rowActions = useMemo(
+    () => [
+      {
+        title: t('Rename dashboard'),
+        onClick: () => console.log('clicked on Some action'), // eslint-disable-line no-console
+      },
+      {
+        title: t('Duplicate dashboard'),
+        onClick: () => console.log('clicked on Another action'), // eslint-disable-line no-console
+      },
+      {
+        isSeparator: true,
+      },
+      {
+        title: t('Delete dashboard'),
+        onClick: () => console.log('clicked on Third action'), // eslint-disable-line no-console
+      },
+    ],
+    [t],
+  );
+
+  const ActionsWithTooltip = useCallback(() => {
+    console.log('!JZ ActionsWithTooltip');
+    return (
+      <>
+        {disabled || loading ? (
+          <Tooltip content={t("You don't have permissions to dashboard actions")}>
+            <ActionsColumn items={rowActions} disabled={disabled || loading} />
+          </Tooltip>
+        ) : (
+          <ActionsColumn items={rowActions} disabled={disabled || loading} />
+        )}
+      </>
+    );
+  }, [disabled, loading, rowActions, t]);
+
   const pageRows: DataViewTr[] = useMemo(
     () =>
       sortedAndFilteredData
         .slice((page - 1) * perPage, (page - 1) * perPage + perPage)
-        .map(({ name, project, created, modified }) => [name.link, project, created, modified]),
-    [page, perPage, sortedAndFilteredData],
+        .map(({ name, project, created, modified }) => [
+          name.link,
+          project,
+          created,
+          modified,
+          {
+            cell: <ActionsWithTooltip />,
+            props: { isActionCell: true },
+          },
+        ]),
+    [ActionsWithTooltip, page, perPage, sortedAndFilteredData],
   );
 
   const PaginationTool = () => {
