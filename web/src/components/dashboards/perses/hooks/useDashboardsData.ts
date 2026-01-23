@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 
 import { DashboardResource } from '@perses-dev/core';
 import { useNavigate } from 'react-router-dom-v5-compat';
@@ -13,9 +13,11 @@ import { usePerses } from './usePerses';
 // This hook syncs with mutliple external API's, redux, and URL state. Its a lot, but needs to all
 // be in a single location
 export const useDashboardsData = () => {
+  console.log('!JZ 🎯 useDashboardsData called');
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { activeProject, setActiveProject } = useActiveProject();
+  console.log('!JZ 🎯 useDashboardsData activeProject:', activeProject);
 
   // track initial page load to prevent a full page loading state when swapping dashboards
   // or projects
@@ -27,17 +29,17 @@ export const useDashboardsData = () => {
   const persesAvailable = !persesProjectsLoading && persesProjects;
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
 
-  // Determine when to stop having the full page loader be used
-  const combinedInitialLoad = useMemo(() => {
-    if (!initialPageLoad) {
-      return false;
-    }
-    if (!(persesProjectsLoading || persesDashboardsLoading)) {
+  // Handle the initial page load state update in a useEffect (side effects belong here, not in useMemo)
+  useEffect(() => {
+    if (initialPageLoad && !(persesProjectsLoading || persesDashboardsLoading)) {
       setInitialPageLoadFalse();
-      return false;
     }
-    return true;
   }, [persesProjectsLoading, persesDashboardsLoading, initialPageLoad, setInitialPageLoadFalse]);
+
+  // Determine when to stop having the full page loader be used (pure computation, no side effects)
+  const combinedInitialLoad = useMemo(() => {
+    return initialPageLoad && (persesProjectsLoading || persesDashboardsLoading);
+  }, [persesProjectsLoading, persesDashboardsLoading, initialPageLoad]);
 
   // Homogenize data needed for dashboards dropdown between legacy and perses dashboards
   // to enable both to use the same component

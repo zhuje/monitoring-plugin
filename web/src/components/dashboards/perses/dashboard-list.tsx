@@ -104,19 +104,23 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   persesDashboardsLoading,
   activeProject,
 }) => {
+  console.log('!JZ 🔄 DashboardsTable render - activeProject:', activeProject);
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   const { perspective } = usePerspective();
   const dashboardBaseURL = getDashboardUrl(perspective);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  console.log('!JZ 🔍 DashboardsTable searchParams:', Object.fromEntries(searchParams));
   const { sortBy, direction, onSort } = useDataViewSort({ searchParams, setSearchParams });
+  console.log('!JZ 📊 DashboardsTable sort:', { sortBy, direction });
 
   const { filters, onSetFilters, clearAllFilters } = useDataViewFilters<DashboardRowFilters>({
     initialFilters: { name: '', 'project-filter': '' },
     searchParams,
     setSearchParams,
   });
+  console.log('!JZ 🔧 DashboardsTable filters:', filters);
   const pagination = useDataViewPagination({ perPage: perPageOptions[0].value });
   const { page, perPage } = pagination;
 
@@ -280,6 +284,7 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
 };
 
 export const DashboardList: FC = () => {
+  console.log('!JZ 🏠 DashboardList render start');
   const {
     activeProjectDashboardsMetadata,
     changeBoard,
@@ -289,6 +294,7 @@ export const DashboardList: FC = () => {
     persesDashboards,
     combinedInitialLoad,
   } = useDashboardsData();
+  console.log('!JZ 🏠 DashboardList data:', { activeProject, dashboardName, combinedInitialLoad });
 
   return (
     <DashboardListFrame

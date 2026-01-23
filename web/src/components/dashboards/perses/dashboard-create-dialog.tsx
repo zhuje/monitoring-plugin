@@ -39,13 +39,13 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-  const { canEdit, loading } = usePersesEditPermissions();
-  const disabled = !canEdit;
-
   const { persesProjects } = usePerses();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+
+  const { canEdit, loading } = usePersesEditPermissions(selectedProject);
+  const disabled = !canEdit;
   const [dashboardName, setDashboardName] = useState<string>('');
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
