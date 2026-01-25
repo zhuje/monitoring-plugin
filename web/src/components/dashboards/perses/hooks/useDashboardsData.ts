@@ -79,6 +79,10 @@ export const useDashboardsData = () => {
       }
       const queryArguments = getAllQueryArguments();
 
+      // Remove the edit parameter when switching dashboards/projects
+      console.log('!JZ deleting edit paramters! ');
+      delete queryArguments.edit;
+
       const params = new URLSearchParams(queryArguments);
 
       let projectToUse = activeProject;
