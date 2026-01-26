@@ -96,7 +96,6 @@ const useHasEditableProjects = (projects: any[]) => {
       }
 
       if (mounted) {
-        console.log(`!JZ All editable projects:`, editableProjectNames);
         setEditableProjects(editableProjectNames);
         setLoading(false);
       }
@@ -144,25 +143,13 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   } = useHasEditableProjects(hookInput);
 
   const disabled = activeProjectFromUrl
-    ? !canEdit  // When on a specific project page, check specific project permissions
-    : !hasEditableProject;  // When on general page, check if any projects are editable
-
-  console.log('!JZ Editable projects:', editableProjects);
-  console.log('!JZ activeProjectFromUrl:', activeProjectFromUrl);
-  console.log('!JZ Hook input:', hookInput);
-  console.log('!JZ Disabled state:', { disabled, canEdit, hasEditableProject });
+    ? !canEdit // When on a specific project page, check specific project permissions
+    : !hasEditableProject; // When on general page, check if any projects are editable
 
   // Filter projects to only show editable ones (memoized to prevent infinite loops)
   const filteredProjects = useMemo(() => {
     return persesProjects.filter((project) => editableProjects.includes(project.metadata.name));
   }, [persesProjects, editableProjects]);
-
-  console.log(
-    '!JZ Filtered projects:',
-    filteredProjects.map((p) => p.metadata.name),
-  );
-
-  console.log('!JZ Render count for:', { isModalOpen, selectedProject });
 
   // Set initial project when modal opens and no project is selected
   useEffect(() => {
@@ -172,7 +159,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       filteredProjects.length > 0 &&
       selectedProject === null
     ) {
-      // Prioritize the current active project from URL, otherwise use the first available editable project
       const projectToSelect =
         activeProjectFromUrl &&
         filteredProjects.some((p) => p.metadata.name === activeProjectFromUrl)

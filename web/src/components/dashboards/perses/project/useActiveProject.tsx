@@ -5,18 +5,14 @@ import {
 } from '@openshift-console/dynamic-plugin-sdk';
 import { useState, useEffect } from 'react';
 import { ProjectModel } from '../../../console/models';
-import { usePerspective } from '../../../hooks/usePerspective';
 import { usePerses } from '../hooks/usePerses';
 import { QueryParams } from '../../../query-params';
 import { StringParam, useQueryParam } from 'use-query-params';
 
 export const useActiveProject = () => {
-  console.log('!JZ 🌟 useActiveProject called');
   const [activeProject, setActiveProject] = useState<string | null>(null);
-  console.log('!JZ 🌟 useActiveProject state:', activeProject);
   const [activeNamespace, setActiveNamespace] = useActiveNamespace();
-  const { perspective } = usePerspective();
-  const { persesProjects, persesProjectsLoading } = usePerses();
+  const { persesProjectsLoading } = usePerses();
   const [projectFromUrl, setProject] = useQueryParam(QueryParams.Project, StringParam);
   const [namespaces, namespacesLoaded] = useK8sWatchResource<K8sResourceKind[]>({
     isList: true,
@@ -35,7 +31,6 @@ export const useActiveProject = () => {
     }
     // If the url and the data is out of sync, follow the data
     if (activeProject && projectFromUrl !== activeProject) {
-      console.log('!JZ activeProject!!');
       setProject(activeProject);
     }
   }, [projectFromUrl, activeProject, persesProjectsLoading, setProject]);
