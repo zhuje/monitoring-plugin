@@ -118,8 +118,6 @@ export const usePersesEditPermissions = (namespace: string | null = null) => {
     namespace,
   });
 
-  console.log('!JZ usePersesEditPermissions ', { canUpdate, canCreate, canDelete });
-
   const loading = createLoading || updateLoading || deleteLoading;
   const canEdit = canUpdate && canCreate && canDelete;
 

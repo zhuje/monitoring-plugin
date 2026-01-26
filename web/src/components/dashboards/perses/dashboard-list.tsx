@@ -284,7 +284,6 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
 };
 
 export const DashboardList: FC = () => {
-  // console.log('!JZ 🏠 DashboardList render start');
   const {
     activeProjectDashboardsMetadata,
     changeBoard,
@@ -294,7 +293,6 @@ export const DashboardList: FC = () => {
     persesDashboards,
     combinedInitialLoad,
   } = useDashboardsData();
-  // console.log('!JZ 🏠 DashboardList data:', { activeProject, dashboardName, combinedInitialLoad });
 
   return (
     <DashboardListFrame

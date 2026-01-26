@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
@@ -37,15 +37,14 @@ import { usePersesEditPermissions } from './dashboard-toolbar';
 import { persesDashboardDataTestIDs } from '../../data-test';
 import { checkAccess } from '@openshift-console/dynamic-plugin-sdk';
 
-// Hook to check if user has edit permissions for at least one project
+// Hook to get list of all editable projects
 const useHasEditableProjects = (projects: any[]) => {
-  console.log('!JZ useHasEditableProjects', { projects });
-  const [hasEditableProject, setHasEditableProject] = useState(false);
+  const [editableProjects, setEditableProjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!projects || projects.length === 0) {
-      setHasEditableProject(false);
+      setEditableProjects([]);
       setLoading(false);
       return;
     }
@@ -54,6 +53,7 @@ const useHasEditableProjects = (projects: any[]) => {
 
     const checkProjectPermissions = async () => {
       setLoading(true);
+      const editableProjectNames: string[] = [];
 
       for (const project of projects) {
         const projectName = project?.metadata?.name;
@@ -86,26 +86,18 @@ const useHasEditableProjects = (projects: any[]) => {
             updateResult.status.allowed &&
             deleteResult.status.allowed;
 
-          console.log(`!JZ Permission check for project ${projectName}:`, {
-            create: createResult.status.allowed,
-            update: updateResult.status.allowed,
-            delete: deleteResult.status.allowed,
-            canEdit,
-          });
-
-          if (canEdit && mounted) {
-            console.log(`!JZ Found editable project: ${projectName}`);
-            setHasEditableProject(true);
-            setLoading(false);
-            return; // Found one, can exit early
+          if (canEdit) {
+            editableProjectNames.push(projectName);
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.warn(`Failed to check permissions for project ${projectName}:`, error);
         }
       }
 
       if (mounted) {
-        setHasEditableProject(false);
+        console.log(`!JZ All editable projects:`, editableProjectNames);
+        setEditableProjects(editableProjectNames);
         setLoading(false);
       }
     };
@@ -117,7 +109,9 @@ const useHasEditableProjects = (projects: any[]) => {
     };
   }, [projects]);
 
-  return { hasEditableProject, loading };
+  const hasEditableProject = editableProjects.length > 0;
+
+  return { editableProjects, hasEditableProject, loading };
 };
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
@@ -125,64 +119,69 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-
   const { persesProjects } = usePerses();
-  // Get active project from URL params directly to avoid dependency chain loops
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
-
-  console.log('!JZ DashboardCreateDialog ', { persesProjects, activeProjectFromUrl });
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-
-  const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
-
-  const beans = activeProjectFromUrl ? [] : persesProjects || [];
-  console.log('!JZ BEANS!! ', { activeProjectFromUrl, beans });
-
-  const { hasEditableProject, loading: globalPermissionsLoading } = useHasEditableProjects(
-    activeProjectFromUrl ? [] : persesProjects || [],
-  );
-
-  const disabled = activeProjectFromUrl ? !canEdit : !hasEditableProject;
-
-  console.log('!JZ disable ', {
-    disabled,
-    selectedProject,
-    activeProjectFromUrl,
-    canEdit,
-    hasEditableProject,
-  });
-
-  console.log('!JZ DashboardCreateDialog permissions ', {
-    selectedProject,
-    activeProjectFromUrl,
-    canEdit,
-    hasEditableProject,
-    loading,
-    globalPermissionsLoading,
-    disabled,
-    totalProjects: persesProjects?.length || 0,
-  });
-
   const [dashboardName, setDashboardName] = useState<string>('');
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
-
   const createDashboardMutation = useCreateDashboardMutation();
+
+  // Disable Create button
+  const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
+
+  // Always check global permissions to get list of editable projects
+  // This is needed to filter the dropdown properly
+  const hookInput = useMemo(() => {
+    return persesProjects || [];
+  }, [persesProjects]);
+
+  const {
+    editableProjects,
+    hasEditableProject,
+    loading: globalPermissionsLoading,
+  } = useHasEditableProjects(hookInput);
+
+  const disabled = activeProjectFromUrl
+    ? !canEdit  // When on a specific project page, check specific project permissions
+    : !hasEditableProject;  // When on general page, check if any projects are editable
+
+  console.log('!JZ Editable projects:', editableProjects);
+  console.log('!JZ activeProjectFromUrl:', activeProjectFromUrl);
+  console.log('!JZ Hook input:', hookInput);
+  console.log('!JZ Disabled state:', { disabled, canEdit, hasEditableProject });
+
+  // Filter projects to only show editable ones (memoized to prevent infinite loops)
+  const filteredProjects = useMemo(() => {
+    return persesProjects.filter((project) => editableProjects.includes(project.metadata.name));
+  }, [persesProjects, editableProjects]);
+
+  console.log(
+    '!JZ Filtered projects:',
+    filteredProjects.map((p) => p.metadata.name),
+  );
+
+  console.log('!JZ Render count for:', { isModalOpen, selectedProject });
 
   // Set initial project when modal opens and no project is selected
   useEffect(() => {
-    if (isModalOpen && persesProjects && persesProjects.length > 0 && selectedProject === null) {
-      // Prioritize the current active project from URL, otherwise use the first available project
+    if (
+      isModalOpen &&
+      filteredProjects &&
+      filteredProjects.length > 0 &&
+      selectedProject === null
+    ) {
+      // Prioritize the current active project from URL, otherwise use the first available editable project
       const projectToSelect =
-        activeProjectFromUrl && persesProjects.some((p) => p.metadata.name === activeProjectFromUrl)
+        activeProjectFromUrl &&
+        filteredProjects.some((p) => p.metadata.name === activeProjectFromUrl)
           ? activeProjectFromUrl
-          : persesProjects[0].metadata.name;
+          : filteredProjects[0].metadata.name;
 
       setSelectedProject(projectToSelect);
     }
-  }, [isModalOpen, persesProjects, selectedProject, activeProjectFromUrl]);
+  }, [isModalOpen, filteredProjects, selectedProject, activeProjectFromUrl]);
 
   // Only fetch project dashboards when modal is open and project is selected
   const { persesProjectDashboards: dashboards } = usePerses(
@@ -337,7 +336,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
                 )}
               >
                 <DropdownList>
-                  {persesProjects.map((project, i) => (
+                  {filteredProjects.map((project, i) => (
                     <DropdownItem
                       value={`${project.metadata.name}`}
                       key={`${i}-${project.metadata.name}`}

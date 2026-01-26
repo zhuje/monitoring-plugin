@@ -13,11 +13,9 @@ import { usePerses } from './usePerses';
 // This hook syncs with mutliple external API's, redux, and URL state. Its a lot, but needs to all
 // be in a single location
 export const useDashboardsData = () => {
-  console.log('!JZ 🎯 useDashboardsData called');
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { activeProject, setActiveProject } = useActiveProject();
-  console.log('!JZ 🎯 useDashboardsData activeProject:', activeProject);
 
   // track initial page load to prevent a full page loading state when swapping dashboards
   // or projects
@@ -29,7 +27,6 @@ export const useDashboardsData = () => {
   const persesAvailable = !persesProjectsLoading && persesProjects;
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
 
-  // Handle the initial page load state update in a useEffect (side effects belong here, not in useMemo)
   useEffect(() => {
     if (initialPageLoad && !(persesProjectsLoading || persesDashboardsLoading)) {
       setInitialPageLoadFalse();
@@ -80,7 +77,6 @@ export const useDashboardsData = () => {
       const queryArguments = getAllQueryArguments();
 
       // Remove the edit parameter when switching dashboards/projects
-      console.log('!JZ deleting edit paramters! ');
       delete queryArguments.edit;
 
       const params = new URLSearchParams(queryArguments);
