@@ -38,14 +38,7 @@ export const useActiveProject = () => {
       console.log('!JZ activeProject!!');
       setProject(activeProject);
     }
-  }, [
-    projectFromUrl,
-    activeProject,
-    perspective,
-    persesProjects,
-    persesProjectsLoading,
-    setProject,
-  ]);
+  }, [projectFromUrl, activeProject, persesProjectsLoading, setProject]);
 
   // Sync the activeProject and activeNamespace changes
   useEffect(() => {
