@@ -130,6 +130,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
   const { allProjects } = useAllAccessibleProjects();
+  const { persesProjects } = usePerses();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -140,9 +141,44 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
 
   const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
 
+  const combinedProjects = useMemo(() => {
+    const projects = [];
+    const projectNames = new Set();
+
+    // Add projects from general namespace access
+    if (allProjects) {
+      for (const project of allProjects) {
+        projects.push(project);
+        projectNames.add(project.metadata.name);
+      }
+    }
+
+    console.log('!JZ k8projects and projectNamesSet', { projects, projectNames });
+
+    // Add projects from Perses API (where user has specific Perses permissions)
+    if (persesProjects) {
+      for (const persesProject of persesProjects) {
+        if (!projectNames.has(persesProject.metadata.name)) {
+          // Convert Perses project format to K8s project format for consistency
+          projects.push({
+            metadata: {
+              name: persesProject.metadata.name,
+              namespace: persesProject.metadata.name,
+            },
+          });
+          projectNames.add(persesProject.metadata.name);
+        }
+      }
+    }
+
+    console.log('!JZ combined Projects', { projects });
+
+    return projects;
+  }, [allProjects, persesProjects]);
+
   const hookInput = useMemo(() => {
-    return allProjects || [];
-  }, [allProjects]);
+    return combinedProjects || [];
+  }, [combinedProjects]);
 
   const {
     editableProjects,
@@ -153,8 +189,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const disabled = activeProjectFromUrl ? !canEdit : !hasEditableProject;
 
   const filteredProjects = useMemo(() => {
-    return allProjects.filter((project) => editableProjects.includes(project.metadata.name));
-  }, [allProjects, editableProjects]);
+    return combinedProjects.filter((project) => editableProjects.includes(project.metadata.name));
+  }, [combinedProjects, editableProjects]);
 
   useEffect(() => {
     if (
@@ -271,6 +307,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     onFocus();
   };
 
+  console.log('!JZ ', { loading, globalPermissionsLoading });
+
   return (
     <>
       <Button
@@ -310,6 +348,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               fieldId="form-group-create-dashboard-dialog-project-selection"
             >
               <Dropdown
+                isScrollable={true}
                 isOpen={isDropdownOpen}
                 onSelect={onSelect}
                 onOpenChange={(isOpen: boolean) => setIsDropdownOpen(isOpen)}
