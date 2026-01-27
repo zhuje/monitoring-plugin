@@ -24,6 +24,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { usePerses } from './hooks/usePerses';
+import { useAllAccessibleProjects } from './hooks/useAllAccessibleProjects';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { StringParam, useQueryParam } from 'use-query-params';
@@ -128,7 +129,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-  const { persesProjects } = usePerses();
+  const { allProjects } = useAllAccessibleProjects();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -140,8 +141,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
 
   const hookInput = useMemo(() => {
-    return persesProjects || [];
-  }, [persesProjects]);
+    return allProjects || [];
+  }, [allProjects]);
 
   const {
     editableProjects,
@@ -152,8 +153,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const disabled = activeProjectFromUrl ? !canEdit : !hasEditableProject;
 
   const filteredProjects = useMemo(() => {
-    return persesProjects.filter((project) => editableProjects.includes(project.metadata.name));
-  }, [persesProjects, editableProjects]);
+    return allProjects.filter((project) => editableProjects.includes(project.metadata.name));
+  }, [allProjects, editableProjects]);
 
   useEffect(() => {
     if (
