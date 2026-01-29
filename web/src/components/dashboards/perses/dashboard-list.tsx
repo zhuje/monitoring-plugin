@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo, type FC } from 'react';
+import React, { ReactNode, useCallback, useMemo, useState, useEffect, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDashboardsData } from './hooks/useDashboardsData';
 
@@ -7,8 +7,13 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateVariant,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Pagination,
   Title,
+  Tooltip,
 } from '@patternfly/react-core';
 import { DataView } from '@patternfly/react-data-view/dist/dynamic/DataView';
 import { DataViewFilters } from '@patternfly/react-data-view/dist/dynamic/DataViewFilters';
@@ -21,13 +26,22 @@ import { DataViewTextFilter } from '@patternfly/react-data-view/dist/dynamic/Dat
 import { DataViewToolbar } from '@patternfly/react-data-view/dist/dynamic/DataViewToolbar';
 import { useDataViewFilters, useDataViewSort } from '@patternfly/react-data-view';
 import { useDataViewPagination } from '@patternfly/react-data-view/dist/dynamic/Hooks';
-import { ThProps } from '@patternfly/react-table';
+import { ActionsColumn, ThProps } from '@patternfly/react-table';
 import { Link, useSearchParams } from 'react-router-dom-v5-compat';
 
 import { getDashboardUrl, usePerspective } from '../../hooks/usePerspective';
 import { Timestamp } from '@openshift-console/dynamic-plugin-sdk';
 import { listPersesDashboardsDataTestIDs } from '../../../components/data-test';
 import { DashboardListFrame } from './dashboard-list-frame';
+import { usePersesEditPermissions } from './dashboard-toolbar';
+import { useDeleteDashboardMutation } from './dashboard-api';
+import { DashboardResource, getResourceExtendedDisplayName } from '@perses-dev/core';
+import { useToast } from './ToastProvider';
+import {
+  DeleteActionModal,
+  DuplicateActionModal,
+  RenameActionModal,
+} from './dashboard-action-modals';
 const perPageOptions = [
   { title: '10', value: 10 },
   { title: '20', value: 20 },
@@ -46,6 +60,8 @@ interface DashboardRow {
   // Raw values for sorting
   createdAt?: string;
   updatedAt?: string;
+  // Reference to original dashboard data
+  dashboard: DashboardResource;
 }
 
 interface DashboardRowFilters {
@@ -87,14 +103,7 @@ const sortDashboardData = (
 };
 
 interface DashboardsTableProps {
-  persesDashboards: Array<{
-    metadata?: {
-      name?: string;
-      project?: string;
-      createdAt?: string;
-      updatedAt?: string;
-    };
-  }>;
+  persesDashboards: DashboardResource[];
   persesDashboardsLoading: boolean;
   activeProject: string | null;
 }
@@ -105,6 +114,7 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   activeProject,
 }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
+  const { addAlert } = useToast();
 
   const { perspective } = usePerspective();
   const dashboardBaseURL = getDashboardUrl(perspective);
@@ -174,6 +184,7 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
         modified: <Timestamp timestamp={metadata?.updatedAt} />,
         createdAt: metadata?.createdAt,
         updatedAt: metadata?.updatedAt,
+        dashboard: board,
       };
     });
   }, [dashboardBaseURL, persesDashboards, persesDashboardsLoading]);
@@ -198,13 +209,119 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
     [filteredData, sortBy, direction],
   );
 
-  const pageRows: DataViewTr[] = useMemo(
-    () =>
-      sortedAndFilteredData
-        .slice((page - 1) * perPage, (page - 1) * perPage + perPage)
-        .map(({ name, project, created, modified }) => [name.link, project, created, modified]),
-    [page, perPage, sortedAndFilteredData],
+  const [targetedDashboard, setTargetedDashboard] = useState<DashboardResource>();
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState<boolean>(false);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+
+  const handleRenameModalOpen = useCallback((dashboard: DashboardResource) => {
+    setTargetedDashboard(dashboard);
+    setIsRenameModalOpen(true);
+  }, []);
+
+  const handleRenameModalClose = useCallback(() => {
+    setIsRenameModalOpen(false);
+    setTargetedDashboard(undefined);
+  }, []);
+
+  const handleDuplicateModalOpen = useCallback((dashboard: DashboardResource) => {
+    setTargetedDashboard(dashboard);
+    setIsDuplicateModalOpen(true);
+  }, []);
+
+  const handleDuplicateModalClose = useCallback(() => {
+    setIsDuplicateModalOpen(false);
+    setTargetedDashboard(undefined);
+  }, []);
+
+  const handleDeleteModalOpen = useCallback((dashboard: DashboardResource) => {
+    setTargetedDashboard(dashboard);
+    setIsDeleteModalOpen(true);
+  }, []);
+
+  const handleDeleteModalClose = useCallback(() => {
+    setIsDeleteModalOpen(false);
+    setTargetedDashboard(undefined);
+  }, []);
+
+  const emptyRowActions = useMemo(
+    () => [
+      {
+        title: t("You don't have permissions to dashboard actions"),
+        onClick: () => {},
+      },
+    ],
+    [t],
   );
+
+  const pageRows: DataViewTr[] = useMemo(() => {
+    // Define the component inside useMemo to avoid recreating it on every render
+    const ActionsWithTooltip = ({
+      project,
+      dashboard,
+    }: {
+      project: string;
+      dashboard: DashboardResource;
+    }) => {
+      const { canEdit, loading } = usePersesEditPermissions(project);
+      const disabled = !canEdit;
+
+      // Create row-specific actions with the dashboard baked in
+      const rowSpecificActions = useMemo(
+        () => [
+          {
+            title: t('Rename dashboard'),
+            onClick: () => handleRenameModalOpen(dashboard),
+          },
+          {
+            title: t('Duplicate dashboard'),
+            onClick: () => handleDuplicateModalOpen(dashboard), // eslint-disable-line no-console
+          },
+          {
+            title: t('Delete dashboard'),
+            onClick: () => handleDeleteModalOpen(dashboard),
+          },
+        ],
+        [dashboard],
+      );
+
+      return (
+        <>
+          {disabled || loading ? (
+            <Tooltip content={t("You don't have permissions to dashboard actions")}>
+              <div>
+                <ActionsColumn items={emptyRowActions} isDisabled={true} />
+              </div>
+            </Tooltip>
+          ) : (
+            <ActionsColumn items={rowSpecificActions} isDisabled={disabled || loading} />
+          )}
+        </>
+      );
+    };
+
+    return sortedAndFilteredData
+      .slice((page - 1) * perPage, (page - 1) * perPage + perPage)
+      .map(({ name, project, created, modified, dashboard }) => [
+        name.link,
+        project,
+        created,
+        modified,
+        {
+          cell: <ActionsWithTooltip project={project} dashboard={dashboard} />,
+          props: { isActionCell: true },
+        },
+      ]);
+  }, [
+    sortedAndFilteredData,
+    page,
+    perPage,
+    t,
+    emptyRowActions,
+    handleRenameModalOpen,
+    handleDuplicateModalOpen,
+    handleDeleteModalOpen,
+  ]);
 
   const PaginationTool = () => {
     return (
@@ -243,12 +360,32 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
         }
       />
       {hasData ? (
-        <DataViewTable
-          aria-label="Perses Dashboards List"
-          ouiaId={'PersesDashList-DataViewTable'}
-          columns={tableColumns}
-          rows={pageRows}
-        />
+        <>
+          <RenameActionModal
+            isOpen={isRenameModalOpen}
+            onClose={handleRenameModalClose}
+            onClickConfirm={handleRenameModalClose}
+            onClickCancel={handleRenameModalClose}
+          />
+          <DuplicateActionModal
+            isOpen={isDuplicateModalOpen}
+            onClose={handleDuplicateModalClose}
+            onClickConfirm={handleDuplicateModalClose}
+            onClickCancel={handleDuplicateModalClose}
+          />
+          <DeleteActionModal
+            isOpen={isDeleteModalOpen}
+            onClose={handleDeleteModalClose}
+            onClickConfirm={handleDeleteModalClose}
+            onClickCancel={handleDeleteModalClose}
+          />
+          <DataViewTable
+            aria-label="Perses Dashboards List"
+            ouiaId={'PersesDashList-DataViewTable'}
+            columns={tableColumns}
+            rows={pageRows}
+          />
+        </>
       ) : (
         <EmptyState variant={EmptyStateVariant.sm}>
           <Title
@@ -298,6 +435,7 @@ export const DashboardList: FC = () => {
       changeBoard={changeBoard}
       dashboardName={dashboardName}
     >
+      <h1> Hello! </h1>
       <DashboardsTable
         persesDashboards={persesDashboards}
         persesDashboardsLoading={combinedInitialLoad}

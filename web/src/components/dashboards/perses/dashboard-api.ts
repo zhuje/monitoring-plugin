@@ -54,3 +54,36 @@ export const useCreateDashboardMutation = (
     },
   });
 };
+
+const deleteDashboard = async (entity: DashboardResource): Promise<void> => {
+  const url = buildURL({
+    resource: resource,
+    project: entity.metadata.project,
+    name: entity.metadata.name,
+  });
+
+  // Use consoleFetchJSON.delete but don't pass entity as body for DELETE requests
+  await consoleFetchJSON.delete(url);
+};
+
+export function useDeleteDashboardMutation(): UseMutationResult<
+  DashboardResource,
+  Error,
+  DashboardResource
+> {
+  const queryClient = useQueryClient();
+  return useMutation<DashboardResource, Error, DashboardResource>({
+    mutationKey: [resource],
+    mutationFn: (entity: DashboardResource) => {
+      return deleteDashboard(entity).then(() => {
+        return entity;
+      });
+    },
+    onSuccess: (dashboard) => {
+      queryClient.removeQueries({
+        queryKey: [resource, dashboard.metadata.project, dashboard.metadata.name],
+      });
+      return queryClient.invalidateQueries({ queryKey: [resource] });
+    },
+  });
+}
