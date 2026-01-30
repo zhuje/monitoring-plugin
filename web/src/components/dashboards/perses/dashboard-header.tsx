@@ -10,7 +10,7 @@ import { CombinedDashboardMetadata } from './hooks/useDashboardsData';
 import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { getDashboardsListUrl, usePerspective } from '../../hooks/usePerspective';
-=
+
 import {
   chart_color_blue_100,
   chart_color_blue_300,
