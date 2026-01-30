@@ -2,6 +2,8 @@ import { DashboardResource } from '@perses-dev/core';
 import buildURL from './perses/url-builder';
 import { useMutation, UseMutationResult, useQueryClient } from '@tanstack/react-query';
 import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
+import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
+import { StatusError } from '@perses-dev/core';
 
 const resource = 'dashboards';
 
@@ -85,5 +87,50 @@ export function useDeleteDashboardMutation(): UseMutationResult<
       });
       return queryClient.invalidateQueries({ queryKey: [resource] });
     },
+  });
+}
+
+/**
+ * Generated a resource name valid for the API.
+ * By removing accents from alpha characters and replace specials character by underscores.
+ * @param name
+ */
+export function generateMetadataName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-zA-Z0-9_.-]/g, '_');
+}
+
+export const getDashboards = async (
+  project?: string,
+  metadataOnly: boolean = false,
+): Promise<DashboardResource[]> => {
+  const queryParams = new URLSearchParams();
+  if (metadataOnly) {
+    queryParams.set('metadata_only', 'true');
+  }
+  const url = buildURL({ resource: resource, project: project, queryParams: queryParams });
+
+  return consoleFetchJSON(url);
+};
+
+type DashboardListOptions = Omit<
+  UseQueryOptions<DashboardResource[], StatusError>,
+  'queryKey' | 'queryFn'
+> & {
+  project?: string;
+  metadataOnly?: boolean;
+};
+
+export function useDashboardList(
+  options: DashboardListOptions,
+): UseQueryResult<DashboardResource[], StatusError> {
+  return useQuery<DashboardResource[], StatusError>({
+    queryKey: [resource, options.project, options.metadataOnly],
+    queryFn: () => {
+      return getDashboards(options.project, options.metadataOnly);
+    },
+    ...options,
   });
 }

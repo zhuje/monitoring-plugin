@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useMemo, useState, useEffect, type FC } from 'react';
+import React, { ReactNode, useCallback, useMemo, useState, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDashboardsData } from './hooks/useDashboardsData';
 
@@ -7,10 +7,6 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateVariant,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   Pagination,
   Title,
   Tooltip,
@@ -34,9 +30,7 @@ import { Timestamp } from '@openshift-console/dynamic-plugin-sdk';
 import { listPersesDashboardsDataTestIDs } from '../../../components/data-test';
 import { DashboardListFrame } from './dashboard-list-frame';
 import { usePersesEditPermissions } from './dashboard-toolbar';
-import { useDeleteDashboardMutation } from './dashboard-api';
-import { DashboardResource, getResourceExtendedDisplayName } from '@perses-dev/core';
-import { useToast } from './ToastProvider';
+import { DashboardResource } from '@perses-dev/core';
 import {
   DeleteActionModal,
   DuplicateActionModal,
@@ -114,7 +108,6 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   activeProject,
 }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
-  const { addAlert } = useToast();
 
   const { perspective } = usePerspective();
   const dashboardBaseURL = getDashboardUrl(perspective);
@@ -164,6 +157,7 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
     }
     return persesDashboards.map((board) => {
       const metadata = board?.metadata;
+      const displayName = board?.spec?.display.name;
       const dashboardsParams = `?dashboard=${metadata?.name}&project=${metadata?.project}`;
       const dashboardName: DashboardRowNameLink = {
         link: (
@@ -171,7 +165,7 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
             to={`${dashboardBaseURL}${dashboardsParams}`}
             data-test={`perseslistpage-${board?.metadata?.name}`}
           >
-            {metadata?.name}
+            {displayName}
           </Link>
         ),
         label: metadata?.name || '',
@@ -362,22 +356,20 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
       {hasData ? (
         <>
           <RenameActionModal
+            dashboard={targetedDashboard}
             isOpen={isRenameModalOpen}
             onClose={handleRenameModalClose}
-            onClickConfirm={handleRenameModalClose}
-            onClickCancel={handleRenameModalClose}
+            handleModalClose={handleRenameModalClose}
           />
           <DuplicateActionModal
             isOpen={isDuplicateModalOpen}
             onClose={handleDuplicateModalClose}
-            onClickConfirm={handleDuplicateModalClose}
-            onClickCancel={handleDuplicateModalClose}
+            handleModalClose={handleDuplicateModalClose}
           />
           <DeleteActionModal
             isOpen={isDeleteModalOpen}
             onClose={handleDeleteModalClose}
-            onClickConfirm={handleDeleteModalClose}
-            onClickCancel={handleDeleteModalClose}
+            handleModalClose={handleDeleteModalClose}
           />
           <DataViewTable
             aria-label="Perses Dashboards List"

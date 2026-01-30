@@ -81,7 +81,7 @@ const DashboardPage_: FC = () => {
       setActiveProject={setActiveProject}
       activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
       changeBoard={changeBoard}
-      dashboardName={currentDashboard.name}
+      dashboardDisplayName={currentDashboard.title}
     >
       <OCPDashboardApp
         dashboardResource={currentDashboard.persesDashboard}
