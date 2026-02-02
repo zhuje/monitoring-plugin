@@ -22,7 +22,11 @@ import {
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUpdateDashboardMutation, useCreateDashboardMutation } from './dashboard-api';
+import {
+  useUpdateDashboardMutation,
+  useCreateDashboardMutation,
+  useDeleteDashboardMutation,
+} from './dashboard-api';
 import {
   renameDashboardDialogValidationSchema,
   RenameDashboardValidationType,
@@ -40,7 +44,6 @@ import {
 } from '@perses-dev/core';
 import { useToast } from './ToastProvider';
 import { usePerses } from './hooks/usePerses';
-import { t } from 'i18next';
 import { generateMetadataName } from './dashboard-utils';
 import { useProjectPermissions } from './dashboard-permissions';
 
@@ -52,7 +55,7 @@ interface ActionModalProps {
 }
 
 export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { addAlert } = useToast();
 
   const form = useForm<RenameDashboardValidationType>({
@@ -103,11 +106,10 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
       variant={ModalVariant.small}
       isOpen={isOpen}
       onClose={handleClose}
-      ouiaId="BasicModal"
-      aria-labelledby="basic-modal-title"
-      aria-describedby="modal-box-body-basic"
+      ouiaId="RenameModal"
+      aria-labelledby="rename-modal"
     >
-      <ModalHeader title="Rename Dashboard" labelId="basic-modal-title" />
+      <ModalHeader title="Rename Dashboard" labelId="rename-modal-title" />
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(processForm)}>
           <ModalBody id="modal-box-body-basic">
@@ -151,7 +153,7 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
               type="submit"
               isDisabled={!form.formState.isValid}
             >
-              {t('Save')}
+              {t('Rename')}
             </Button>
             <Button key="cancel" variant="link" onClick={handleClose}>
               {t('Cancel')}
@@ -163,31 +165,8 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
   );
 };
 
-export const DeleteActionModal = ({ isOpen, onClose, handleModalClose }: ActionModalProps) => {
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      ouiaId="BasicModal"
-      aria-labelledby="basic-modal-title"
-      aria-describedby="modal-box-body-basic"
-    >
-      <ModalHeader title="Delete dashboards" labelId="basic-modal-title" />
-      <ModalBody id="modal-box-body-basic"></ModalBody>
-      <ModalFooter>
-        <Button key="confirm" variant="primary" onClick={handleModalClose}>
-          {t('Delete')}
-        </Button>
-        <Button key="cancel" variant="link" onClick={handleModalClose}>
-          {t('Cancel')}
-        </Button>
-      </ModalFooter>
-    </Modal>
-  );
-};
-
 export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModalProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { addAlert } = useToast();
   const [isProjectSelectOpen, setIsProjectSelectOpen] = useState(false);
 
@@ -362,7 +341,8 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
       variant={ModalVariant.small}
       isOpen={isOpen}
       onClose={handleClose}
-      aria-labelledby="duplicate-modal-title"
+      ouiaId="DuplicateModal"
+      aria-labelledby="duplicate-modal"
     >
       <ModalHeader title="Duplicate Dashboard" labelId="duplicate-modal-title" />
       {/* {isSchemaLoading || persesProjectsLoading ? (
@@ -403,6 +383,7 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                 </FormGroup>
               )}
             />
+
             {/* Project Selection */}
             <Controller
               control={form.control}
@@ -439,7 +420,10 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                   >
                     <SelectList>
                       {filteredProjects.map((project) => (
-                        <SelectOption key={project.metadata.name} value={project.metadata.name}>
+                        <SelectOption
+                          key={project.metadata.name}
+                          value={project.metadata.name}
+                        >
                           {getResourceDisplayName(project)}
                         </SelectOption>
                       ))}
@@ -482,6 +466,69 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
         </form>
       </FormProvider>
       {/* )} */}
+    </Modal>
+  );
+};
+
+export const DeleteActionModal = ({ dashboard, isOpen, onClose }: ActionModalProps) => {
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
+  const { addAlert } = useToast();
+
+  const deleteDashboardMutation = useDeleteDashboardMutation();
+  const dashboardName = dashboard?.spec?.display?.name ?? 'this dashboard';
+
+  const handleDeleteConfirm = async () => {
+    if (!dashboard) return;
+
+    deleteDashboardMutation.mutate(dashboard, {
+      onSuccess: (deletedDashboard: DashboardResource) => {
+        const msg = t(
+          `Dashboard ${getResourceExtendedDisplayName(
+            deletedDashboard,
+          )} has been successfully deleted`,
+        );
+        addAlert(msg, AlertVariant.success);
+        onClose();
+      },
+      onError: (err) => {
+        const msg = t(`Could not delete dashboard. ${err}`);
+        addAlert(msg, AlertVariant.danger);
+        throw err;
+      },
+    });
+  };
+
+  return (
+    <Modal
+      variant={ModalVariant.small}
+      isOpen={isOpen}
+      onClose={onClose}
+      ouiaId="DeleteModal"
+      aria-labelledby="delete-modal"
+    >
+      <ModalHeader
+        titleIconVariant="warning"
+        title="Permanently delete dashboard?"
+        labelId="basic-modal-title"
+      />
+      <ModalBody id="modal-box-body-basic">
+        {t('Are you sure you want to delete ')}
+        <strong>{dashboardName}</strong>
+        {t('? This action can not be undone.')}
+      </ModalBody>
+      <ModalFooter>
+        <Button
+          key="delete"
+          onClick={handleDeleteConfirm}
+          isDisabled={!dashboard || deleteDashboardMutation.isPending}
+          isLoading={deleteDashboardMutation.isPending}
+        >
+          {deleteDashboardMutation.isPending ? t('Deleting...') : t('Delete')}
+        </Button>
+        <Button key="cancel" variant="link" onClick={onClose}>
+          {t('Cancel')}
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };
