@@ -20,6 +20,7 @@ import {
   MenuToggleElement,
   Stack,
   StackItem,
+  Spinner,
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import React, { useMemo, useState } from 'react';
@@ -188,7 +189,7 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
   } as React.CSSProperties;
 
   // Get projects data
-  const { persesProjects } = usePerses();
+  const { persesProjects, persesProjectsLoading } = usePerses();
 
   const hookInput = useMemo(() => {
     return persesProjects || [];
@@ -338,21 +339,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
     }
   };
 
-  // // Show loading spinner while validation schema or projects are loading
-  // if (isSchemaLoading || persesProjectsLoading) {
-  //   return (
-  //     <Modal
-  //       variant={ModalVariant.small}
-  //       isOpen={isOpen}
-  //       onClose={handleClose}
-  //       aria-labelledby="duplicate-modal-title"
-  //     >
-  //       <ModalHeader title="Duplicate Dashboard" labelId="duplicate-modal-title" />
-  //       <ModalBody style={{ textAlign: 'center', padding: '2rem' }}>{t('Loading...')}</ModalBody>
-  //     </Modal>
-  //   );
-  // }
-
   return (
     <Modal
       variant={ModalVariant.small}
@@ -362,133 +348,138 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
       aria-labelledby="duplicate-modal"
     >
       <ModalHeader title="Duplicate Dashboard" labelId="duplicate-modal-title" />
-      {/* {isSchemaLoading || persesProjectsLoading ? (
-        <ModalBody style={{ textAlign: 'center', padding: '2rem' }}>{t('Loading...')}</ModalBody>
-      ) : ( */}
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(processForm)}>
-          <ModalBody>
-            <Stack hasGutter>
-              <StackItem>
-                <Controller
-                  control={form.control}
-                  name="dashboardName"
-                  render={({ field, fieldState }) => (
-                    <FormGroup
-                      label={t('Dashboard name')}
-                      isRequired
-                      fieldId="duplicate-dashboard-name"
-                      style={formGroupStyle}
-                    >
-                      <LabelSpacer />
-                      <TextInput
-                        {...field}
+      {persesProjectsLoading ? (
+        <ModalBody style={{ textAlign: 'center', padding: '2rem' }}>
+          {t('Loading...')} <Spinner aria-label="Contents of the basic example" />
+        </ModalBody>
+      ) : (
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(processForm)}>
+            <ModalBody>
+              <Stack hasGutter>
+                <StackItem>
+                  <Controller
+                    control={form.control}
+                    name="dashboardName"
+                    render={({ field, fieldState }) => (
+                      <FormGroup
+                        label={t('Dashboard name')}
                         isRequired
-                        type="text"
-                        id="duplicate-dashboard-name-input"
-                        validated={
-                          fieldState.error ? ValidatedOptions.error : ValidatedOptions.default
-                        }
-                      />
-                      {fieldState.error && (
-                        <FormHelperText>
-                          <HelperText>
-                            <HelperTextItem
-                              icon={<ExclamationCircleIcon />}
-                              variant={HelperTextItemVariant.error}
-                            >
-                              {fieldState.error.message}
-                            </HelperTextItem>
-                          </HelperText>
-                        </FormHelperText>
-                      )}
-                    </FormGroup>
-                  )}
-                />
-              </StackItem>
-              <StackItem>
-                <Controller
-                  control={form.control}
-                  name="projectName"
-                  render={({ field, fieldState }) => (
-                    <FormGroup
-                      label={t('Select namespace')}
-                      isRequired
-                      fieldId="duplicate-dashboard-project"
-                      style={formGroupStyle}
-                    >
-                      <LabelSpacer />
-                      <Select
-                        id="duplicate-dashboard-project-select"
-                        isOpen={isProjectSelectOpen}
-                        selected={field.value}
-                        onSelect={onProjectSelect}
-                        onOpenChange={setIsProjectSelectOpen}
-                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                          <MenuToggle
-                            ref={toggleRef}
-                            onClick={onProjectToggle}
-                            isExpanded={isProjectSelectOpen}
-                            isFullWidth
-                          >
-                            {(() => {
-                              const selectedProject = filteredProjects.find(
-                                (p) => p.metadata.name === field.value,
-                              );
-                              return selectedProject
-                                ? getResourceDisplayName(selectedProject)
-                                : field.value || 'Select project';
-                            })()}
-                          </MenuToggle>
-                        )}
+                        fieldId="duplicate-dashboard-name"
+                        style={formGroupStyle}
                       >
-                        <SelectList>
-                          {filteredProjects.map((project) => (
-                            <SelectOption key={project.metadata.name} value={project.metadata.name}>
-                              {getResourceDisplayName(project)}
-                            </SelectOption>
-                          ))}
-                        </SelectList>
-                      </Select>
-                      {fieldState.error && (
-                        <FormHelperText>
-                          <HelperText>
-                            <HelperTextItem
-                              icon={<ExclamationCircleIcon />}
-                              variant={HelperTextItemVariant.error}
+                        <LabelSpacer />
+                        <TextInput
+                          {...field}
+                          isRequired
+                          type="text"
+                          id="duplicate-dashboard-name-input"
+                          validated={
+                            fieldState.error ? ValidatedOptions.error : ValidatedOptions.default
+                          }
+                        />
+                        {fieldState.error && (
+                          <FormHelperText>
+                            <HelperText>
+                              <HelperTextItem
+                                icon={<ExclamationCircleIcon />}
+                                variant={HelperTextItemVariant.error}
+                              >
+                                {fieldState.error.message}
+                              </HelperTextItem>
+                            </HelperText>
+                          </FormHelperText>
+                        )}
+                      </FormGroup>
+                    )}
+                  />
+                </StackItem>
+                <StackItem>
+                  <Controller
+                    control={form.control}
+                    name="projectName"
+                    render={({ field, fieldState }) => (
+                      <FormGroup
+                        label={t('Select namespace')}
+                        isRequired
+                        fieldId="duplicate-dashboard-project"
+                        style={formGroupStyle}
+                      >
+                        <LabelSpacer />
+                        <Select
+                          id="duplicate-dashboard-project-select"
+                          isOpen={isProjectSelectOpen}
+                          selected={field.value}
+                          onSelect={onProjectSelect}
+                          onOpenChange={setIsProjectSelectOpen}
+                          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            <MenuToggle
+                              ref={toggleRef}
+                              onClick={onProjectToggle}
+                              isExpanded={isProjectSelectOpen}
+                              isFullWidth
                             >
-                              {fieldState.error.message}
-                            </HelperTextItem>
-                          </HelperText>
-                        </FormHelperText>
-                      )}
-                    </FormGroup>
-                  )}
-                />
-              </StackItem>
-            </Stack>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              key="duplicate"
-              variant="primary"
-              type="submit"
-              isDisabled={
-                !(form.watch('dashboardName') || '')?.trim() ||
-                !(form.watch('projectName') || '')?.trim() ||
-                createDashboardMutation.isPending
-              }
-              isLoading={createDashboardMutation.isPending}
-            >
-              {t('Duplicate')}
-            </Button>
-            <Button key="cancel" variant="link" onClick={handleClose}>
-              {t('Cancel')}
-            </Button>
-          </ModalFooter>
-        </form>
-      </FormProvider>
-      {/* )} */}
+                              {(() => {
+                                const selectedProject = filteredProjects.find(
+                                  (p) => p.metadata.name === field.value,
+                                );
+                                return selectedProject
+                                  ? getResourceDisplayName(selectedProject)
+                                  : field.value || 'Select project';
+                              })()}
+                            </MenuToggle>
+                          )}
+                        >
+                          <SelectList>
+                            {filteredProjects.map((project) => (
+                              <SelectOption
+                                key={project.metadata.name}
+                                value={project.metadata.name}
+                              >
+                                {getResourceDisplayName(project)}
+                              </SelectOption>
+                            ))}
+                          </SelectList>
+                        </Select>
+                        {fieldState.error && (
+                          <FormHelperText>
+                            <HelperText>
+                              <HelperTextItem
+                                icon={<ExclamationCircleIcon />}
+                                variant={HelperTextItemVariant.error}
+                              >
+                                {fieldState.error.message}
+                              </HelperTextItem>
+                            </HelperText>
+                          </FormHelperText>
+                        )}
+                      </FormGroup>
+                    )}
+                  />
+                </StackItem>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                key="duplicate"
+                variant="primary"
+                type="submit"
+                isDisabled={
+                  !(form.watch('dashboardName') || '')?.trim() ||
+                  !(form.watch('projectName') || '')?.trim() ||
+                  createDashboardMutation.isPending
+                }
+                isLoading={createDashboardMutation.isPending}
+              >
+                {t('Duplicate')}
+              </Button>
+              <Button key="cancel" variant="link" onClick={handleClose}>
+                {t('Cancel')}
+              </Button>
+            </ModalFooter>
+          </form>
+        </FormProvider>
+      )}
     </Modal>
   );
 };
