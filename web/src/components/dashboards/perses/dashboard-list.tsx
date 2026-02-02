@@ -41,6 +41,59 @@ const perPageOptions = [
   { title: '20', value: 20 },
 ];
 
+// Optimized component to avoid excessive permission calls
+const DashboardActionsCell = React.memo(
+  ({
+    project,
+    dashboard,
+    onRename,
+    onDuplicate,
+    onDelete,
+    emptyActions,
+  }: {
+    project: string;
+    dashboard: DashboardResource;
+    onRename: (dashboard: DashboardResource) => void;
+    onDuplicate: (dashboard: DashboardResource) => void;
+    onDelete: (dashboard: DashboardResource) => void;
+    emptyActions: any[];
+  }) => {
+    const { t } = useTranslation(process.env.I18N_NAMESPACE);
+    const { canEdit, loading } = usePersesEditPermissions(project);
+    const disabled = !canEdit;
+
+    const rowSpecificActions = useMemo(
+      () => [
+        {
+          title: t('Rename dashboard'),
+          onClick: () => onRename(dashboard),
+        },
+        {
+          title: t('Duplicate dashboard'),
+          onClick: () => onDuplicate(dashboard),
+        },
+        {
+          title: t('Delete dashboard'),
+          onClick: () => onDelete(dashboard),
+        },
+      ],
+      [dashboard, onRename, onDuplicate, onDelete, t],
+    );
+
+    if (disabled || loading) {
+      return (
+        <Tooltip content={t("You don't have permissions to dashboard actions")}>
+          <div>
+            <ActionsColumn items={emptyActions} isDisabled={true} />
+          </div>
+        </Tooltip>
+      );
+    }
+
+    return <ActionsColumn items={rowSpecificActions} isDisabled={false} />;
+  },
+);
+
 interface DashboardRowNameLink {
   link: ReactNode;
   label: string;
@@ -249,51 +302,6 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   );
 
   const pageRows: DataViewTr[] = useMemo(() => {
-    // Define the component inside useMemo to avoid recreating it on every render
-    const ActionsWithTooltip = ({
-      project,
-      dashboard,
-    }: {
-      project: string;
-      dashboard: DashboardResource;
-    }) => {
-      const { canEdit, loading } = usePersesEditPermissions(project);
-      const disabled = !canEdit;
-
-      // Create row-specific actions with the dashboard baked in
-      const rowSpecificActions = useMemo(
-        () => [
-          {
-            title: t('Rename dashboard'),
-            onClick: () => handleRenameModalOpen(dashboard),
-          },
-          {
-            title: t('Duplicate dashboard'),
-            onClick: () => handleDuplicateModalOpen(dashboard), // eslint-disable-line no-console
-          },
-          {
-            title: t('Delete dashboard'),
-            onClick: () => handleDeleteModalOpen(dashboard),
-          },
-        ],
-        [dashboard],
-      );
-
-      return (
-        <>
-          {disabled || loading ? (
-            <Tooltip content={t("You don't have permissions to dashboard actions")}>
-              <div>
-                <ActionsColumn items={emptyRowActions} isDisabled={true} />
-              </div>
-            </Tooltip>
-          ) : (
-            <ActionsColumn items={rowSpecificActions} isDisabled={disabled || loading} />
-          )}
-        </>
-      );
-    };
-
     return sortedAndFilteredData
       .slice((page - 1) * perPage, (page - 1) * perPage + perPage)
       .map(({ name, project, created, modified, dashboard }) => [
@@ -302,7 +310,16 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
         created,
         modified,
         {
-          cell: <ActionsWithTooltip project={project} dashboard={dashboard} />,
+          cell: (
+            <DashboardActionsCell
+              project={project}
+              dashboard={dashboard}
+              onRename={handleRenameModalOpen}
+              onDuplicate={handleDuplicateModalOpen}
+              onDelete={handleDeleteModalOpen}
+              emptyActions={emptyRowActions}
+            />
+          ),
           props: { isActionCell: true },
         },
       ]);
@@ -310,7 +327,6 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
     sortedAndFilteredData,
     page,
     perPage,
-    t,
     emptyRowActions,
     handleRenameModalOpen,
     handleDuplicateModalOpen,
@@ -429,7 +445,6 @@ export const DashboardList: FC = () => {
       changeBoard={changeBoard}
       dashboardName={dashboardName}
     >
-      <h1> Hello!! </h1>
       <DashboardsTable
         persesDashboards={persesDashboards}
         persesDashboardsLoading={combinedInitialLoad}

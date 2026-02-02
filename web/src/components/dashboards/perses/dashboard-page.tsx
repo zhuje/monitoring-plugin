@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type FC } from 'react';
+import { type FC, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom-v5-compat';
 import { QueryParamProvider } from 'use-query-params';
@@ -37,15 +37,19 @@ const DashboardPage_: FC = () => {
   const urlDashboard = searchParams.get('dashboard');
   const urlProject = searchParams.get('project');
 
-  // Set active project if provided in URL
-  if (urlProject && urlProject !== activeProject) {
-    setActiveProject(urlProject);
-  }
+  // Set active project if provided in URL - moved to useEffect to avoid state mutations
+  useEffect(() => {
+    if (urlProject && urlProject !== activeProject) {
+      setActiveProject(urlProject);
+    }
+  }, [urlProject, activeProject, setActiveProject]);
 
-  // Change dashboard if provided in URL
-  if (urlDashboard && urlDashboard !== dashboardName) {
-    changeBoard(urlDashboard);
-  }
+  // Change dashboard if provided in URL - moved to useEffect to avoid mutations
+  useEffect(() => {
+    if (urlDashboard && urlDashboard !== dashboardName) {
+      changeBoard(urlDashboard);
+    }
+  }, [urlDashboard, dashboardName, changeBoard]);
 
   if (combinedInitialLoad) {
     return <LoadingInline />;
