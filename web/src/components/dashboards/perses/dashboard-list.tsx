@@ -362,11 +362,13 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
             handleModalClose={handleRenameModalClose}
           />
           <DuplicateActionModal
+            dashboard={targetedDashboard}
             isOpen={isDuplicateModalOpen}
             onClose={handleDuplicateModalClose}
             handleModalClose={handleDuplicateModalClose}
           />
           <DeleteActionModal
+            dashboard={targetedDashboard}
             isOpen={isDeleteModalOpen}
             onClose={handleDeleteModalClose}
             handleModalClose={handleDeleteModalClose}
@@ -427,7 +429,7 @@ export const DashboardList: FC = () => {
       changeBoard={changeBoard}
       dashboardName={dashboardName}
     >
-      <h1> Hello! </h1>
+      <h1> Hello!! </h1>
       <DashboardsTable
         persesDashboards={persesDashboards}
         persesDashboardsLoading={combinedInitialLoad}

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { useMemo } from 'react';
 import { nameSchema } from '@perses-dev/core';
-import { generateMetadataName, useDashboardList } from './dashboard-api';
+import { useDashboardList } from './dashboard-api';
+import { generateMetadataName } from './dashboard-utils';
 
 export const dashboardDisplayNameValidationSchema = z
   .string()
