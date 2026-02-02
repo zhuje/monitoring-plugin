@@ -221,7 +221,7 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
             {displayName}
           </Link>
         ),
-        label: metadata?.name || '',
+        label: displayName || '',
       };
 
       return {
