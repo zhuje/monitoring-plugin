@@ -185,8 +185,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
 
   const formGroupStyle = {
     '--pf-v6-c-form__label-text--FontWeight': 'bold',
-    '--pf-v6-c-form__label-text--Color': 'var(--pf-v6-global--Color--100)',
-    '--pf-v6-c-form__group-label--PaddingBottom': '1rem',
   } as React.CSSProperties;
 
   // Get projects data
@@ -408,7 +406,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                   )}
                 />
               </StackItem>
-              <StackItem isFilled></StackItem>
               <StackItem>
                 <Controller
                   control={form.control}
@@ -469,7 +466,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                   )}
                 />
               </StackItem>
-              <StackItem isFilled></StackItem>
             </Stack>
           </ModalBody>
           <ModalFooter>
