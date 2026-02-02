@@ -50,6 +50,8 @@ import { usePerses } from './hooks/usePerses';
 import { generateMetadataName } from './dashboard-utils';
 import { useProjectPermissions } from './dashboard-permissions';
 import { t_global_spacer_200 } from '@patternfly/react-tokens';
+import { useNavigate } from 'react-router-dom-v5-compat';
+import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 
 const LabelSpacer = () => {
   return <div style={{ paddingBottom: t_global_spacer_200.value }} />;
@@ -182,6 +184,8 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
 export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModalProps) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { addAlert } = useToast();
+  const navigate = useNavigate();
+  const { perspective } = usePerspective();
   const [isProjectSelectOpen, setIsProjectSelectOpen] = useState(false);
 
   const formGroupStyle = {
@@ -311,7 +315,14 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
           )} has been successfully created`,
         );
         addAlert(msg, AlertVariant.success);
+
         handleClose();
+
+        const dashboardUrl = getDashboardUrl(perspective);
+        const dashboardParam = `dashboard=${createdDashboard.metadata.name}`;
+        const projectParam = `project=${createdDashboard.metadata.project}`;
+        const editModeParam = `edit=true`;
+        navigate(`${dashboardUrl}?${dashboardParam}&${projectParam}&${editModeParam}`);
       },
       onError: (err) => {
         const msg = t(`Could not duplicate dashboard. ${err}`);
