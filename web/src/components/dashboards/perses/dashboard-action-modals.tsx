@@ -18,6 +18,8 @@ import {
   SelectList,
   MenuToggle,
   MenuToggleElement,
+  Stack,
+  StackItem,
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import React, { useMemo, useState } from 'react';
@@ -46,6 +48,11 @@ import { useToast } from './ToastProvider';
 import { usePerses } from './hooks/usePerses';
 import { generateMetadataName } from './dashboard-utils';
 import { useProjectPermissions } from './dashboard-permissions';
+import { t_global_spacer_200 } from '@patternfly/react-tokens';
+
+const LabelSpacer = () => {
+  return <div style={{ paddingBottom: t_global_spacer_200.value }} />;
+};
 
 interface ActionModalProps {
   dashboard: DashboardResource;
@@ -57,6 +64,10 @@ interface ActionModalProps {
 export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalProps) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { addAlert } = useToast();
+
+  const formGroupStyle = {
+    '--pf-v6-c-form__label-text--FontWeight': 'bold',
+  } as React.CSSProperties;
 
   const form = useForm<RenameDashboardValidationType>({
     resolver: zodResolver(renameDashboardDialogValidationSchema),
@@ -121,7 +132,9 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
                   label={t('Dashboard name')}
                   isRequired
                   fieldId="form-group-rename-dashboard-name"
+                  style={formGroupStyle}
                 >
+                  <LabelSpacer />
                   <TextInput
                     {...field}
                     isRequired
@@ -151,7 +164,7 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
               key="rename"
               variant="primary"
               type="submit"
-              isDisabled={!form.formState.isValid}
+              isDisabled={!(form.watch('dashboardName') || '')?.trim()}
             >
               {t('Rename')}
             </Button>
@@ -169,6 +182,12 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { addAlert } = useToast();
   const [isProjectSelectOpen, setIsProjectSelectOpen] = useState(false);
+
+  const formGroupStyle = {
+    '--pf-v6-c-form__label-text--FontWeight': 'bold',
+    '--pf-v6-c-form__label-text--Color': 'var(--pf-v6-global--Color--100)',
+    '--pf-v6-c-form__group-label--PaddingBottom': '1rem',
+  } as React.CSSProperties;
 
   // Get projects data
   const { persesProjects } = usePerses();
@@ -351,99 +370,107 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(processForm)}>
           <ModalBody>
-            {/* Dashboard Name */}
-            <Controller
-              control={form.control}
-              name="dashboardName"
-              render={({ field, fieldState }) => (
-                <FormGroup
-                  label={t('Dashboard name')}
-                  isRequired
-                  fieldId="duplicate-dashboard-name"
-                >
-                  <TextInput
-                    {...field}
-                    isRequired
-                    type="text"
-                    id="duplicate-dashboard-name-input"
-                    validated={fieldState.error ? ValidatedOptions.error : ValidatedOptions.default}
-                  />
-                  {fieldState.error && (
-                    <FormHelperText>
-                      <HelperText>
-                        <HelperTextItem
-                          icon={<ExclamationCircleIcon />}
-                          variant={HelperTextItemVariant.error}
-                        >
-                          {fieldState.error.message}
-                        </HelperTextItem>
-                      </HelperText>
-                    </FormHelperText>
+            <Stack hasGutter>
+              <StackItem>
+                <Controller
+                  control={form.control}
+                  name="dashboardName"
+                  render={({ field, fieldState }) => (
+                    <FormGroup
+                      label={t('Dashboard name')}
+                      isRequired
+                      fieldId="duplicate-dashboard-name"
+                      style={formGroupStyle}
+                    >
+                      <LabelSpacer />
+                      <TextInput
+                        {...field}
+                        isRequired
+                        type="text"
+                        id="duplicate-dashboard-name-input"
+                        validated={
+                          fieldState.error ? ValidatedOptions.error : ValidatedOptions.default
+                        }
+                      />
+                      {fieldState.error && (
+                        <FormHelperText>
+                          <HelperText>
+                            <HelperTextItem
+                              icon={<ExclamationCircleIcon />}
+                              variant={HelperTextItemVariant.error}
+                            >
+                              {fieldState.error.message}
+                            </HelperTextItem>
+                          </HelperText>
+                        </FormHelperText>
+                      )}
+                    </FormGroup>
                   )}
-                </FormGroup>
-              )}
-            />
-
-            {/* Project Selection */}
-            <Controller
-              control={form.control}
-              name="projectName"
-              render={({ field, fieldState }) => (
-                <FormGroup
-                  label={t('Select namespace')}
-                  isRequired
-                  fieldId="duplicate-dashboard-project"
-                >
-                  <Select
-                    id="duplicate-dashboard-project-select"
-                    isOpen={isProjectSelectOpen}
-                    selected={field.value}
-                    onSelect={onProjectSelect}
-                    onOpenChange={setIsProjectSelectOpen}
-                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                      <MenuToggle
-                        ref={toggleRef}
-                        onClick={onProjectToggle}
-                        isExpanded={isProjectSelectOpen}
-                        isFullWidth
+                />
+              </StackItem>
+              <StackItem isFilled></StackItem>
+              <StackItem>
+                <Controller
+                  control={form.control}
+                  name="projectName"
+                  render={({ field, fieldState }) => (
+                    <FormGroup
+                      label={t('Select namespace')}
+                      isRequired
+                      fieldId="duplicate-dashboard-project"
+                      style={formGroupStyle}
+                    >
+                      <LabelSpacer />
+                      <Select
+                        id="duplicate-dashboard-project-select"
+                        isOpen={isProjectSelectOpen}
+                        selected={field.value}
+                        onSelect={onProjectSelect}
+                        onOpenChange={setIsProjectSelectOpen}
+                        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                          <MenuToggle
+                            ref={toggleRef}
+                            onClick={onProjectToggle}
+                            isExpanded={isProjectSelectOpen}
+                            isFullWidth
+                          >
+                            {(() => {
+                              const selectedProject = filteredProjects.find(
+                                (p) => p.metadata.name === field.value,
+                              );
+                              return selectedProject
+                                ? getResourceDisplayName(selectedProject)
+                                : field.value || 'Select project';
+                            })()}
+                          </MenuToggle>
+                        )}
                       >
-                        {(() => {
-                          const selectedProject = filteredProjects.find(
-                            (p) => p.metadata.name === field.value,
-                          );
-                          return selectedProject
-                            ? getResourceDisplayName(selectedProject)
-                            : field.value || 'Select project';
-                        })()}
-                      </MenuToggle>
-                    )}
-                  >
-                    <SelectList>
-                      {filteredProjects.map((project) => (
-                        <SelectOption
-                          key={project.metadata.name}
-                          value={project.metadata.name}
-                        >
-                          {getResourceDisplayName(project)}
-                        </SelectOption>
-                      ))}
-                    </SelectList>
-                  </Select>
-                  {fieldState.error && (
-                    <FormHelperText>
-                      <HelperText>
-                        <HelperTextItem
-                          icon={<ExclamationCircleIcon />}
-                          variant={HelperTextItemVariant.error}
-                        >
-                          {fieldState.error.message}
-                        </HelperTextItem>
-                      </HelperText>
-                    </FormHelperText>
+                        <SelectList>
+                          {filteredProjects.map((project) => (
+                            <SelectOption key={project.metadata.name} value={project.metadata.name}>
+                              {getResourceDisplayName(project)}
+                            </SelectOption>
+                          ))}
+                        </SelectList>
+                      </Select>
+                      {fieldState.error && (
+                        <FormHelperText>
+                          <HelperText>
+                            <HelperTextItem
+                              icon={<ExclamationCircleIcon />}
+                              variant={HelperTextItemVariant.error}
+                            >
+                              {fieldState.error.message}
+                            </HelperTextItem>
+                          </HelperText>
+                        </FormHelperText>
+                      )}
+                    </FormGroup>
                   )}
-                </FormGroup>
-              )}
-            />
+                />
+              </StackItem>
+              <StackItem isFilled></StackItem>
+            </Stack>
           </ModalBody>
           <ModalFooter>
             <Button

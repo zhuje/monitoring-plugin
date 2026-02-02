@@ -23,7 +23,7 @@ export type RenameDashboardValidationType = z.infer<typeof renameDashboardDialog
 export interface DashboardValidationSchema {
   schema?: z.ZodSchema;
   isSchemaLoading: boolean;
-  hasSchemaError: boolean; // TODO: Later use it with a goog error handling design
+  hasSchemaError: boolean;
 }
 
 // Validate dashboard name and check if it doesn't already exist
