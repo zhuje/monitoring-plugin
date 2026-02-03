@@ -1,0 +1,33 @@
+#!/bin/bash  
+
+# ==============================================================================                                                                                                                                                              
+# Prerequisites                                                                                                                                                                                                                           
+                                                                                                                                                                                                                                   
+# 1. OpenShift cluster with admin access                                                                                                                                                                                                  
+# 2. oc CLI tool configured                                                                                                                                                                                                               
+# 3. Monitoring plugin with PR #660 changes deployed  
+# ==============================================================================
+
+echo "=== Testing PR #660 TLS Fix ==="                                                                                                                                                                                                  
+                                                                                                                                                                                                                                        
+echo "1. Current TLS profile:"                                                                                                                                                                                                          
+oc get apiservers.config.openshift.io cluster -o jsonpath='{.spec.tlsSecurityProfile}' 2>/dev/null || echo "Default"                                                                                                                    
+                                                                                                                                                                                                                                        
+echo "2. Applying modern TLS profile..."                                                                                                                                                                                                
+oc patch apiservers.config.openshift.io cluster --type=merge -p='{"spec":{"tlsSecurityProfile":{"type":"Modern"}}}'                                                                                                                     
+                                                                                                                                                                                                                                        
+echo "3. Waiting for plugin pods to update..."                                                                                                                                                                                          
+sleep 30                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                        
+echo "4. Checking plugin pod status:"                                                                                                                                                                                                   
+oc get pods -n openshift-monitoring -l app=console-plugin-monitoring                                                                                                                                                                    
+                                                                                                                                                                                                                                        
+echo "5. Checking for TLS errors:"                                                                                                                                                                                                      
+ERROR_COUNT=$(oc logs -n openshift-monitoring -l app=console-plugin-monitoring --tail=50 2>/dev/null | grep -i "invalid tls\|tls.*error" | wc -l)                                                                                       
+if [ "$ERROR_COUNT" -eq 0 ]; then                                                                                                                                                                                                       
+    echo "✅ No TLS configuration errors found"                                                                                                                                                                                         
+else                                                                                                                                                                                                                                    
+    echo "❌ Found $ERROR_COUNT TLS configuration errors"                                                                                                                                                                               
+fi                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                        
+echo "6. TLS configuration test complete!"                                 
