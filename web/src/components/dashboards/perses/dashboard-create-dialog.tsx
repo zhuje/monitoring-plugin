@@ -30,7 +30,7 @@ import { StringParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../query-params';
 
 import { DashboardResource } from '@perses-dev/core';
-import { useCreateDashboardMutation } from './dashboard-api';
+import { useCreateDashboardMutation, useCreateProjectMutation } from './dashboard-api';
 import { createNewDashboard } from './dashboard-utils';
 import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
@@ -58,6 +58,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const [dashboardName, setDashboardName] = useState<string>('');
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const createDashboardMutation = useCreateDashboardMutation();
+  const createProjectMutation = useCreateProjectMutation();
+  const { persesProjects } = usePerses();
 
   // const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
 
@@ -128,6 +130,28 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
         return;
       }
 
+      // Check if the project exists on Perses server, create if it doesn't
+      const projectExists = persesProjects.some(
+        (project) => project.metadata?.name === selectedProject,
+      );
+
+      if (!projectExists) {
+        // eslint-disable-next-line no-console
+        console.log(`!JZ Creating missing project: ${selectedProject}`);
+
+        try {
+          await createProjectMutation.mutateAsync(selectedProject as string);
+          addAlert(`Project "${selectedProject}" created successfully`, 'success');
+        } catch (projectError) {
+          const errorMessage =
+            projectError?.message ||
+            `Failed to create project "${selectedProject}". Please try again.`;
+          addAlert(`Error creating project: ${errorMessage}`, 'danger');
+          setFormErrors({ general: errorMessage });
+          return;
+        }
+      }
+
       const newDashboard: DashboardResource = createNewDashboard(
         dashboardName.trim(),
         selectedProject as string,
@@ -189,6 +213,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     onFocus();
   };
 
+  // eslint-disable-next-line no-console
   console.log('!JZ permissions state:', {
     permissionsLoading,
     hasEditableProject,
@@ -310,11 +335,16 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
             variant="primary"
             onClick={handleAdd}
             isDisabled={
-              !dashboardName?.trim() || !selectedProject || createDashboardMutation.isPending
+              !dashboardName?.trim() ||
+              !selectedProject ||
+              createDashboardMutation.isPending ||
+              createProjectMutation.isPending
             }
-            isLoading={createDashboardMutation.isPending}
+            isLoading={createDashboardMutation.isPending || createProjectMutation.isPending}
           >
-            {createDashboardMutation.isPending ? t('Creating...') : t('Create')}
+            {createDashboardMutation.isPending || createProjectMutation.isPending
+              ? t('Creating...')
+              : t('Create')}
           </Button>
           <Button key="cancel" variant="link" onClick={handleModalToggle}>
             {t('Cancel')}

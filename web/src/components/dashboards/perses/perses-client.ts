@@ -27,6 +27,39 @@ export const fetchPersesProjects = (): Promise<ProjectResource[]> => {
   return ocpPersesFetchJson<ProjectResource[]>(persesURL);
 };
 
+export const createPersesProject = async (projectName: string): Promise<ProjectResource> => {
+  const createProjectURL = '/api/v1/projects';
+  const persesURL = `${PERSES_PROXY_BASE_PATH}${createProjectURL}`;
+
+  const newProject: Partial<ProjectResource> = {
+    kind: 'Project',
+    metadata: {
+      name: projectName,
+      version: 0,
+    },
+    spec: {
+      display: {
+        name: projectName,
+      },
+    },
+  };
+
+  const response = await fetch(persesURL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken(),
+    },
+    body: JSON.stringify(newProject),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create project: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
 export interface PersesPermission {
   scopes: string;
   actions: string[];

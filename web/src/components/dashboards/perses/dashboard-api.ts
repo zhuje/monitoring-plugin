@@ -1,7 +1,8 @@
-import { DashboardResource } from '@perses-dev/core';
+import { DashboardResource, ProjectResource } from '@perses-dev/core';
 import buildURL from './perses/url-builder';
 import { useMutation, UseMutationResult, useQueryClient } from '@tanstack/react-query';
 import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
+import { createPersesProject } from './perses-client';
 
 const resource = 'dashboards';
 
@@ -51,6 +52,24 @@ export const useCreateDashboardMutation = (
     onSuccess: onSuccess,
     onSettled: () => {
       return queryClient.invalidateQueries({ queryKey: [resource] });
+    },
+  });
+};
+
+export const useCreateProjectMutation = (): UseMutationResult<
+  ProjectResource,
+  Error,
+  string
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ProjectResource, Error, string>({
+    mutationKey: ['projects'],
+    mutationFn: createPersesProject,
+    onSuccess: () => {
+      // Invalidate both projects and dashboards queries since projects affect available dashboards
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: [resource] });
     },
   });
 };

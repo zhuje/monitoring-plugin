@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { fetchPersesUserPermissions } from '../perses-client';
 import { useAllAccessibleProjects } from './useAllAccessibleProjects';
+import { usePerses } from './usePerses';
 
 // TODO: These will be available in future versions of the plugin SDK
 const getUser = (state: any) => state.sdkCore?.user;
@@ -17,8 +18,10 @@ interface ProjectInfo {
 export const usePersesUserPermissions = () => {
   const user = useSelector(getUser);
   const username = user?.metadata?.name || user?.username;
-  const { allProjects, projectsLoaded } = useAllAccessibleProjects();
+  const { allProjects } = useAllAccessibleProjects();
+  const { persesProjects, persesProjectsLoading } = usePerses();
 
+  // eslint-disable-next-line no-console
   console.log('!JZ 1. usePersesUserPermissions >> ', { username });
 
   const {
@@ -38,16 +41,18 @@ export const usePersesUserPermissions = () => {
     },
   });
 
+  // eslint-disable-next-line no-console
   console.log('!JZ 2. usePersesUserPermissions >> ', {
     userPermissions,
     permissionsLoading,
     permissionsError,
   });
+  // eslint-disable-next-line no-console
   console.log('!JZ 3. usePersesUserPermissions userPermissions detailed >> ', userPermissions);
 
   const { editableProjects, projectsWithPermissions, usePersesUserPermissionsError } =
     useMemo(() => {
-      if (permissionsLoading) {
+      if (permissionsLoading || persesProjectsLoading) {
         return {
           editableProjects: undefined,
           projectsWithPermissions: undefined,
@@ -65,11 +70,37 @@ export const usePersesUserPermissions = () => {
       const editableProjectNames: string[] = [];
       const projects: ProjectInfo[] = [];
 
+      // Create a combined list of all available projects (both Perses and OpenShift)
+      const allAvailableProjects = new Set<string>();
+
+      // Add all Perses projects
+      persesProjects?.forEach((project) => {
+        if (project.metadata?.name) {
+          allAvailableProjects.add(project.metadata.name);
+        }
+      });
+
+      // Add all OpenShift projects
+      allProjects?.forEach((project) => {
+        if (project.metadata?.name) {
+          allAvailableProjects.add(project.metadata.name);
+        }
+      });
+
+      // eslint-disable-next-line no-console
+      console.log('!JZ Combined available projects:', {
+        persesProjects: persesProjects?.map((p) => p.metadata?.name),
+        openshiftProjects: allProjects?.map((p) => p.metadata?.name),
+        combined: Array.from(allAvailableProjects),
+      });
+
       Object.entries(userPermissions).forEach(([projectName, permissions]) => {
+        // eslint-disable-next-line no-console
         console.log('!JZ 4. Processing project permissions:', { projectName, permissions });
 
         // Check if user has dashboard edit permissions (create, update, delete)
         const hasDashboardPermissions = permissions.some((permission) => {
+          // eslint-disable-next-line no-console
           console.log('!JZ 5a. Permission details:', {
             permission,
             scope: permission.scopes,
@@ -87,31 +118,31 @@ export const usePersesUserPermissions = () => {
           const hasPermission =
             permission.scopes.includes('Dashboard') && (individualActions || allActions);
 
+          // eslint-disable-next-line no-console
           console.log('!JZ 5b. Checking permission:', { permission, hasPermission });
           return hasPermission;
         });
 
+        // eslint-disable-next-line no-console
         console.log('!JZ 6. Project dashboard permissions result:', {
           projectName,
           hasDashboardPermissions,
         });
 
         if (hasDashboardPermissions) {
-          // Handle wildcard permissions - expand to all actual projects
-          if (projectName === '*' && projectsLoaded && allProjects?.length > 0) {
-            const actualProjectNames = allProjects.map((project) => project.metadata?.name).filter(Boolean);
-            editableProjectNames.push(...actualProjectNames);
+          // Handle wildcard permissions - expand to all available projects (both Perses and OpenShift)
+          if (projectName === '*') {
+            const allProjectNames = Array.from(allAvailableProjects);
+            editableProjectNames.push(...allProjectNames);
 
-            // Add all actual projects to projects list
-            allProjects.forEach((project) => {
-              if (project.metadata?.name) {
-                projects.push({
-                  metadata: {
-                    name: project.metadata.name,
-                    namespace: project.metadata.name,
-                  },
-                });
-              }
+            // Add all available projects to projects list
+            allProjectNames.forEach((name) => {
+              projects.push({
+                metadata: {
+                  name,
+                  namespace: name,
+                },
+              });
             });
           } else if (projectName !== '*') {
             // Handle specific project permissions
@@ -138,7 +169,13 @@ export const usePersesUserPermissions = () => {
         editableProjects: editableProjectNames,
         projectsWithPermissions: projects,
       };
-    }, [userPermissions, permissionsLoading]);
+    }, [
+      permissionsLoading,
+      persesProjectsLoading,
+      userPermissions,
+      allProjects,
+      persesProjects,
+    ]);
 
   const hasEditableProject = editableProjects ? editableProjects.length > 0 : false;
 
