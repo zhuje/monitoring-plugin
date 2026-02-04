@@ -27,6 +27,22 @@ export const fetchPersesProjects = (): Promise<ProjectResource[]> => {
   return ocpPersesFetchJson<ProjectResource[]>(persesURL);
 };
 
+export interface PersesPermission {
+  scopes: string;
+  actions: string[];
+}
+
+export type PersesUserPermissions = {
+  [projectName: string]: PersesPermission[];
+};
+
+export const fetchPersesUserPermissions = (username: string): Promise<PersesUserPermissions> => {
+  const userPermissionsURL = `/api/v1/users/${encodeURIComponent(username)}/permissions`;
+  const persesURL = `${PERSES_PROXY_BASE_PATH}${userPermissionsURL}`;
+
+  return ocpPersesFetchJson<PersesUserPermissions>(persesURL);
+};
+
 export async function ocpPersesFetchJson<T>(url: string): Promise<T> {
   // Use perses fetch as base fetch call as it handles refresh tokens
   return fetchJson(url, {

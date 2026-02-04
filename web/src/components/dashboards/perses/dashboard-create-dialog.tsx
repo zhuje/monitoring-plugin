@@ -21,10 +21,9 @@ import {
   HelperTextItemVariant,
   ValidatedOptions,
 } from '@patternfly/react-core';
-import { useQuery } from '@tanstack/react-query';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { usePerses } from './hooks/usePerses';
-import { useAllAccessibleProjects } from './hooks/useAllAccessibleProjects';
+import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { StringParam, useQueryParam } from 'use-query-params';
@@ -37,100 +36,21 @@ import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 import { usePersesEditPermissions } from './dashboard-toolbar';
 import { persesDashboardDataTestIDs } from '../../data-test';
-import { checkAccess } from '@openshift-console/dynamic-plugin-sdk';
 
-const checkProjectPermissions = async (projects: any[]): Promise<string[]> => {
-  if (!projects || projects.length === 0) {
-    return [];
-  }
-
-  const editableProjectNames: string[] = [];
-
-  for (const project of projects) {
-    const projectName = project?.metadata?.name;
-    if (!projectName) continue;
-
-    try {
-      const [createResult, updateResult, deleteResult] = await Promise.all([
-        checkAccess({
-          group: 'perses.dev',
-          resource: 'persesdashboards',
-          verb: 'create',
-          namespace: projectName,
-        }),
-        checkAccess({
-          group: 'perses.dev',
-          resource: 'persesdashboards',
-          verb: 'update',
-          namespace: projectName,
-        }),
-        checkAccess({
-          group: 'perses.dev',
-          resource: 'persesdashboards',
-          verb: 'delete',
-          namespace: projectName,
-        }),
-      ]);
-
-      const canEdit =
-        createResult.status.allowed && updateResult.status.allowed && deleteResult.status.allowed;
-
-      if (canEdit) {
-        editableProjectNames.push(projectName);
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to check permissions for project ${projectName}:`, error);
-    }
-  }
-
-  return editableProjectNames;
-};
-
-const useProjectPermissions = (projects: any[]) => {
-  const queryKey = useMemo(() => {
-    if (!projects || projects.length === 0) {
-      return ['project-permissions', 'empty'];
-    }
-
-    const projectFingerprint = projects.map((p) => ({
-      name: p?.metadata?.name,
-      version: p?.metadata?.version,
-      updatedAt: p?.metadata?.updatedAt,
-    }));
-
-    return ['project-permissions', JSON.stringify(projectFingerprint)];
-  }, [projects]);
-
-  const {
-    data: editableProjects = [],
-    isLoading: loading,
-    error,
-  } = useQuery({
-    queryKey,
-    queryFn: () => checkProjectPermissions(projects),
-    enabled: !!projects && projects.length > 0,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
-    retry: 2,
-    onError: (error) => {
-      // eslint-disable-next-line no-console
-      console.warn('Failed to check project permissions:', error);
-    },
-  });
-
-  const hasEditableProject = editableProjects.length > 0;
-
-  return { editableProjects, hasEditableProject, loading, error };
-};
+// Removed checkProjectPermissions and useProjectPermissions - replaced with usePersesUserPermissions
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-  const { allProjects } = useAllAccessibleProjects();
-  const { persesProjects } = usePerses();
+  const {
+    editableProjects,
+    projectsWithPermissions,
+    hasEditableProject,
+    permissionsLoading,
+    permissionsError,
+  } = usePersesUserPermissions();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -139,58 +59,20 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const createDashboardMutation = useCreateDashboardMutation();
 
-  const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
+  // const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
 
-  const combinedProjects = useMemo(() => {
-    const projects = [];
-    const projectNames = new Set();
+  // Using the new optimized Perses permissions endpoint instead of the old inefficient approach
 
-    // Add projects from general namespace access
-    if (allProjects) {
-      for (const project of allProjects) {
-        projects.push(project);
-        projectNames.add(project.metadata.name);
-      }
-    }
-
-    console.log('!JZ k8projects and projectNamesSet', { projects, projectNames });
-
-    // Add projects from Perses API (where user has specific Perses permissions)
-    if (persesProjects) {
-      for (const persesProject of persesProjects) {
-        if (!projectNames.has(persesProject.metadata.name)) {
-          // Convert Perses project format to K8s project format for consistency
-          projects.push({
-            metadata: {
-              name: persesProject.metadata.name,
-              namespace: persesProject.metadata.name,
-            },
-          });
-          projectNames.add(persesProject.metadata.name);
-        }
-      }
-    }
-
-    console.log('!JZ combined Projects', { projects });
-
-    return projects;
-  }, [allProjects, persesProjects]);
-
-  const hookInput = useMemo(() => {
-    return combinedProjects || [];
-  }, [combinedProjects]);
-
-  const {
-    editableProjects,
-    hasEditableProject,
-    loading: globalPermissionsLoading,
-  } = useProjectPermissions(hookInput);
-
-  const disabled = activeProjectFromUrl ? !canEdit : !hasEditableProject;
+  const disabled = permissionsLoading || !hasEditableProject;
 
   const filteredProjects = useMemo(() => {
-    return combinedProjects.filter((project) => editableProjects.includes(project.metadata.name));
-  }, [combinedProjects, editableProjects]);
+    if (!projectsWithPermissions || !editableProjects) {
+      return [];
+    }
+    return projectsWithPermissions.filter((project) =>
+      editableProjects.includes(project.metadata.name),
+    );
+  }, [projectsWithPermissions, editableProjects]);
 
   useEffect(() => {
     if (
@@ -307,17 +189,22 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     onFocus();
   };
 
-  console.log('!JZ ', { loading, globalPermissionsLoading });
+  console.log('!JZ permissions state:', {
+    permissionsLoading,
+    hasEditableProject,
+    editableProjects,
+    permissionsError,
+  });
 
   return (
     <>
       <Button
         variant="primary"
         onClick={handleModalToggle}
-        isDisabled={disabled || loading || globalPermissionsLoading}
+        isDisabled={disabled}
         data-test={persesDashboardDataTestIDs.createDashboardButtonToolbar}
       >
-        {loading || globalPermissionsLoading ? t('Loading...') : t('Create')}
+        {permissionsLoading ? t('Loading...') : t('Create')}
       </Button>
       <Modal
         variant={ModalVariant.small}
@@ -328,6 +215,16 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       >
         <ModalHeader title={t('Create Dashboard')} />
         <ModalBody>
+          {permissionsError && (
+            <Alert
+              variant="danger"
+              title={t(
+                'Failed to load project permissions. Please refresh the page and try again.',
+              )}
+              isInline
+              style={{ marginBottom: '16px' }}
+            />
+          )}
           {formErrors.general && (
             <Alert
               variant="danger"

@@ -17,10 +17,13 @@ export const useAllAccessibleProjects = () => {
     return allProjects || [];
   }, [allProjects]);
 
-  const result = useMemo(() => ({
-    allProjects: memoizedAllProjects,
-    projectsLoaded,
-  }), [memoizedAllProjects, projectsLoaded]);
+  const result = useMemo(
+    () => ({
+      allProjects: memoizedAllProjects,
+      projectsLoaded,
+    }),
+    [memoizedAllProjects, projectsLoaded],
+  );
 
   return result;
 };
