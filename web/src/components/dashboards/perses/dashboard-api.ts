@@ -56,11 +56,7 @@ export const useCreateDashboardMutation = (
   });
 };
 
-export const useCreateProjectMutation = (): UseMutationResult<
-  ProjectResource,
-  Error,
-  string
-> => {
+export const useCreateProjectMutation = (): UseMutationResult<ProjectResource, Error, string> => {
   const queryClient = useQueryClient();
 
   return useMutation<ProjectResource, Error, string>({

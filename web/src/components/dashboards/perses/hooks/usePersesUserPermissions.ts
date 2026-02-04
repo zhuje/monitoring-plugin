@@ -130,7 +130,7 @@ export const usePersesUserPermissions = () => {
         });
 
         if (hasDashboardPermissions) {
-          // Handle wildcard permissions - expand to all available projects (both Perses and OpenShift)
+          // Handle wildcard permissions to all projects
           if (projectName === '*') {
             const allProjectNames = Array.from(allAvailableProjects);
             editableProjectNames.push(...allProjectNames);
@@ -169,13 +169,7 @@ export const usePersesUserPermissions = () => {
         editableProjects: editableProjectNames,
         projectsWithPermissions: projects,
       };
-    }, [
-      permissionsLoading,
-      persesProjectsLoading,
-      userPermissions,
-      allProjects,
-      persesProjects,
-    ]);
+    }, [permissionsLoading, persesProjectsLoading, userPermissions, allProjects, persesProjects]);
 
   const hasEditableProject = editableProjects ? editableProjects.length > 0 : false;
 

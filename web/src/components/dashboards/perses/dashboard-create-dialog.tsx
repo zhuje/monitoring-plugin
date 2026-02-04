@@ -37,8 +37,6 @@ import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 import { usePersesEditPermissions } from './dashboard-toolbar';
 import { persesDashboardDataTestIDs } from '../../data-test';
 
-// Removed checkProjectPermissions and useProjectPermissions - replaced with usePersesUserPermissions
-
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const navigate = useNavigate();
@@ -213,7 +211,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     onFocus();
   };
 
-  // eslint-disable-next-line no-console
   console.log('!JZ permissions state:', {
     permissionsLoading,
     hasEditableProject,
