@@ -13,15 +13,11 @@ import {
   HelperTextItemVariant,
   ModalVariant,
   AlertVariant,
-  Select,
-  SelectOption,
-  SelectList,
-  MenuToggle,
-  MenuToggleElement,
   Stack,
   StackItem,
   Spinner,
 } from '@patternfly/react-core';
+import { TypeaheadSelect, TypeaheadSelectOption } from '@patternfly/react-templates';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -188,7 +184,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
 
   const navigate = useNavigate();
   const { perspective } = usePerspective();
-  const [isProjectSelectOpen, setIsProjectSelectOpen] = useState(false);
 
   const {
     editableProjects,
@@ -230,6 +225,16 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
     },
   });
 
+  const selectedProjectName = form.watch('projectName');
+
+  const projectOptions = useMemo<TypeaheadSelectOption[]>(() => {
+    return filteredProjects.map((project) => ({
+      content: getResourceDisplayName(project),
+      value: project.metadata.name,
+      selected: project.metadata.name === selectedProjectName,
+    }));
+  }, [filteredProjects, selectedProjectName]);
+
   const createDashboardMutation = useCreateDashboardMutation();
 
   React.useEffect(() => {
@@ -240,14 +245,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
       });
     }
   }, [isOpen, dashboard, defaultProject, filteredProjects.length, form]);
-
-  const selectedProjectName = form.watch('projectName');
-  const selectedProjectDisplay = useMemo(() => {
-    const selectedProject = filteredProjects.find((p) => p.metadata.name === selectedProjectName);
-    return selectedProject
-      ? getResourceDisplayName(selectedProject)
-      : selectedProjectName || t('Select project');
-  }, [filteredProjects, selectedProjectName, t]);
 
   if (!dashboard) {
     return null;
@@ -299,18 +296,8 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
     form.reset();
   };
 
-  const onProjectToggle = () => {
-    setIsProjectSelectOpen(!isProjectSelectOpen);
-  };
-
-  const onProjectSelect = (
-    _event: React.MouseEvent<Element, MouseEvent> | undefined,
-    value: string | number | undefined,
-  ) => {
-    if (typeof value === 'string') {
-      form.setValue('projectName', value);
-      setIsProjectSelectOpen(false);
-    }
+  const onProjectSelect = (_event: any, selection: string) => {
+    form.setValue('projectName', selection);
   };
 
   return (
@@ -385,35 +372,15 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                         style={formGroupStyle}
                       >
                         <LabelSpacer />
-                        <Select
-                          id="duplicate-modal-select-namespace-form-group-select"
-                          isScrollable={true}
-                          isOpen={isProjectSelectOpen}
-                          selected={field.value}
+                        <TypeaheadSelect
+                          initialOptions={projectOptions}
+                          placeholder={t('Select namespace')}
+                          noOptionsFoundMessage={(filter) => `No namespace found for "${filter}"`}
+                          onClearSelection={() => form.setValue('projectName', '')}
                           onSelect={onProjectSelect}
-                          onOpenChange={setIsProjectSelectOpen}
-                          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                            <MenuToggle
-                              ref={toggleRef}
-                              onClick={onProjectToggle}
-                              isExpanded={isProjectSelectOpen}
-                              isFullWidth
-                            >
-                              {selectedProjectDisplay}
-                            </MenuToggle>
-                          )}
-                        >
-                          <SelectList>
-                            {filteredProjects.map((project) => (
-                              <SelectOption
-                                key={project.metadata.name}
-                                value={project.metadata.name}
-                              >
-                                {getResourceDisplayName(project)}
-                              </SelectOption>
-                            ))}
-                          </SelectList>
-                        </Select>
+                          isCreatable={false}
+                          maxMenuHeight="200px"
+                        />
                         {fieldState.error && (
                           <FormHelperText>
                             <HelperText>

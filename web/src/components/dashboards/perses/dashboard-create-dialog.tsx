@@ -2,11 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
-  Dropdown,
-  DropdownList,
-  DropdownItem,
-  MenuToggle,
-  MenuToggleElement,
   Modal,
   ModalBody,
   ModalHeader,
@@ -21,6 +16,7 @@ import {
   HelperTextItemVariant,
   ValidatedOptions,
 } from '@patternfly/react-core';
+import { TypeaheadSelect, TypeaheadSelectOption } from '@patternfly/react-templates';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { usePerses } from './hooks/usePerses';
 import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
@@ -50,7 +46,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   } = usePersesUserPermissions();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [dashboardName, setDashboardName] = useState<string>('');
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
@@ -68,6 +63,14 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       editableProjects.includes(project.metadata.name),
     );
   }, [projectsWithPermissions, editableProjects]);
+
+  const projectOptions = useMemo<TypeaheadSelectOption[]>(() => {
+    return filteredProjects.map((project) => ({
+      content: project.metadata.name,
+      value: project.metadata.name,
+      selected: project.metadata.name === selectedProject,
+    }));
+  }, [filteredProjects, selectedProject]);
 
   useEffect(() => {
     if (
@@ -172,38 +175,18 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
 
   const handleModalToggle = () => {
     setIsModalOpen(!isModalOpen);
-    setIsDropdownOpen(false);
     if (isModalOpen) {
       setDashboardName('');
       setFormErrors({});
     }
   };
 
-  const handleDropdownToggle = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  const onFocus = () => {
-    const element = document.getElementById('modal-dropdown-toggle');
-    (element as HTMLElement)?.focus();
-  };
-
   const onEscapePress = () => {
-    if (isDropdownOpen) {
-      setIsDropdownOpen(!isDropdownOpen);
-      onFocus();
-    } else {
-      handleModalToggle();
-    }
+    handleModalToggle();
   };
 
-  const onSelect = (
-    event: React.MouseEvent<Element, MouseEvent> | undefined,
-    value: string | number | undefined,
-  ) => {
-    setSelectedProject(typeof value === 'string' ? value : null);
-    setIsDropdownOpen(false);
-    onFocus();
+  const onSelect = (_event: any, selection: string) => {
+    setSelectedProject(selection);
   };
 
   return (
@@ -254,33 +237,15 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               isRequired
               fieldId="form-group-create-dashboard-dialog-project-selection"
             >
-              <Dropdown
-                isScrollable={true}
-                isOpen={isDropdownOpen}
+              <TypeaheadSelect
+                initialOptions={projectOptions}
+                placeholder={t('Select a project')}
+                noOptionsFoundMessage={(filter) => `No project found for "${filter}"`}
+                onClearSelection={() => setSelectedProject(null)}
                 onSelect={onSelect}
-                onOpenChange={(isOpen: boolean) => setIsDropdownOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle
-                    ref={toggleRef}
-                    onClick={handleDropdownToggle}
-                    isExpanded={isDropdownOpen}
-                    isFullWidth
-                  >
-                    {selectedProject}
-                  </MenuToggle>
-                )}
-              >
-                <DropdownList>
-                  {filteredProjects.map((project, i) => (
-                    <DropdownItem
-                      value={`${project.metadata.name}`}
-                      key={`${i}-${project.metadata.name}`}
-                    >
-                      {project.metadata.name}
-                    </DropdownItem>
-                  ))}
-                </DropdownList>
-              </Dropdown>
+                isCreatable={false}
+                maxMenuHeight="200px"
+              />
             </FormGroup>
             <FormGroup
               label={t('Dashboard name')}

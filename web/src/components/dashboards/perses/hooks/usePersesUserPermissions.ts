@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { fetchPersesUserPermissions } from '../perses-client';
 import { useAllAccessibleProjects } from './useAllAccessibleProjects';
-import { usePerses } from './usePerses';
 
 // TODO: These will be available in future versions of the plugin SDK
 const getUser = (state: any) => state.sdkCore?.user;
@@ -24,7 +23,6 @@ export const usePersesUserPermissions = () => {
   const user = useSelector(getUser);
   const username = user?.metadata?.name || user?.username;
   const { allProjects } = useAllAccessibleProjects();
-  const { persesProjects, persesProjectsLoading } = usePerses();
 
   // eslint-disable-next-line no-console
   console.log('!JZ 1. usePersesUserPermissions >> ', { username });
@@ -57,7 +55,7 @@ export const usePersesUserPermissions = () => {
 
   const { editableProjects, projectsWithPermissions, usePersesUserPermissionsError } =
     useMemo(() => {
-      if (permissionsLoading || persesProjectsLoading) {
+      if (permissionsLoading) {
         return {
           editableProjects: undefined,
           projectsWithPermissions: undefined,
@@ -78,11 +76,10 @@ export const usePersesUserPermissions = () => {
       // Create a combined list of all available projects (both Perses and OpenShift)
       const allAvailableProjects = new Set<string>();
 
-      // Add all Perses projects
-      persesProjects?.forEach((project) => {
-        if (project.metadata?.name) {
-          allAvailableProjects.add(project.metadata.name);
-        }
+      // Add all projects from Perses permissions (projects user has access to)
+      const persesProjectNames = Object.keys(userPermissions).filter((name) => name !== '*');
+      persesProjectNames.forEach((projectName) => {
+        allAvailableProjects.add(projectName);
       });
 
       // Add all OpenShift projects
@@ -94,7 +91,7 @@ export const usePersesUserPermissions = () => {
 
       // eslint-disable-next-line no-console
       console.log('!JZ Combined available projects:', {
-        persesProjects: persesProjects?.map((p) => p.metadata?.name),
+        persesProjectNames,
         openshiftProjects: allProjects?.map((p) => p.metadata?.name),
         combined: Array.from(allAvailableProjects),
       });
@@ -185,11 +182,17 @@ export const usePersesUserPermissions = () => {
         }
       });
 
+      // Sort projects alphabetically for better UX
+      const sortedEditableProjects = editableProjectNames.sort();
+      const sortedProjects = projects.sort((a, b) =>
+        a.metadata.name.localeCompare(b.metadata.name),
+      );
+
       return {
-        editableProjects: editableProjectNames,
-        projectsWithPermissions: projects,
+        editableProjects: sortedEditableProjects,
+        projectsWithPermissions: sortedProjects,
       };
-    }, [permissionsLoading, persesProjectsLoading, userPermissions, allProjects, persesProjects]);
+    }, [permissionsLoading, userPermissions, allProjects]);
 
   const hasEditableProject = editableProjects ? editableProjects.length > 0 : false;
 
