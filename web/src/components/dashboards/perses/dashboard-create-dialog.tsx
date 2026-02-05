@@ -23,13 +23,14 @@ import {
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { usePerses } from './hooks/usePerses';
+import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { StringParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../query-params';
 
 import { DashboardResource } from '@perses-dev/core';
-import { useCreateDashboardMutation } from './dashboard-api';
+import { useCreateDashboardMutation, useCreateProjectMutation } from './dashboard-api';
 import { createNewDashboard } from './dashboard-utils';
 import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
@@ -42,7 +43,13 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-  const { persesProjects } = usePerses();
+  const {
+    editableProjects,
+    projectsWithPermissions,
+    hasEditableProject,
+    permissionsLoading,
+    permissionsError,
+  } = usePersesUserPermissions();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -50,24 +57,23 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const [dashboardName, setDashboardName] = useState<string>('');
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const createDashboardMutation = useCreateDashboardMutation();
+  const createProjectMutation = useCreateProjectMutation();
+  const { persesProjects } = usePerses();
 
-  const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
+  // const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
 
-  const hookInput = useMemo(() => {
-    return persesProjects || [];
-  }, [persesProjects]);
+  // Using the new optimized Perses permissions endpoint instead of the old inefficient approach
 
-  const {
-    editableProjects,
-    hasEditableProject,
-    loading: globalPermissionsLoading,
-  } = useProjectPermissions(hookInput);
-
-  const disabled = activeProjectFromUrl ? !canEdit : !hasEditableProject;
+  const disabled = permissionsLoading || !hasEditableProject;
 
   const filteredProjects = useMemo(() => {
-    return persesProjects.filter((project) => editableProjects.includes(project.metadata.name));
-  }, [persesProjects, editableProjects]);
+    if (!projectsWithPermissions || !editableProjects) {
+      return [];
+    }
+    return projectsWithPermissions.filter((project) =>
+      editableProjects.includes(project.metadata.name),
+    );
+  }, [projectsWithPermissions, editableProjects]);
 
   useEffect(() => {
     if (
@@ -121,6 +127,28 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
           dashboardName: `Dashboard name "${dashboardName}" already exists in this project`,
         });
         return;
+      }
+
+      // Check if the project exists on Perses server, create if it doesn't
+      const projectExists = persesProjects.some(
+        (project) => project.metadata?.name === selectedProject,
+      );
+
+      if (!projectExists) {
+        // eslint-disable-next-line no-console
+        console.log(`!JZ Creating missing project: ${selectedProject}`);
+
+        try {
+          await createProjectMutation.mutateAsync(selectedProject as string);
+          addAlert(`Project "${selectedProject}" created successfully`, 'success');
+        } catch (projectError) {
+          const errorMessage =
+            projectError?.message ||
+            `Failed to create project "${selectedProject}". Please try again.`;
+          addAlert(`Error creating project: ${errorMessage}`, 'danger');
+          setFormErrors({ general: errorMessage });
+          return;
+        }
       }
 
       const newDashboard: DashboardResource = createNewDashboard(
@@ -184,15 +212,22 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     onFocus();
   };
 
+  console.log('!JZ permissions state:', {
+    permissionsLoading,
+    hasEditableProject,
+    editableProjects,
+    permissionsError,
+  });
+
   return (
     <>
       <Button
         variant="primary"
         onClick={handleModalToggle}
-        isDisabled={disabled || loading || globalPermissionsLoading}
+        isDisabled={disabled}
         data-test={persesDashboardDataTestIDs.createDashboardButtonToolbar}
       >
-        {loading || globalPermissionsLoading ? t('Loading...') : t('Create')}
+        {permissionsLoading ? t('Loading...') : t('Create')}
       </Button>
       <Modal
         variant={ModalVariant.small}
@@ -203,6 +238,16 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       >
         <ModalHeader title={t('Create Dashboard')} />
         <ModalBody>
+          {permissionsError && (
+            <Alert
+              variant="danger"
+              title={t(
+                'Failed to load project permissions. Please refresh the page and try again.',
+              )}
+              isInline
+              style={{ marginBottom: '16px' }}
+            />
+          )}
           {formErrors.general && (
             <Alert
               variant="danger"
@@ -223,6 +268,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               fieldId="form-group-create-dashboard-dialog-project-selection"
             >
               <Dropdown
+                isScrollable={true}
                 isOpen={isDropdownOpen}
                 onSelect={onSelect}
                 onOpenChange={(isOpen: boolean) => setIsDropdownOpen(isOpen)}
@@ -287,11 +333,16 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
             variant="primary"
             onClick={handleAdd}
             isDisabled={
-              !dashboardName?.trim() || !selectedProject || createDashboardMutation.isPending
+              !dashboardName?.trim() ||
+              !selectedProject ||
+              createDashboardMutation.isPending ||
+              createProjectMutation.isPending
             }
-            isLoading={createDashboardMutation.isPending}
+            isLoading={createDashboardMutation.isPending || createProjectMutation.isPending}
           >
-            {createDashboardMutation.isPending ? t('Creating...') : t('Create')}
+            {createDashboardMutation.isPending || createProjectMutation.isPending
+              ? t('Creating...')
+              : t('Create')}
           </Button>
           <Button key="cancel" variant="link" onClick={handleModalToggle}>
             {t('Cancel')}
