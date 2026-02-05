@@ -46,9 +46,8 @@ import {
   getResourceExtendedDisplayName,
 } from '@perses-dev/core';
 import { useToast } from './ToastProvider';
-import { usePerses } from './hooks/usePerses';
 import { generateMetadataName } from './dashboard-utils';
-import { useProjectPermissions } from './dashboard-permissions';
+import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
 import { t_global_spacer_200, t_global_font_weight_200 } from '@patternfly/react-tokens';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
@@ -191,17 +190,22 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
   const { perspective } = usePerspective();
   const [isProjectSelectOpen, setIsProjectSelectOpen] = useState(false);
 
-  const { persesProjects, persesProjectsLoading } = usePerses();
-
-  const hookInput = useMemo(() => {
-    return persesProjects || [];
-  }, [persesProjects]);
-
-  const { editableProjects } = useProjectPermissions(hookInput);
+  const {
+    editableProjects,
+    projectsWithPermissions,
+    hasEditableProject,
+    permissionsLoading,
+    permissionsError,
+  } = usePersesUserPermissions();
 
   const filteredProjects = useMemo(() => {
-    return persesProjects.filter((project) => editableProjects.includes(project.metadata.name));
-  }, [persesProjects, editableProjects]);
+    if (!projectsWithPermissions || !editableProjects) {
+      return [];
+    }
+    return projectsWithPermissions.filter((project) =>
+      editableProjects.includes(project.metadata.name),
+    );
+  }, [projectsWithPermissions, editableProjects]);
 
   const defaultProject = useMemo(() => {
     if (!dashboard) return '';
@@ -318,9 +322,14 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
       aria-labelledby="duplicate-modal"
     >
       <ModalHeader title="Duplicate Dashboard" labelId="duplicate-modal-title" />
-      {persesProjectsLoading ? (
+      {permissionsLoading ? (
         <ModalBody style={{ textAlign: 'center', padding: '2rem' }}>
           {t('Loading...')} <Spinner aria-label="Duplicate Dashboard Modal Loading" />
+        </ModalBody>
+      ) : permissionsError ? (
+        <ModalBody style={{ textAlign: 'center', padding: '2rem' }}>
+          <ExclamationCircleIcon style={{ color: 'var(--pf-v5-global--danger-color--100)' }} />{' '}
+          {t('Failed to load project permissions. Please refresh the page and try again.')}
         </ModalBody>
       ) : (
         <FormProvider {...form}>
@@ -378,6 +387,7 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                         <LabelSpacer />
                         <Select
                           id="duplicate-modal-select-namespace-form-group-select"
+                          isScrollable={true}
                           isOpen={isProjectSelectOpen}
                           selected={field.value}
                           onSelect={onProjectSelect}
@@ -430,6 +440,7 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                 isDisabled={
                   !(form.watch('dashboardName') || '')?.trim() ||
                   !(form.watch('projectName') || '')?.trim() ||
+                  !hasEditableProject ||
                   createDashboardMutation.isPending
                 }
                 isLoading={createDashboardMutation.isPending}

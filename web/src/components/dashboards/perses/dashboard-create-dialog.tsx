@@ -34,9 +34,7 @@ import { useCreateDashboardMutation, useCreateProjectMutation } from './dashboar
 import { createNewDashboard } from './dashboard-utils';
 import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
-import { usePersesEditPermissions } from './dashboard-toolbar';
 import { persesDashboardDataTestIDs } from '../../data-test';
-import { useProjectPermissions } from './dashboard-permissions';
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -59,10 +57,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const createDashboardMutation = useCreateDashboardMutation();
   const createProjectMutation = useCreateProjectMutation();
   const { persesProjects } = usePerses();
-
-  // const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
-
-  // Using the new optimized Perses permissions endpoint instead of the old inefficient approach
 
   const disabled = permissionsLoading || !hasEditableProject;
 
@@ -211,13 +205,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     setIsDropdownOpen(false);
     onFocus();
   };
-
-  console.log('!JZ permissions state:', {
-    permissionsLoading,
-    hasEditableProject,
-    editableProjects,
-    permissionsError,
-  });
 
   return (
     <>

@@ -13,6 +13,11 @@ interface ProjectInfo {
     name: string;
     namespace: string;
   };
+  spec: {
+    display: {
+      name: string;
+    };
+  };
 }
 
 export const usePersesUserPermissions = () => {
@@ -142,6 +147,11 @@ export const usePersesUserPermissions = () => {
                   name,
                   namespace: name,
                 },
+                spec: {
+                  display: {
+                    name,
+                  },
+                },
               });
             });
           } else if (projectName !== '*') {
@@ -152,6 +162,11 @@ export const usePersesUserPermissions = () => {
                 name: projectName,
                 namespace: projectName,
               },
+              spec: {
+                display: {
+                  name: projectName,
+                },
+              },
             });
           }
         } else if (projectName !== '*') {
@@ -160,6 +175,11 @@ export const usePersesUserPermissions = () => {
             metadata: {
               name: projectName,
               namespace: projectName,
+            },
+            spec: {
+              display: {
+                name: projectName,
+              },
             },
           });
         }

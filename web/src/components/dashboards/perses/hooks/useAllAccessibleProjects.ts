@@ -9,10 +9,6 @@ export const useAllAccessibleProjects = () => {
     optional: true,
   });
 
-  const whatIsThis = ProjectModel.kind;
-
-  console.log('!JZ useAllAccessibleProjects', { allProjects, projectsLoaded, whatIsThis });
-
   const memoizedAllProjects = useMemo(() => {
     return allProjects || [];
   }, [allProjects]);
