@@ -36,6 +36,7 @@ import {
   DuplicateActionModal,
   RenameActionModal,
 } from './dashboard-action-modals';
+import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
 const perPageOptions = [
   { title: '10', value: 10 },
   { title: '20', value: 20 },
@@ -152,12 +153,22 @@ interface DashboardsTableProps {
   persesDashboards: DashboardResource[];
   persesDashboardsLoading: boolean;
   activeProject: string | null;
+  editableProjects: string[] | undefined;
+  projectsWithPermissions: any[] | undefined;
+  hasEditableProject: boolean;
+  permissionsLoading: boolean;
+  permissionsError: any;
 }
 
 const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
   persesDashboards,
   persesDashboardsLoading,
   activeProject,
+  editableProjects,
+  projectsWithPermissions,
+  hasEditableProject,
+  permissionsLoading,
+  permissionsError,
 }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
@@ -381,6 +392,11 @@ const DashboardsTable: React.FunctionComponent<DashboardsTableProps> = ({
             isOpen={isDuplicateModalOpen}
             onClose={handleDuplicateModalClose}
             handleModalClose={handleDuplicateModalClose}
+            editableProjects={editableProjects}
+            projectsWithPermissions={projectsWithPermissions}
+            hasEditableProject={hasEditableProject}
+            permissionsLoading={permissionsLoading}
+            permissionsError={permissionsError}
           />
           <DeleteActionModal
             dashboard={targetedDashboard}
@@ -436,6 +452,15 @@ export const DashboardList: FC = () => {
     combinedInitialLoad,
   } = useDashboardsData();
 
+  // Get permissions data once for both create dialog and action modals
+  const {
+    editableProjects,
+    projectsWithPermissions,
+    hasEditableProject,
+    permissionsLoading,
+    permissionsError,
+  } = usePersesUserPermissions();
+
   return (
     <DashboardListFrame
       activeProject={activeProject}
@@ -443,11 +468,21 @@ export const DashboardList: FC = () => {
       activeProjectDashboardsMetadata={activeProjectDashboardsMetadata}
       changeBoard={changeBoard}
       dashboardName={dashboardName}
+      editableProjects={editableProjects}
+      projectsWithPermissions={projectsWithPermissions}
+      hasEditableProject={hasEditableProject}
+      permissionsLoading={permissionsLoading}
+      permissionsError={permissionsError}
     >
       <DashboardsTable
         persesDashboards={persesDashboards}
         persesDashboardsLoading={combinedInitialLoad}
         activeProject={activeProject}
+        editableProjects={editableProjects}
+        projectsWithPermissions={projectsWithPermissions}
+        hasEditableProject={hasEditableProject}
+        permissionsLoading={permissionsLoading}
+        permissionsError={permissionsError}
       />
     </DashboardListFrame>
   );

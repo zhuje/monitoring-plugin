@@ -97,7 +97,21 @@ const DashboardPageHeader: React.FunctionComponent<{ dashboardDisplayName?: stri
   );
 };
 
-const DashboardListPageHeader: React.FunctionComponent = () => {
+interface DashboardListPageHeaderProps {
+  editableProjects: string[] | undefined;
+  projectsWithPermissions: any[] | undefined;
+  hasEditableProject: boolean;
+  permissionsLoading: boolean;
+  permissionsError: any;
+}
+
+const DashboardListPageHeader: React.FunctionComponent<DashboardListPageHeaderProps> = ({
+  editableProjects,
+  projectsWithPermissions,
+  hasEditableProject,
+  permissionsLoading,
+  permissionsError,
+}) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const hideFavBtn = shouldHideFavoriteButton();
 
@@ -109,7 +123,13 @@ const DashboardListPageHeader: React.FunctionComponent = () => {
     >
       <Split hasGutter isWrappable>
         <SplitItem>
-          <DashboardCreateDialog />
+          <DashboardCreateDialog
+            editableProjects={editableProjects}
+            projectsWithPermissions={projectsWithPermissions}
+            hasEditableProject={hasEditableProject}
+            permissionsLoading={permissionsLoading}
+            permissionsError={permissionsError}
+          />
         </SplitItem>
       </Split>
     </ListPageHeader>
@@ -121,6 +141,11 @@ type MonitoringDashboardsPageProps = PropsWithChildren<{
   changeBoard: (dashboardName: string) => void;
   dashboardDisplayName: string;
   activeProject?: string;
+  editableProjects?: string[] | undefined;
+  projectsWithPermissions?: any[] | undefined;
+  hasEditableProject?: boolean;
+  permissionsLoading?: boolean;
+  permissionsError?: any;
 }>;
 
 export const DashboardHeader: FC<MonitoringDashboardsPageProps> = memo(
@@ -139,17 +164,32 @@ export const DashboardHeader: FC<MonitoringDashboardsPageProps> = memo(
   },
 );
 
-export const DashboardListHeader: FC<MonitoringDashboardsPageProps> = memo(({ children }) => {
-  const { t } = useTranslation(process.env.I18N_NAMESPACE);
+export const DashboardListHeader: FC<MonitoringDashboardsPageProps> = memo(
+  ({
+    children,
+    editableProjects,
+    projectsWithPermissions,
+    hasEditableProject,
+    permissionsLoading,
+    permissionsError,
+  }) => {
+    const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
-  return (
-    <>
-      <DocumentTitle>{t('Metrics dashboards')}</DocumentTitle>
-      <PagePadding right={t_global_spacer_xl.value}>
-        <DashboardListPageHeader />
-      </PagePadding>
-      <Divider inset={{ default: 'insetMd' }} />
-      {children}
-    </>
-  );
-});
+    return (
+      <>
+        <DocumentTitle>{t('Metrics dashboards')}</DocumentTitle>
+        <PagePadding right={t_global_spacer_xl.value}>
+          <DashboardListPageHeader
+            editableProjects={editableProjects}
+            projectsWithPermissions={projectsWithPermissions}
+            hasEditableProject={hasEditableProject}
+            permissionsLoading={permissionsLoading}
+            permissionsError={permissionsError}
+          />
+        </PagePadding>
+        <Divider inset={{ default: 'insetMd' }} />
+        {children}
+      </>
+    );
+  },
+);

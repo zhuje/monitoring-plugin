@@ -10,6 +10,11 @@ interface DashboardListFrameProps {
   changeBoard: (boardName: string) => void;
   dashboardName: string;
   children: ReactNode;
+  editableProjects: string[] | undefined;
+  projectsWithPermissions: any[] | undefined;
+  hasEditableProject: boolean;
+  permissionsLoading: boolean;
+  permissionsError: any;
 }
 
 export const DashboardListFrame: React.FC<DashboardListFrameProps> = ({
@@ -19,6 +24,11 @@ export const DashboardListFrame: React.FC<DashboardListFrameProps> = ({
   changeBoard,
   dashboardName,
   children,
+  editableProjects,
+  projectsWithPermissions,
+  hasEditableProject,
+  permissionsLoading,
+  permissionsError,
 }) => {
   return (
     <>
@@ -28,6 +38,11 @@ export const DashboardListFrame: React.FC<DashboardListFrameProps> = ({
         changeBoard={changeBoard}
         dashboardDisplayName={dashboardName}
         activeProject={activeProject}
+        editableProjects={editableProjects}
+        projectsWithPermissions={projectsWithPermissions}
+        hasEditableProject={hasEditableProject}
+        permissionsLoading={permissionsLoading}
+        permissionsError={permissionsError}
       >
         {children}
       </DashboardListHeader>

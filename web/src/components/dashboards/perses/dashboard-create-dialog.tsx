@@ -19,7 +19,6 @@ import {
 import { TypeaheadSelect, TypeaheadSelectOption } from '@patternfly/react-templates';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { usePerses } from './hooks/usePerses';
-import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { StringParam, useQueryParam } from 'use-query-params';
@@ -32,18 +31,25 @@ import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 import { persesDashboardDataTestIDs } from '../../data-test';
 
-export const DashboardCreateDialog: React.FunctionComponent = () => {
+interface DashboardCreateDialogProps {
+  editableProjects: string[] | undefined;
+  projectsWithPermissions: any[] | undefined;
+  hasEditableProject: boolean;
+  permissionsLoading: boolean;
+  permissionsError: any;
+}
+
+export const DashboardCreateDialog: React.FunctionComponent<DashboardCreateDialogProps> = ({
+  editableProjects,
+  projectsWithPermissions,
+  hasEditableProject,
+  permissionsLoading,
+  permissionsError,
+}) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-  const {
-    editableProjects,
-    projectsWithPermissions,
-    hasEditableProject,
-    permissionsLoading,
-    permissionsError,
-  } = usePersesUserPermissions();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);

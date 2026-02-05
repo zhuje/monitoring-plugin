@@ -19,7 +19,7 @@ import {
 } from '@patternfly/react-core';
 import { TypeaheadSelect, TypeaheadSelectOption } from '@patternfly/react-templates';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   useUpdateDashboardMutation,
@@ -43,7 +43,6 @@ import {
 } from '@perses-dev/core';
 import { useToast } from './ToastProvider';
 import { generateMetadataName } from './dashboard-utils';
-import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
 import { t_global_spacer_200, t_global_font_weight_200 } from '@patternfly/react-tokens';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
@@ -61,6 +60,14 @@ interface ActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   handleModalClose: () => void;
+}
+
+interface DuplicateActionModalProps extends ActionModalProps {
+  editableProjects: string[] | undefined;
+  projectsWithPermissions: any[] | undefined;
+  hasEditableProject: boolean;
+  permissionsLoading: boolean;
+  permissionsError: any;
 }
 
 export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalProps) => {
@@ -178,20 +185,21 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
   );
 };
 
-export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModalProps) => {
+export const DuplicateActionModal = ({
+  dashboard,
+  isOpen,
+  onClose,
+  editableProjects,
+  projectsWithPermissions,
+  hasEditableProject,
+  permissionsLoading,
+  permissionsError,
+}: DuplicateActionModalProps) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { addAlert } = useToast();
 
   const navigate = useNavigate();
   const { perspective } = usePerspective();
-
-  const {
-    editableProjects,
-    projectsWithPermissions,
-    hasEditableProject,
-    permissionsLoading,
-    permissionsError,
-  } = usePersesUserPermissions();
 
   const filteredProjects = useMemo(() => {
     if (!projectsWithPermissions || !editableProjects) {
@@ -364,7 +372,7 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
                   <Controller
                     control={form.control}
                     name="projectName"
-                    render={({ field, fieldState }) => (
+                    render={({ fieldState }) => (
                       <FormGroup
                         label={t('Select namespace')}
                         isRequired
