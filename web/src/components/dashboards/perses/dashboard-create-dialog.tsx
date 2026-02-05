@@ -2,11 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
-  Dropdown,
-  DropdownList,
-  DropdownItem,
-  MenuToggle,
-  MenuToggleElement,
   Modal,
   ModalBody,
   ModalHeader,
@@ -21,53 +16,61 @@ import {
   HelperTextItemVariant,
   ValidatedOptions,
 } from '@patternfly/react-core';
+import { TypeaheadSelect, TypeaheadSelectOption } from '@patternfly/react-templates';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { usePerses } from './hooks/usePerses';
+import { usePersesUserPermissions } from './hooks/usePersesUserPermissions';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { StringParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../query-params';
 
 import { DashboardResource } from '@perses-dev/core';
-import { useCreateDashboardMutation } from './dashboard-api';
+import { useCreateDashboardMutation, useCreateProjectMutation } from './dashboard-api';
 import { createNewDashboard } from './dashboard-utils';
 import { useToast } from './ToastProvider';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
-import { usePersesEditPermissions } from './dashboard-toolbar';
 import { persesDashboardDataTestIDs } from '../../data-test';
-import { useProjectPermissions } from './dashboard-permissions';
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-  const { persesProjects } = usePerses();
+  const {
+    editableProjects,
+    projectsWithPermissions,
+    hasEditableProject,
+    permissionsLoading,
+    permissionsError,
+  } = usePersesUserPermissions();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [dashboardName, setDashboardName] = useState<string>('');
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const createDashboardMutation = useCreateDashboardMutation();
+  const createProjectMutation = useCreateProjectMutation();
+  const { persesProjects } = usePerses();
 
-  const { canEdit, loading } = usePersesEditPermissions(activeProjectFromUrl);
-
-  const hookInput = useMemo(() => {
-    return persesProjects || [];
-  }, [persesProjects]);
-
-  const {
-    editableProjects,
-    hasEditableProject,
-    loading: globalPermissionsLoading,
-  } = useProjectPermissions(hookInput);
-
-  const disabled = activeProjectFromUrl ? !canEdit : !hasEditableProject;
+  const disabled = permissionsLoading || !hasEditableProject;
 
   const filteredProjects = useMemo(() => {
-    return persesProjects.filter((project) => editableProjects.includes(project.metadata.name));
-  }, [persesProjects, editableProjects]);
+    if (!projectsWithPermissions || !editableProjects) {
+      return [];
+    }
+    return projectsWithPermissions.filter((project) =>
+      editableProjects.includes(project.metadata.name),
+    );
+  }, [projectsWithPermissions, editableProjects]);
+
+  const projectOptions = useMemo<TypeaheadSelectOption[]>(() => {
+    return filteredProjects.map((project) => ({
+      content: project.metadata.name,
+      value: project.metadata.name,
+      selected: project.metadata.name === selectedProject,
+    }));
+  }, [filteredProjects, selectedProject]);
 
   useEffect(() => {
     if (
@@ -123,6 +126,28 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
         return;
       }
 
+      // Check if the project exists on Perses server, create if it doesn't
+      const projectExists = persesProjects.some(
+        (project) => project.metadata?.name === selectedProject,
+      );
+
+      if (!projectExists) {
+        // eslint-disable-next-line no-console
+        console.log(`!JZ Creating missing project: ${selectedProject}`);
+
+        try {
+          await createProjectMutation.mutateAsync(selectedProject as string);
+          addAlert(`Project "${selectedProject}" created successfully`, 'success');
+        } catch (projectError) {
+          const errorMessage =
+            projectError?.message ||
+            `Failed to create project "${selectedProject}". Please try again.`;
+          addAlert(`Error creating project: ${errorMessage}`, 'danger');
+          setFormErrors({ general: errorMessage });
+          return;
+        }
+      }
+
       const newDashboard: DashboardResource = createNewDashboard(
         dashboardName.trim(),
         selectedProject as string,
@@ -150,38 +175,18 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
 
   const handleModalToggle = () => {
     setIsModalOpen(!isModalOpen);
-    setIsDropdownOpen(false);
     if (isModalOpen) {
       setDashboardName('');
       setFormErrors({});
     }
   };
 
-  const handleDropdownToggle = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  const onFocus = () => {
-    const element = document.getElementById('modal-dropdown-toggle');
-    (element as HTMLElement)?.focus();
-  };
-
   const onEscapePress = () => {
-    if (isDropdownOpen) {
-      setIsDropdownOpen(!isDropdownOpen);
-      onFocus();
-    } else {
-      handleModalToggle();
-    }
+    handleModalToggle();
   };
 
-  const onSelect = (
-    event: React.MouseEvent<Element, MouseEvent> | undefined,
-    value: string | number | undefined,
-  ) => {
-    setSelectedProject(typeof value === 'string' ? value : null);
-    setIsDropdownOpen(false);
-    onFocus();
+  const onSelect = (_event: any, selection: string) => {
+    setSelectedProject(selection);
   };
 
   return (
@@ -189,10 +194,10 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       <Button
         variant="primary"
         onClick={handleModalToggle}
-        isDisabled={disabled || loading || globalPermissionsLoading}
+        isDisabled={disabled}
         data-test={persesDashboardDataTestIDs.createDashboardButtonToolbar}
       >
-        {loading || globalPermissionsLoading ? t('Loading...') : t('Create')}
+        {permissionsLoading ? t('Loading...') : t('Create')}
       </Button>
       <Modal
         variant={ModalVariant.small}
@@ -203,6 +208,16 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       >
         <ModalHeader title={t('Create Dashboard')} />
         <ModalBody>
+          {permissionsError && (
+            <Alert
+              variant="danger"
+              title={t(
+                'Failed to load project permissions. Please refresh the page and try again.',
+              )}
+              isInline
+              style={{ marginBottom: '16px' }}
+            />
+          )}
           {formErrors.general && (
             <Alert
               variant="danger"
@@ -222,32 +237,15 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               isRequired
               fieldId="form-group-create-dashboard-dialog-project-selection"
             >
-              <Dropdown
-                isOpen={isDropdownOpen}
+              <TypeaheadSelect
+                initialOptions={projectOptions}
+                placeholder={t('Select a project')}
+                noOptionsFoundMessage={(filter) => `No project found for "${filter}"`}
+                onClearSelection={() => setSelectedProject(null)}
                 onSelect={onSelect}
-                onOpenChange={(isOpen: boolean) => setIsDropdownOpen(isOpen)}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle
-                    ref={toggleRef}
-                    onClick={handleDropdownToggle}
-                    isExpanded={isDropdownOpen}
-                    isFullWidth
-                  >
-                    {selectedProject}
-                  </MenuToggle>
-                )}
-              >
-                <DropdownList>
-                  {filteredProjects.map((project, i) => (
-                    <DropdownItem
-                      value={`${project.metadata.name}`}
-                      key={`${i}-${project.metadata.name}`}
-                    >
-                      {project.metadata.name}
-                    </DropdownItem>
-                  ))}
-                </DropdownList>
-              </Dropdown>
+                isCreatable={false}
+                maxMenuHeight="200px"
+              />
             </FormGroup>
             <FormGroup
               label={t('Dashboard name')}
@@ -287,11 +285,16 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
             variant="primary"
             onClick={handleAdd}
             isDisabled={
-              !dashboardName?.trim() || !selectedProject || createDashboardMutation.isPending
+              !dashboardName?.trim() ||
+              !selectedProject ||
+              createDashboardMutation.isPending ||
+              createProjectMutation.isPending
             }
-            isLoading={createDashboardMutation.isPending}
+            isLoading={createDashboardMutation.isPending || createProjectMutation.isPending}
           >
-            {createDashboardMutation.isPending ? t('Creating...') : t('Create')}
+            {createDashboardMutation.isPending || createProjectMutation.isPending
+              ? t('Creating...')
+              : t('Create')}
           </Button>
           <Button key="cancel" variant="link" onClick={handleModalToggle}>
             {t('Cancel')}
