@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import { fetchPersesUserPermissions } from '../perses-client';
 import { useAllAccessibleProjects } from './useAllAccessibleProjects';
 
-// TODO: These will be available in future versions of the plugin SDK
 const getUser = (state: any) => state.sdkCore?.user;
 
 interface ProjectInfo {
@@ -40,6 +39,8 @@ export const usePersesUserPermissions = () => {
       console.warn('Failed to fetch Perses user permissions:', error);
     },
   });
+
+  console.log('!JZ userPermissions', { userPermissions });
 
   const { editableProjects, projectsWithPermissions, usePersesUserPermissionsError } =
     useMemo(() => {

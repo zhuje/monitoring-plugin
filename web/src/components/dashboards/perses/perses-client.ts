@@ -3,6 +3,7 @@ import { DashboardResource, ProjectResource, fetchJson } from '@perses-dev/core'
 import { NumberParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../query-params';
 import { getCSRFToken } from '@openshift-console/dynamic-plugin-sdk/lib/utils/fetch/console-fetch-utils';
+import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
 
 export const PERSES_PROXY_BASE_PATH = '/api/proxy/plugin/monitoring-console-plugin/perses';
 
@@ -44,20 +45,7 @@ export const createPersesProject = async (projectName: string): Promise<ProjectR
     },
   };
 
-  const response = await fetch(persesURL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCSRFToken(),
-    },
-    body: JSON.stringify(newProject),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to create project: ${response.statusText}`);
-  }
-
-  return response.json();
+  return consoleFetchJSON.post(persesURL, newProject);
 };
 
 export interface PersesPermission {

@@ -122,6 +122,7 @@ export function useDashboardList(
     ...options,
   });
 }
+
 export const useCreateProjectMutation = (): UseMutationResult<ProjectResource, Error, string> => {
   const queryClient = useQueryClient();
 

@@ -15,6 +15,7 @@ import {
   HelperTextItem,
   HelperTextItemVariant,
   ValidatedOptions,
+  Tooltip,
 } from '@patternfly/react-core';
 import { TypeaheadSelect, TypeaheadSelectOption } from '@patternfly/react-templates';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
@@ -126,7 +127,6 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
         return;
       }
 
-      // Check if the project exists on Perses server, create if it doesn't
       const projectExists = persesProjects.some(
         (project) => project.metadata?.name === selectedProject,
       );
@@ -186,8 +186,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     setSelectedProject(selection);
   };
 
-  return (
-    <>
+  const CreateBtn = () => {
+    return (
       <Button
         variant="primary"
         onClick={handleModalToggle}
@@ -196,6 +196,20 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       >
         {permissionsLoading ? t('Loading...') : t('Create')}
       </Button>
+    );
+  };
+
+  return (
+    <>
+      {disabled ? (
+        <Tooltip content={t('Create button is disabled because you do not have permission')}>
+          <span style={{ cursor: 'not-allowed' }}>
+            <CreateBtn />
+          </span>
+        </Tooltip>
+      ) : (
+        <CreateBtn />
+      )}
       <Modal
         variant={ModalVariant.small}
         isOpen={isModalOpen}
