@@ -40,8 +40,6 @@ export const usePersesUserPermissions = () => {
     },
   });
 
-  console.log('!JZ userPermissions', { userPermissions });
-
   const { editableProjects, projectsWithPermissions, usePersesUserPermissionsError } =
     useMemo(() => {
       if (permissionsLoading) {
