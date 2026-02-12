@@ -3,6 +3,7 @@ import { DashboardResource, ProjectResource, fetchJson } from '@perses-dev/core'
 import { NumberParam, useQueryParam } from 'use-query-params';
 import { QueryParams } from '../../query-params';
 import { getCSRFToken } from '@openshift-console/dynamic-plugin-sdk/lib/utils/fetch/console-fetch-utils';
+import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
 
 export const PERSES_PROXY_BASE_PATH = '/api/proxy/plugin/monitoring-console-plugin/perses';
 
@@ -25,6 +26,42 @@ export const fetchPersesProjects = (): Promise<ProjectResource[]> => {
   const persesURL = `${PERSES_PROXY_BASE_PATH}${listProjectURL}`;
 
   return ocpPersesFetchJson<ProjectResource[]>(persesURL);
+};
+
+export const createPersesProject = async (projectName: string): Promise<ProjectResource> => {
+  const createProjectURL = '/api/v1/projects';
+  const persesURL = `${PERSES_PROXY_BASE_PATH}${createProjectURL}`;
+
+  const newProject: Partial<ProjectResource> = {
+    kind: 'Project',
+    metadata: {
+      name: projectName,
+      version: 0,
+    },
+    spec: {
+      display: {
+        name: projectName,
+      },
+    },
+  };
+
+  return consoleFetchJSON.post(persesURL, newProject);
+};
+
+export interface PersesPermission {
+  scopes: string;
+  actions: string[];
+}
+
+export type PersesUserPermissions = {
+  [projectName: string]: PersesPermission[];
+};
+
+export const fetchPersesUserPermissions = (username: string): Promise<PersesUserPermissions> => {
+  const userPermissionsURL = `/api/v1/users/${encodeURIComponent(username)}/permissions`;
+  const persesURL = `${PERSES_PROXY_BASE_PATH}${userPermissionsURL}`;
+
+  return ocpPersesFetchJson<PersesUserPermissions>(persesURL);
 };
 
 export async function ocpPersesFetchJson<T>(url: string): Promise<T> {
