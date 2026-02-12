@@ -103,3 +103,28 @@ export const useFetchPersesDashboard = (project: string, dashboardName: string) 
     persesDashboardLoading,
   };
 };
+
+export const useFetchPersesPermissions = (username: string) => {
+  const {
+    isLoading: persesPermissionsLoading,
+    error: persesPermissionsError,
+    data: persesUserPermissions,
+  } = useQuery({
+    queryKey: ['perses-user-permissions', username],
+    queryFn: () => fetchPersesUserPermissions(username),
+    enabled: !!username,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: true,
+    retry: 2,
+    onError: (error) => {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to fetch Perses user permissions:', error);
+    },
+  });
+
+  return {
+    persesUserPermissions,
+    persesPermissionsError,
+    persesPermissionsLoading,
+  };
+};

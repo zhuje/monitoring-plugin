@@ -193,15 +193,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
     permissionsError,
   } = usePersesUserPermissions();
 
-  const filteredProjects = useMemo(() => {
-    if (!projectsWithPermissions || !editableProjects) {
-      return [];
-    }
-    return projectsWithPermissions.filter((project) =>
-      editableProjects.includes(project.metadata.name),
-    );
-  }, [projectsWithPermissions, editableProjects]);
-
   const defaultProject = useMemo(() => {
     if (!dashboard) return '';
 
@@ -209,8 +200,8 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
       return dashboard.metadata.project;
     }
 
-    return filteredProjects[0]?.metadata.name || '';
-  }, [dashboard, editableProjects, filteredProjects]);
+    return projectsWithPermissions[0] || '';
+  }, [dashboard, editableProjects, projectsWithPermissions]);
 
   const { schema: validationSchema } = useDashboardValidationSchema(defaultProject, t);
 
@@ -228,23 +219,26 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
   const selectedProjectName = form.watch('projectName');
 
   const projectOptions = useMemo<TypeaheadSelectOption[]>(() => {
-    return filteredProjects.map((project) => ({
-      content: getResourceDisplayName(project),
-      value: project.metadata.name,
-      selected: project.metadata.name === selectedProjectName,
+    if (!editableProjects) {
+      return [];
+    }
+    return editableProjects.map((project) => ({
+      content: project,
+      value: project,
+      selected: project === selectedProjectName,
     }));
-  }, [filteredProjects, selectedProjectName]);
+  }, [editableProjects, selectedProjectName]);
 
   const createDashboardMutation = useCreateDashboardMutation();
 
   React.useEffect(() => {
-    if (isOpen && dashboard && filteredProjects.length > 0 && defaultProject) {
+    if (isOpen && dashboard && editableProjects?.length > 0 && defaultProject) {
       form.reset({
         projectName: defaultProject,
         dashboardName: '',
       });
     }
-  }, [isOpen, dashboard, defaultProject, filteredProjects.length, form]);
+  }, [isOpen, dashboard, defaultProject, editableProjects?.length, form]);
 
   if (!dashboard) {
     return null;

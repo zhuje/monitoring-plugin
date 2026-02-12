@@ -38,13 +38,8 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { perspective } = usePerspective();
   const { addAlert } = useToast();
-  const {
-    editableProjects,
-    projectsWithPermissions,
-    hasEditableProject,
-    permissionsLoading,
-    permissionsError,
-  } = usePersesUserPermissions();
+  const { editableProjects, hasEditableProject, permissionsLoading, permissionsError } =
+    usePersesUserPermissions();
   const [activeProjectFromUrl] = useQueryParam(QueryParams.Project, StringParam);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -56,39 +51,33 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
 
   const disabled = permissionsLoading || !hasEditableProject;
 
-  const filteredProjects = useMemo(() => {
-    if (!projectsWithPermissions || !editableProjects) {
+  const projectOptions = useMemo<TypeaheadSelectOption[]>(() => {
+    if (!editableProjects) {
       return [];
     }
-    return projectsWithPermissions.filter((project) =>
-      editableProjects.includes(project.metadata.name),
-    );
-  }, [projectsWithPermissions, editableProjects]);
 
-  const projectOptions = useMemo<TypeaheadSelectOption[]>(() => {
-    return filteredProjects.map((project) => ({
-      content: project.metadata.name,
-      value: project.metadata.name,
-      selected: project.metadata.name === selectedProject,
+    return editableProjects.map((project) => ({
+      content: project,
+      value: project,
+      selected: project === selectedProject,
     }));
-  }, [filteredProjects, selectedProject]);
+  }, [editableProjects, selectedProject]);
 
   useEffect(() => {
     if (
       isModalOpen &&
-      filteredProjects &&
-      filteredProjects.length > 0 &&
+      editableProjects &&
+      editableProjects.length > 0 &&
       selectedProject === null
     ) {
       const projectToSelect =
-        activeProjectFromUrl &&
-        filteredProjects.some((p) => p.metadata.name === activeProjectFromUrl)
+        activeProjectFromUrl && editableProjects.some((p) => p === activeProjectFromUrl)
           ? activeProjectFromUrl
-          : filteredProjects[0].metadata.name;
+          : editableProjects[0];
 
       setSelectedProject(projectToSelect);
     }
-  }, [isModalOpen, filteredProjects, selectedProject, activeProjectFromUrl]);
+  }, [isModalOpen, selectedProject, activeProjectFromUrl, editableProjects]);
 
   const { persesProjectDashboards: dashboards } = usePerses(
     isModalOpen && selectedProject ? selectedProject : undefined,
