@@ -240,7 +240,6 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
       const result = dynamicValidationSchema.safeParse(currentValues);
 
       if (!result.success) {
-        // Apply validation errors for the current form values
         result.error.issues.forEach((issue) => {
           if (issue.path[0] === 'dashboardName') {
             form.setError('dashboardName', {
