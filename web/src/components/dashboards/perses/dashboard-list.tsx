@@ -93,7 +93,7 @@ const DashboardActionsCell = React.memo(
     }
     if (permissionsLoading) {
       return (
-        <Tooltip content={t('Permissions are loading')}>
+        <Tooltip content={t('Checking permissions...')}>
           <div>
             <ActionsColumn items={emptyActions} isDisabled={true} />
           </div>
