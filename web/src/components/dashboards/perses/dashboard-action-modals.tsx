@@ -208,12 +208,8 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
     return allProjects[0] || '';
   }, [dashboard, editableProjects, allProjects]);
 
-  const { schema: validationSchema } = useDashboardValidationSchema(defaultProject, t);
-
   const form = useForm<CreateDashboardValidationType>({
-    resolver: validationSchema
-      ? zodResolver(validationSchema)
-      : zodResolver(createDashboardDialogValidationSchema(t)),
+    resolver: zodResolver(createDashboardDialogValidationSchema(t)),
     mode: 'onBlur',
     defaultValues: {
       projectName: defaultProject,
@@ -222,6 +218,8 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
   });
 
   const selectedProjectName = form.watch('projectName');
+
+  const { schema: dynamicValidationSchema } = useDashboardValidationSchema(selectedProjectName, t);
 
   const projectOptions = useMemo<TypeaheadSelectOption[]>(() => {
     if (!editableProjects) {
@@ -235,6 +233,27 @@ export const DuplicateActionModal = ({ dashboard, isOpen, onClose }: ActionModal
   }, [editableProjects, selectedProjectName]);
 
   const createDashboardMutation = useCreateDashboardMutation();
+
+  React.useEffect(() => {
+    if (dynamicValidationSchema && selectedProjectName) {
+      const currentValues = form.getValues();
+      const result = dynamicValidationSchema.safeParse(currentValues);
+
+      if (!result.success) {
+        // Apply validation errors for the current form values
+        result.error.issues.forEach((issue) => {
+          if (issue.path[0] === 'dashboardName') {
+            form.setError('dashboardName', {
+              type: 'validate',
+              message: issue.message,
+            });
+          }
+        });
+      } else {
+        form.clearErrors('dashboardName');
+      }
+    }
+  }, [selectedProjectName, dynamicValidationSchema, form]);
 
   React.useEffect(() => {
     if (isOpen && dashboard && editableProjects?.length > 0 && defaultProject) {
