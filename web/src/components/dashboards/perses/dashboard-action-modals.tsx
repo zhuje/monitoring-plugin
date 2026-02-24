@@ -50,11 +50,11 @@ import { t_global_spacer_200, t_global_font_weight_200 } from '@patternfly/react
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 
-const formGroupStyle = {
+export const formGroupStyle = {
   fontWeight: t_global_font_weight_200.value,
 } as React.CSSProperties;
 
-const LabelSpacer = () => {
+export const LabelSpacer = () => {
   return <div style={{ paddingBottom: t_global_spacer_200.value }} />;
 };
 

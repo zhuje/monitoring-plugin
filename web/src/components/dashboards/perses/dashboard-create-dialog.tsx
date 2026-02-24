@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Alert,
   Button,
@@ -8,7 +8,6 @@ import {
   ModalFooter,
   ModalVariant,
   FormGroup,
-  Form,
   TextInput,
   FormHelperText,
   HelperText,
@@ -16,7 +15,11 @@ import {
   HelperTextItemVariant,
   ValidatedOptions,
   Tooltip,
+  Stack,
+  StackItem,
 } from '@patternfly/react-core';
+import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { TypeaheadSelect, TypeaheadSelectOption } from '@patternfly/react-templates';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
 import { usePerses } from './hooks/usePerses';
@@ -28,8 +31,14 @@ import { DashboardResource } from '@perses-dev/core';
 import { useCreateDashboardMutation, useCreateProjectMutation } from './dashboard-api';
 import { createNewDashboard } from './dashboard-utils';
 import { useToast } from './ToastProvider';
+import {
+  createDashboardDialogValidationSchema,
+  CreateDashboardValidationType,
+  useDashboardValidationSchema,
+} from './dashboard-action-validations';
 import { usePerspective, getDashboardUrl } from '../../hooks/usePerspective';
 import { persesDashboardDataTestIDs } from '../../data-test';
+import { formGroupStyle, LabelSpacer } from './dashboard-action-modals';
 
 export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -39,12 +48,60 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   const { editableProjects, hasEditableProject, permissionsLoading, permissionsError } =
     useEditableProjects();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [dashboardName, setDashboardName] = useState<string>('');
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [generalError, setGeneralError] = useState<string>('');
   const createDashboardMutation = useCreateDashboardMutation();
   const createProjectMutation = useCreateProjectMutation();
   const { persesProjects } = usePerses();
+
+  // Initialize form with React Hook Form
+  const form = useForm<CreateDashboardValidationType>({
+    resolver: zodResolver(createDashboardDialogValidationSchema(t)),
+    mode: 'onBlur',
+    defaultValues: {
+      projectName: '',
+      dashboardName: '',
+    },
+  });
+
+  // Watch for project selection changes
+  const selectedProject = form.watch('projectName');
+
+  // Get dynamic validation schema based on currently selected project
+  const { schema: dynamicValidationSchema } = useDashboardValidationSchema(selectedProject, t);
+
+  // Dynamic validation effect - validate current form values when project changes
+  React.useEffect(() => {
+    if (dynamicValidationSchema && selectedProject) {
+      const currentValues = form.getValues();
+      const result = dynamicValidationSchema.safeParse(currentValues);
+
+      if (!result.success) {
+        // Apply validation errors for the current form values
+        result.error.issues.forEach((issue) => {
+          if (issue.path[0] === 'dashboardName') {
+            form.setError('dashboardName', {
+              type: 'validate',
+              message: issue.message,
+            });
+          }
+        });
+      } else {
+        // Clear dashboard name errors if validation passes
+        form.clearErrors('dashboardName');
+      }
+    }
+  }, [selectedProject, dynamicValidationSchema, form]);
+
+  // Reset form when modal opens
+  React.useEffect(() => {
+    if (isModalOpen) {
+      form.reset({
+        projectName: '',
+        dashboardName: '',
+      });
+      setGeneralError('');
+    }
+  }, [isModalOpen, form]);
 
   const disabled = permissionsLoading || !hasEditableProject;
 
@@ -60,74 +117,42 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
     }));
   }, [editableProjects, selectedProject]);
 
-  const { persesProjectDashboards: dashboards } = usePerses(
-    isModalOpen && selectedProject ? selectedProject : undefined,
-  );
-
-  const handleSetDashboardName = (_event, dashboardName: string) => {
-    setDashboardName(dashboardName);
-    if (formErrors.dashboardName) {
-      setFormErrors((prev) => ({ ...prev, dashboardName: '' }));
-    }
-  };
-
-  const handleAdd = async () => {
-    setFormErrors({});
-
-    if (!selectedProject || !dashboardName.trim()) {
-      const errors: { [key: string]: string } = {};
-      if (!selectedProject) errors.project = t('Project is required');
-      if (!dashboardName.trim()) errors.dashboardName = t('Dashboard name is required');
-      setFormErrors(errors);
-      return;
-    }
+  // Form submission handler using React Hook Form
+  const processForm: SubmitHandler<CreateDashboardValidationType> = async (data) => {
+    setGeneralError('');
 
     try {
-      if (
-        dashboards &&
-        dashboards.some(
-          (d) =>
-            d.metadata.project === selectedProject &&
-            d.metadata.name.toLowerCase() === dashboardName.trim().toLowerCase(),
-        )
-      ) {
-        setFormErrors({
-          dashboardName: `Dashboard name "${dashboardName}" already exists in this project`,
-        });
-        return;
-      }
-
       const projectExists = persesProjects?.some(
-        (project) => project.metadata.name === selectedProject,
+        (project) => project.metadata.name === data.projectName,
       );
 
       if (!projectExists) {
         try {
-          await createProjectMutation.mutateAsync(selectedProject as string);
+          await createProjectMutation.mutateAsync(data.projectName);
           addAlert(
-            t('Project "{{project}}" created successfully', { project: selectedProject }),
+            t('Project "{{project}}" created successfully', { project: data.projectName }),
             'success',
           );
         } catch (projectError) {
           const errorMessage =
             projectError?.message ||
             t('Failed to create project "{{project}}". Please try again.', {
-              project: selectedProject,
+              project: data.projectName,
             });
           addAlert(t('Error creating project: {{error}}', { error: errorMessage }), 'danger');
-          setFormErrors({ general: errorMessage });
+          setGeneralError(errorMessage);
           return;
         }
       }
 
       const newDashboard: DashboardResource = createNewDashboard(
-        dashboardName.trim(),
-        selectedProject as string,
+        data.dashboardName.trim(),
+        data.projectName,
       );
 
       const createdDashboard = await createDashboardMutation.mutateAsync(newDashboard);
 
-      addAlert(`Dashboard "${dashboardName}" created successfully`, 'success');
+      addAlert(`Dashboard "${data.dashboardName}" created successfully`, 'success');
 
       const dashboardUrl = getDashboardUrl(perspective);
       const dashboardParam = `dashboard=${createdDashboard.metadata.name}`;
@@ -135,22 +160,24 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
       const editModeParam = `edit=true`;
       navigate(`${dashboardUrl}?${dashboardParam}&${projectParam}&${editModeParam}`);
 
-      setIsModalOpen(false);
-      setDashboardName('');
-      setFormErrors({});
+      handleModalClose();
     } catch (error) {
       const errorMessage = error?.message || t('Failed to create dashboard. Please try again.');
       addAlert(`Error creating dashboard: ${errorMessage}`, 'danger');
-      setFormErrors({ general: errorMessage });
+      setGeneralError(errorMessage);
     }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    form.reset();
+    setGeneralError('');
   };
 
   const handleModalToggle = () => {
     setIsModalOpen(!isModalOpen);
     if (isModalOpen) {
-      setDashboardName('');
-      setFormErrors({});
-      setSelectedProject(null);
+      handleModalClose();
     }
   };
 
@@ -159,7 +186,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
   };
 
   const onSelect = (_event: any, selection: string) => {
-    setSelectedProject(selection);
+    form.setValue('projectName', selection);
   };
 
   const createBtn = (
@@ -203,80 +230,110 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
               style={{ marginBottom: '16px' }}
             />
           )}
-          {formErrors.general && (
+          {generalError && (
             <Alert
               variant="danger"
-              title={formErrors.general}
+              title={generalError}
               isInline
               style={{ marginBottom: '16px' }}
             />
           )}
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleAdd();
-            }}
-          >
-            <FormGroup
-              label={t('Select project')}
-              isRequired
-              fieldId="form-group-create-dashboard-dialog-project-selection"
-            >
-              <TypeaheadSelect
-                key={selectedProject || 'no-selection'}
-                initialOptions={projectOptions}
-                placeholder={t('Select a project')}
-                noOptionsFoundMessage={(filter) =>
-                  t('No project found for "{{filter}}"', { filter })
-                }
-                onClearSelection={() => {
-                  setSelectedProject(null);
-                }}
-                onSelect={onSelect}
-                isCreatable={false}
-                maxMenuHeight="200px"
-              />
-            </FormGroup>
-            <FormGroup
-              label={t('Dashboard name')}
-              isRequired
-              fieldId="form-group-create-dashboard-dialog-name"
-            >
-              <TextInput
-                isRequired
-                type="text"
-                id="text-input-create-dashboard-dialog-name"
-                name="text-input-create-dashboard-dialog-name"
-                placeholder={t('my-new-dashboard')}
-                value={dashboardName}
-                onChange={handleSetDashboardName}
-                validated={
-                  formErrors.dashboardName ? ValidatedOptions.error : ValidatedOptions.default
-                }
-              />
-              {formErrors.dashboardName && (
-                <FormHelperText>
-                  <HelperText>
-                    <HelperTextItem
-                      icon={<ExclamationCircleIcon />}
-                      variant={HelperTextItemVariant.error}
-                    >
-                      {formErrors.dashboardName}
-                    </HelperTextItem>
-                  </HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
-          </Form>
+          <FormProvider {...form}>
+            <form id="dashboard-create-form" onSubmit={form.handleSubmit(processForm)}>
+              <Stack hasGutter>
+                <StackItem>
+                  <Controller
+                    control={form.control}
+                    name="projectName"
+                    render={({ fieldState }) => (
+                      <FormGroup
+                        label={t('Select namespace')}
+                        isRequired
+                        fieldId="form-group-create-dashboard-dialog-project-selection"
+                        style={formGroupStyle}
+                      >
+                        <LabelSpacer />
+                        <TypeaheadSelect
+                          key={selectedProject || 'no-selection'}
+                          initialOptions={projectOptions}
+                          placeholder={t('Select a namespace')}
+                          noOptionsFoundMessage={(filter) =>
+                            t('No namespace found for "{{filter}}"', { filter })
+                          }
+                          onClearSelection={() => {
+                            form.setValue('projectName', '');
+                          }}
+                          onSelect={onSelect}
+                          isCreatable={false}
+                          maxMenuHeight="200px"
+                        />
+                        {fieldState.error && (
+                          <FormHelperText>
+                            <HelperText>
+                              <HelperTextItem
+                                icon={<ExclamationCircleIcon />}
+                                variant={HelperTextItemVariant.error}
+                              >
+                                {fieldState.error.message}
+                              </HelperTextItem>
+                            </HelperText>
+                          </FormHelperText>
+                        )}
+                      </FormGroup>
+                    )}
+                  />
+                </StackItem>
+                <StackItem>
+                  <Controller
+                    control={form.control}
+                    name="dashboardName"
+                    render={({ field, fieldState }) => (
+                      <FormGroup
+                        label={t('Dashboard name')}
+                        isRequired
+                        fieldId="form-group-create-dashboard-dialog-name"
+                        style={formGroupStyle}
+                      >
+                        <LabelSpacer />
+                        <TextInput
+                          {...field}
+                          isRequired
+                          type="text"
+                          id="text-input-create-dashboard-dialog-name"
+                          placeholder={t('my-new-dashboard')}
+                          validated={
+                            fieldState.error ? ValidatedOptions.error : ValidatedOptions.default
+                          }
+                        />
+                        {fieldState.error && (
+                          <FormHelperText>
+                            <HelperText>
+                              <HelperTextItem
+                                icon={<ExclamationCircleIcon />}
+                                variant={HelperTextItemVariant.error}
+                              >
+                                {fieldState.error.message}
+                              </HelperTextItem>
+                            </HelperText>
+                          </FormHelperText>
+                        )}
+                      </FormGroup>
+                    )}
+                  />
+                </StackItem>
+              </Stack>
+            </form>
+          </FormProvider>
         </ModalBody>
         <ModalFooter>
           <Button
             key="create"
             variant="primary"
-            onClick={handleAdd}
+            type="submit"
+            form="dashboard-create-form"
             isDisabled={
-              !dashboardName?.trim() ||
-              !selectedProject ||
+              !(form.watch('dashboardName') || '')?.trim() ||
+              !(form.watch('projectName') || '')?.trim() ||
               createDashboardMutation.isPending ||
               createProjectMutation.isPending
             }
