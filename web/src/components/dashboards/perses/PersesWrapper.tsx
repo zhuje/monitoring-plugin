@@ -218,6 +218,28 @@ const mapPatterflyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
           },
         },
       },
+      MuiButtonGroup: {
+        styleOverrides: {
+          root: {
+            // Remove border-radius from button groups to prevent pill shape
+            '& .MuiButton-root': {
+              borderRadius: 'var(--pf-t--global--border--radius--tiny) !important',
+            },
+          },
+          grouped: {
+            borderRadius: 'var(--pf-t--global--border--radius--tiny)  !important',
+          },
+          firstButton: {
+            borderRadius: 'var(--pf-t--global--border--radius--tiny)  !important',
+          },
+          lastButton: {
+            borderRadius: 'var(--pf-t--global--border--radius--tiny)  !important',
+          },
+          middleButton: {
+            borderRadius: 'var(--pf-t--global--border--radius--tiny)  !important',
+          },
+        },
+      },
       MuiFormLabel: {
         styleOverrides: {
           root: {
