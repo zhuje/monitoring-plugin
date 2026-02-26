@@ -60,7 +60,7 @@ export function useDashboardValidationSchema(
     if (!dashboards?.length)
       return {
         schema: createDashboardDialogValidationSchema(t),
-        isSchemaLoading: true,
+        isSchemaLoading: false,
         hasSchemaError: false,
       };
 
@@ -87,6 +87,6 @@ export function useDashboardValidationSchema(
       }),
     );
 
-    return { schema: refinedSchema, isSchemaLoading: true, hasSchemaError: false };
+    return { schema: refinedSchema, isSchemaLoading: false, hasSchemaError: false };
   }, [dashboards, isDashboardsLoading, isError, t]);
 }
