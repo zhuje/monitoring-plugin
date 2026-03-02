@@ -314,8 +314,6 @@ const mapPatternFlyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
 };
 
 export function PersesWrapper({ children, project }: PersesWrapperProps) {
-  console.log('!JZ PersesWrapper render', { project });
-
   const { theme } = usePatternFlyTheme();
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
 
@@ -378,7 +376,7 @@ function InnerWrapper({ children, project, dashboardName }) {
   const DEFAULT_REFRESH_INTERVAL = '0s';
 
   // Always have a dashboard resource to prevent context issues
-  const effectiveDashboard = React.useMemo(() => {
+  const effectiveDashboard: DashboardResource = React.useMemo(() => {
     if (persesDashboard) {
       return persesDashboard;
     }
@@ -386,9 +384,9 @@ function InnerWrapper({ children, project, dashboardName }) {
     return {
       kind: 'Dashboard' as const,
       metadata: {
-        name: dashboardName || 'loading',
-        project: project || 'default',
-        version: 0
+        name: 'loading',
+        project: null,
+        version: 0,
       },
       spec: {
         display: { name: 'Loading...' },
@@ -397,12 +395,10 @@ function InnerWrapper({ children, project, dashboardName }) {
         layouts: [],
         variables: [],
         duration: '1h',
-        refreshInterval: '30s'
-      }
+        refreshInterval: '30s',
+      },
     };
   }, [persesDashboard, dashboardName, project]);
-
-  console.log('!JZ InnerWrapper', { persesDashboard: !!persesDashboard, persesDashboardLoading, effectiveDashboard: effectiveDashboard.metadata.name });
 
   const dashboardDuration = persesDashboard?.spec?.duration;
   const dashboardTimeInterval = persesDashboard?.spec?.refreshInterval;
@@ -455,10 +451,10 @@ function InnerWrapper({ children, project, dashboardName }) {
     >
       <VariableProviderWithQueryParams
         builtinVariableDefinitions={builtinVariables}
-        initialVariableDefinitions={persesDashboard?.spec?.variables}
+        initialVariableDefinitions={effectiveDashboard?.spec?.variables}
         key={effectiveDashboard.metadata.name}
       >
-        <PersesPrometheusDatasourceWrapper queries={[]} dashboardResource={persesDashboard}>
+        <PersesPrometheusDatasourceWrapper queries={[]} dashboardResource={effectiveDashboard}>
           <DashboardProvider
             initialState={{
               dashboardResource: effectiveDashboard,

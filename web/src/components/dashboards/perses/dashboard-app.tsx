@@ -46,14 +46,6 @@ export interface DashboardAppProps {
 }
 
 export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement => {
-  const dashboardName = props?.dashboardResource?.metadata?.name || 'NO DASHBOARD';
-  console.log('!JZ OCPDashboardApp render', dashboardName, props);
-
-  if (!props) {
-    console.error('!JZ OCPDashboardApp called with undefined props!', new Error().stack);
-    return <div>OCPDashboardApp: No props provided</div>;
-  }
-
   const {
     dashboardResource,
     emptyDashboardProps,
