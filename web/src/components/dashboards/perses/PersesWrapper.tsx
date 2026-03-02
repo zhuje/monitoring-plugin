@@ -314,6 +314,8 @@ const mapPatternFlyThemeToMUI = (theme: 'light' | 'dark'): ThemeOptions => {
 };
 
 export function PersesWrapper({ children, project }: PersesWrapperProps) {
+  console.log('!JZ PersesWrapper render', { project });
+
   const { theme } = usePatternFlyTheme();
   const [dashboardName] = useQueryParam(QueryParams.Dashboard, StringParam);
 
@@ -356,13 +358,9 @@ export function PersesWrapper({ children, project }: PersesWrapperProps) {
           content=""
         >
           <PluginRegistry pluginLoader={pluginLoader}>
-            {!project ? (
-              <>{children}</>
-            ) : (
-              <InnerWrapper project={project} dashboardName={dashboardName}>
-                {children}
-              </InnerWrapper>
-            )}
+            <InnerWrapper project={project} dashboardName={dashboardName}>
+              {children}
+            </InnerWrapper>
           </PluginRegistry>
         </SnackbarProvider>
       </ChartsProvider>
@@ -378,6 +376,33 @@ function InnerWrapper({ children, project, dashboardName }) {
   );
   const DEFAULT_DASHBOARD_DURATION = '30m';
   const DEFAULT_REFRESH_INTERVAL = '0s';
+
+  // Always have a dashboard resource to prevent context issues
+  const effectiveDashboard = React.useMemo(() => {
+    if (persesDashboard) {
+      return persesDashboard;
+    }
+    // Create a temporary dashboard when the real one isn't available
+    return {
+      kind: 'Dashboard' as const,
+      metadata: {
+        name: dashboardName || 'loading',
+        project: project || 'default',
+        version: 0
+      },
+      spec: {
+        display: { name: 'Loading...' },
+        datasources: {},
+        panels: {},
+        layouts: [],
+        variables: [],
+        duration: '1h',
+        refreshInterval: '30s'
+      }
+    };
+  }, [persesDashboard, dashboardName, project]);
+
+  console.log('!JZ InnerWrapper', { persesDashboard: !!persesDashboard, persesDashboardLoading, effectiveDashboard: effectiveDashboard.metadata.name });
 
   const dashboardDuration = persesDashboard?.spec?.duration;
   const dashboardTimeInterval = persesDashboard?.spec?.refreshInterval;
@@ -423,10 +448,6 @@ function InnerWrapper({ children, project, dashboardName }) {
     return result;
   }, [data, project, dashboardName]);
 
-  if (persesDashboardLoading) {
-    return <LoadingBox />;
-  }
-
   return (
     <TimeRangeProviderWithQueryParams
       initialTimeRange={initialTimeRange}
@@ -435,20 +456,19 @@ function InnerWrapper({ children, project, dashboardName }) {
       <VariableProviderWithQueryParams
         builtinVariableDefinitions={builtinVariables}
         initialVariableDefinitions={persesDashboard?.spec?.variables}
-        key={persesDashboard?.metadata.name}
+        key={effectiveDashboard.metadata.name}
       >
         <PersesPrometheusDatasourceWrapper queries={[]} dashboardResource={persesDashboard}>
-          {persesDashboard ? (
-            <DashboardProvider
-              initialState={{
-                dashboardResource: persesDashboard,
-              }}
-            >
-              <ValidationProvider>{children}</ValidationProvider>
-            </DashboardProvider>
-          ) : (
-            <>{children}</>
-          )}
+          <DashboardProvider
+            initialState={{
+              dashboardResource: effectiveDashboard,
+            }}
+            key={effectiveDashboard.metadata.name}
+          >
+            <ValidationProvider>
+              {persesDashboardLoading ? <LoadingBox /> : children}
+            </ValidationProvider>
+          </DashboardProvider>
         </PersesPrometheusDatasourceWrapper>
       </VariableProviderWithQueryParams>
     </TimeRangeProviderWithQueryParams>

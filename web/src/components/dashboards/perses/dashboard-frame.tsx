@@ -24,6 +24,8 @@ export const DashboardFrame: React.FC<DashboardFrameProps> = ({
   dashboardDisplayName,
   children,
 }) => {
+  console.log('!JZ DashboardFrame render', { activeProject, activeProjectDashboardsMetadata, dashboardDisplayName });
+
   return (
     <>
       <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />

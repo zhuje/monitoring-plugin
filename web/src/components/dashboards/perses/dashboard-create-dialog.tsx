@@ -151,7 +151,7 @@ export const DashboardCreateDialog: React.FunctionComponent = () => {
 
   const createBtn = (
     <Button variant="primary" onClick={handleModalToggle} isDisabled={disabled}>
-      {permissionsLoading ? t('Checking permissions...') : t('Create')}
+      {permissionsLoading ? t('Checking permissions...') : t('Create??')}
     </Button>
   );
 

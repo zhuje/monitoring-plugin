@@ -64,6 +64,8 @@ const DashboardPage_: React.FC = () => {
     (d) => d.name === targetDashboardName,
   );
 
+  console.log('!JZ dashboard-page.tsx', { targetDashboardName, currentDashboard, activeProjectDashboardsMetadata });
+
   if (!currentDashboard) {
     return (
       <div style={{ padding: '2rem' }}>
@@ -77,6 +79,18 @@ const DashboardPage_: React.FC = () => {
       </div>
     );
   }
+
+  if (!currentDashboard.persesDashboard) {
+    console.log('!JZ currentDashboard.persesDashboard is undefined', currentDashboard);
+    return (
+      <div style={{ padding: '2rem' }}>
+        <h2>{t('Dashboard loading')}</h2>
+        <p>{t('The dashboard data is still loading...')}</p>
+      </div>
+    );
+  }
+
+  console.log('!JZ dashboard-page.tsx about to render OCPDashboardApp with:', currentDashboard.persesDashboard?.metadata?.name);
 
   return (
     <DashboardFrame
