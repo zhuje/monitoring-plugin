@@ -18,7 +18,7 @@ export const renameDashboardDialogValidationSchema = (t: (key: string) => string
     dashboardName: createDashboardDisplayNameValidationSchema(t),
   });
 
-export const importDashboardDialogValidationSchema = (t: (key: string) => string) =>
+export const importDashboardDialogValidationSchema = (_t: (key: string) => string) =>
   z.object({
     projectName: nameSchema,
   });

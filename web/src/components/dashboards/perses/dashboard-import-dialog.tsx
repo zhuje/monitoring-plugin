@@ -22,11 +22,12 @@ import { ChangeEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { useEditableProjects } from './hooks/useEditableProjects';
+import { usePerses } from './hooks/usePerses';
 
 import { DashboardResource } from '@perses-dev/core';
 import * as React from 'react';
 import { getDashboardUrl, usePerspective } from '../../hooks/usePerspective';
-import { useCreateDashboardMutation } from './dashboard-api';
+import { useCreateDashboardMutation, useCreateProjectMutation } from './dashboard-api';
 import { usePatternFlyTheme } from './hooks/usePatternflyTheme';
 import { useMigrateDashboard } from './migrate-api';
 import { useToast } from './ToastProvider';
@@ -79,6 +80,7 @@ export const DashboardImportDialog: React.FunctionComponent<DashboardImportDialo
   const { editableProjects, allProjects, permissionsLoading, permissionsError } =
     useEditableProjects();
 
+  const { persesProjects } = usePerses();
   const { theme } = usePatternFlyTheme();
 
   const defaultProject = React.useMemo(() => {
@@ -100,6 +102,7 @@ export const DashboardImportDialog: React.FunctionComponent<DashboardImportDialo
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   const createDashboardMutation = useCreateDashboardMutation();
+  const createProjectMutation = useCreateProjectMutation();
   const migrateMutation = useMigrateDashboard();
 
   const projectOptions = React.useMemo<SelectOptionProps[]>(() => {
@@ -227,7 +230,10 @@ export const DashboardImportDialog: React.FunctionComponent<DashboardImportDialo
     setParseError('');
   };
 
-  const isImporting = createDashboardMutation.isPending || migrateMutation.isPending;
+  const isImporting =
+    createDashboardMutation.isPending ||
+    createProjectMutation.isPending ||
+    migrateMutation.isPending;
 
   const importDashboard = async (dashboard: DashboardResource, projectName: string) => {
     dashboard.metadata.project = projectName;
@@ -264,6 +270,29 @@ export const DashboardImportDialog: React.FunctionComponent<DashboardImportDialo
     // Capture current values before async operations to prevent race conditions
     const currentProject = data.projectName;
     const currentParsedDashboard = parsedDashboard;
+
+    // Check if project exists, create it if it doesn't
+    const projectExists = persesProjects?.some(
+      (project) => project.metadata.name === currentProject,
+    );
+
+    if (!projectExists) {
+      try {
+        await createProjectMutation.mutateAsync(currentProject);
+        addAlert(
+          t('Project "{{project}}" created successfully', { project: currentProject }),
+          'success',
+        );
+      } catch (projectError) {
+        const errorMessage =
+          getErrorMessage(projectError) ||
+          t('Failed to create project "{{project}}". Please try again.', {
+            project: currentProject,
+          });
+        addAlert(t('Error creating project: {{error}}', { error: errorMessage }), 'danger');
+        return;
+      }
+    }
 
     try {
       if (currentParsedDashboard.kind === 'grafana') {
@@ -450,6 +479,7 @@ export const DashboardImportDialog: React.FunctionComponent<DashboardImportDialo
                           onSelect={onProjectSelect}
                           defaultValue={projectNameValue || defaultProject}
                           retainValue
+                          maxHeight="200px"
                         />
                         {fieldState.error && (
                           <FormHelperText>
