@@ -21,6 +21,7 @@ import {
 } from '@perses-dev/dashboards';
 import {
   useDashboard,
+  useDashboardActions,
   useDiscardChangesConfirmationDialog,
   useEditMode,
 } from '@perses-dev/dashboards';
@@ -64,13 +65,13 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
   const { addAlert } = useToast();
 
   const { isEditMode, setEditMode } = useEditMode();
-  const { dashboard, setDashboard } = useDashboard();
+  const { dashboard } = useDashboard();
+  const { setDashboard } = useDashboardActions();
 
   const [originalDashboard, setOriginalDashboard] = React.useState<
     DashboardResource | EphemeralDashboardResource | undefined
   >(undefined);
   const [saveErrorOccurred, setSaveErrorOccurred] = React.useState(false);
-  const [forceRenderKey, setForceRenderKey] = React.useState(0);
 
   React.useEffect(() => {
     if (saveErrorOccurred && !isEditMode) {
@@ -162,6 +163,8 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
       try {
         console.log('!JZ 🔍 Dashboard save - sending data:', data);
         console.log('!JZ 📊 Current dashboard state before save:', dashboard);
+        console.log('!!JZ OLD ', { dashboard, data });
+
         const result = await updateDashboardMutation.mutateAsync(data, {
           onSuccess: (updatedDashboard: DashboardResource) => {
             console.log('!JZ ✅ Dashboard save success - received:', updatedDashboard);
@@ -176,9 +179,9 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
             );
 
             setSaveErrorOccurred(false);
-            // Force Dashboard component re-render to clear panel cache
-            setForceRenderKey((prev) => prev + 1);
-            console.log('!JZ 🔄 Forcing Dashboard re-render with new key');
+            setDashboard(updatedDashboard);
+            console.log('!JZ 🔄 Dashboard will re-render with updatedAt key');
+            console.log('!!JZ  NEW', { updatedDashboard });
             return updatedDashboard;
           },
         });
@@ -214,8 +217,9 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
       />
       <Box sx={{ paddingTop: 2, paddingX: 2, height: '100%' }}>
         <ErrorBoundary FallbackComponent={ErrorAlert}>
+          <h1> dashboard-${dashboard?.metadata?.updatedAt || dashboard?.metadata?.version} </h1>
           <Dashboard
-            key={`dashboard-${dashboard?.metadata?.version}-${forceRenderKey}`}
+            key={`dashboard-${dashboard?.metadata?.updatedAt || dashboard?.metadata?.version}`}
             emptyDashboardProps={{
               onEditButtonClick,
               ...emptyDashboardProps,
