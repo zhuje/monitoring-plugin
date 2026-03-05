@@ -70,6 +70,7 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
     DashboardResource | EphemeralDashboardResource | undefined
   >(undefined);
   const [saveErrorOccurred, setSaveErrorOccurred] = React.useState(false);
+  const [forceRenderKey, setForceRenderKey] = React.useState(0);
 
   React.useEffect(() => {
     if (saveErrorOccurred && !isEditMode) {
@@ -91,6 +92,30 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
     }
   }, [isEdit, setEditMode]);
 
+  // Debug: Track when dashboardResource prop changes
+  React.useEffect(() => {
+    console.log('!JZ 🔄 dashboardResource prop changed:', dashboardResource);
+  }, [dashboardResource]);
+
+  // Debug: Track when dashboard state changes
+  React.useEffect(() => {
+    console.log('!JZ 🎯 Dashboard state changed:', dashboard);
+    console.log('!JZ 📋 Dashboard version:', dashboard?.metadata?.version);
+    // Show panel queries to track the revert
+    const panels = dashboard?.spec?.panels || {};
+    console.log(
+      '!JZ 📊 Panel queries:',
+      Object.keys(panels).map((panelId) => {
+        const panel = panels[panelId];
+        const queries = panel?.spec?.queries || [];
+        return {
+          panelId,
+          queries: queries.map((q) => q?.spec?.plugin?.spec?.query || 'no query found'),
+        };
+      }),
+    );
+  }, [dashboard]);
+
   const handleDiscardChanges = (): void => {
     // Reset to the original spec and exit edit mode
     if (originalDashboard) {
@@ -104,6 +129,7 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
   };
 
   const onEditButtonClick = (): void => {
+    console.log('!JZ 📝 Edit mode entered - storing original dashboard:', dashboard);
     setEditMode(true);
     setOriginalDashboard(dashboard);
     setSavedDatasources(dashboard.spec.datasources ?? {});
@@ -134,8 +160,12 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
       }
 
       try {
+        console.log('!JZ 🔍 Dashboard save - sending data:', data);
+        console.log('!JZ 📊 Current dashboard state before save:', dashboard);
         const result = await updateDashboardMutation.mutateAsync(data, {
           onSuccess: (updatedDashboard: DashboardResource) => {
+            console.log('!JZ ✅ Dashboard save success - received:', updatedDashboard);
+            console.log('!JZ 🧹 Need to clear preview state after save');
             addAlert(
               t(
                 `Dashboard ${getResourceExtendedDisplayName(
@@ -146,6 +176,9 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
             );
 
             setSaveErrorOccurred(false);
+            // Force Dashboard component re-render to clear panel cache
+            setForceRenderKey((prev) => prev + 1);
+            console.log('!JZ 🔄 Forcing Dashboard re-render with new key');
             return updatedDashboard;
           },
         });
@@ -182,6 +215,7 @@ export const OCPDashboardApp = (props: DashboardAppProps): React.ReactElement =>
       <Box sx={{ paddingTop: 2, paddingX: 2, height: '100%' }}>
         <ErrorBoundary FallbackComponent={ErrorAlert}>
           <Dashboard
+            key={`dashboard-${dashboard?.metadata?.version}-${forceRenderKey}`}
             emptyDashboardProps={{
               onEditButtonClick,
               ...emptyDashboardProps,
