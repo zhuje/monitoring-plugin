@@ -41,6 +41,7 @@ import { useTranslation } from 'react-i18next';
 import { LoadingBox } from '../../../components/console/console-shared/src/components/loading/LoadingBox';
 import { remotePluginLoader } from '@perses-dev/plugin-system';
 import { ChartThemeColor, getThemeColors } from '@patternfly/react-charts';
+import { EmptyStateSpinner } from './dashboard-page';
 
 // Override eChart defaults with PatternFly colors.
 const patternflyBlue100 = '#73bcf7'; // PF-5 lightest blue for dark theme
@@ -373,6 +374,11 @@ function InnerWrapper({ children, project, dashboardName }) {
   const DEFAULT_DASHBOARD_DURATION = '30m';
   const DEFAULT_REFRESH_INTERVAL = '0s';
 
+  // Use the same parameter names as Perses library for compatibility
+  const [startParam, setStartParam] = useQueryParam('start', StringParam);
+  const [endParam] = useQueryParam('end', StringParam);
+  const [refreshParam, setRefreshParam] = useQueryParam('refresh', StringParam);
+
   // Always have a dashboard resource to prevent context issues
   const effectiveDashboard: DashboardResource = React.useMemo(() => {
     if (persesDashboard) {
@@ -401,8 +407,59 @@ function InnerWrapper({ children, project, dashboardName }) {
   const dashboardDuration = persesDashboard?.spec?.duration;
   const dashboardTimeInterval = persesDashboard?.spec?.refreshInterval;
 
-  const effectiveDuration = dashboardDuration || DEFAULT_DASHBOARD_DURATION;
+  const effectiveDuration = dashboardDuration || '1d';
   const effectiveRefreshInterval = dashboardTimeInterval || DEFAULT_REFRESH_INTERVAL;
+
+  console.log('!JZ Dashboard Data:', {
+    persesDashboard: !!persesDashboard,
+    effectiveDuration,
+    effectiveRefreshInterval,
+    dashboardDuration,
+    dashboardTimeInterval,
+  });
+
+  console.log('!JZ URL Parameters:', {
+    startParam,
+    endParam,
+    refreshParam,
+    currentURL: window.location.href,
+  });
+
+  // Sync URL query parameters with dashboard saved values when no URL parameters are present
+  React.useEffect(() => {
+    console.log('!JZ useEffect triggered:', {
+      persesDashboard: !!persesDashboard,
+      startParam,
+      endParam,
+      dashboardDuration,
+      condition: persesDashboard && !startParam && !endParam && dashboardDuration,
+    });
+
+    if (persesDashboard && !startParam && !endParam && dashboardDuration) {
+      // Set the start parameter to dashboard's saved duration (Perses format)
+      console.log('!JZ Setting start param to:', dashboardDuration);
+      setStartParam(dashboardDuration);
+    }
+
+    if (
+      persesDashboard &&
+      !refreshParam &&
+      dashboardTimeInterval &&
+      dashboardTimeInterval !== '0s'
+    ) {
+      console.log('!JZ Setting refresh param to:', dashboardTimeInterval);
+      setRefreshParam(dashboardTimeInterval);
+    }
+  }, [
+    persesDashboard,
+    startParam,
+    endParam,
+    refreshParam,
+    dashboardDuration,
+    dashboardTimeInterval,
+    setStartParam,
+    setRefreshParam,
+  ]);
 
   const initialTimeRange = useInitialTimeRange(effectiveDuration);
   const initialRefreshInterval = useInitialRefreshInterval(effectiveRefreshInterval);
@@ -442,6 +499,10 @@ function InnerWrapper({ children, project, dashboardName }) {
     return result;
   }, [data, project, dashboardName]);
 
+  if (persesDashboardLoading) {
+    return <EmptyStateSpinner />;
+  }
+
   return (
     <TimeRangeProviderWithQueryParams
       initialTimeRange={initialTimeRange}
@@ -459,9 +520,7 @@ function InnerWrapper({ children, project, dashboardName }) {
             }}
             key={effectiveDashboard.metadata.name}
           >
-            <ValidationProvider>
-              {persesDashboardLoading ? <LoadingBox /> : children}
-            </ValidationProvider>
+            <ValidationProvider>{children}</ValidationProvider>
           </DashboardProvider>
         </PersesPrometheusDatasourceWrapper>
       </VariableProviderWithQueryParams>
