@@ -53,7 +53,8 @@ import {
   setIncidentsActiveFilters,
   setIncidentsLastRefreshTime,
 } from '../../store/actions';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom-v5-compat';
+// import { useLocation } from 'react-router-dom';
 import { changeDaysFilter } from './utils';
 import { parsePrometheusDuration } from '../console/console-shared/src/datetime/prometheus';
 import withFallback from '../console/console-shared/error/fallbacks/withFallback';

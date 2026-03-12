@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom-v5-compat';
 
-import { setQueryArguments } from '../../console/utils/router';
+import { useRouterUtils } from '../../console/utils/router';
 
 import { Perspective } from '../../../store/actions';
 import BarChart from '../legacy/bar-chart';
@@ -101,6 +101,7 @@ const getPanelSpan = (panel: Panel): gridSpans => {
 const Card: FC<CardProps> = memo(({ panel, perspective }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { plugin } = useMonitoring();
+  const { setQueryArguments } = useRouterUtils();
 
   const pollInterval = useSelector(
     (state: MonitoringState) => getObserveState(plugin, state).dashboards.pollInterval,

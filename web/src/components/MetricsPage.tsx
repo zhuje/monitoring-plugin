@@ -85,11 +85,7 @@ import {
 import { getPrometheusBasePath, buildPrometheusUrl } from './utils';
 import { AsyncComponent } from './console/utils/async';
 import { usePoll } from './console/utils/poll-hook';
-import {
-  getAllQueryArguments,
-  getQueryArgument,
-  setAllQueryArguments,
-} from './console/utils/router';
+import { getAllQueryArguments, getQueryArgument, useRouterUtils } from './console/utils/router';
 import { useSafeFetch } from './console/utils/safe-fetch-hook';
 
 import {
@@ -1092,6 +1088,7 @@ const QueryBrowserWrapper: FC<{
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { plugin } = useMonitoring();
   const [activeNamespace] = useActiveNamespace();
+  const { setAllQueryArguments } = useRouterUtils();
 
   const dispatch = useDispatch();
 

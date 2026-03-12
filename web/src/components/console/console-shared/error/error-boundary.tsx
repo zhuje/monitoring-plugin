@@ -1,6 +1,6 @@
 import type { ComponentType, FC } from 'react';
 import { Component } from 'react';
-import { history } from '../../utils/router';
+// Updated for React Router v6 compatibility
 
 type ErrorBoundaryProps = {
   FallbackComponent?: ComponentType<ErrorBoundaryFallbackProps>;
@@ -37,11 +37,17 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidMount() {
-    this.unlisten = history.listen(() => {
-      // reset state to default when location changes
-      this.setState(this.defaultState);
-    });
+    // Listen to popstate events instead of react-router history
+    this.unlisten = () => {
+      window.removeEventListener('popstate', this.handleLocationChange);
+    };
+    window.addEventListener('popstate', this.handleLocationChange);
   }
+
+  handleLocationChange = () => {
+    // reset state to default when location changes
+    this.setState(this.defaultState);
+  };
 
   componentWillUnmount() {
     this.unlisten();

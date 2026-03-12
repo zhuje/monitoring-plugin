@@ -3,7 +3,7 @@ import { useEffect, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom-v5-compat';
 import { QueryParamProvider } from 'use-query-params';
-import { ReactRouter5Adapter } from 'use-query-params/adapters/react-router-5';
+import { ReactRouterV5CompatAdapter } from '../../console/utils/router';
 import { LoadingInline } from '../../console/console-shared/src/components/loading/LoadingInline';
 import { OCPDashboardApp } from './dashboard-app';
 import { DashboardFrame } from './dashboard-frame';
@@ -100,7 +100,7 @@ const DashboardPage_: FC = () => {
 
 const DashboardPage: React.FC = () => {
   return (
-    <QueryParamProvider adapter={ReactRouter5Adapter}>
+    <QueryParamProvider adapter={ReactRouterV5CompatAdapter}>
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
           <DashboardPage_ />

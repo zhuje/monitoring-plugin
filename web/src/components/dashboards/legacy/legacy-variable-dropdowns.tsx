@@ -24,7 +24,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { SingleTypeaheadDropdown } from '../../console/utils/single-typeahead-dropdown';
 import { getPrometheusBasePath, buildPrometheusUrl, ALL_NAMESPACES_KEY } from '../../utils';
-import { getQueryArgument, setQueryArgument } from '../../console/utils/router';
+import { getQueryArgument, useRouterUtils } from '../../console/utils/router';
 import { useSafeFetch } from '../../console/utils/safe-fetch-hook';
 
 import { dashboardsPatchVariable, dashboardsVariableOptionsLoaded } from '../../../store/actions';
@@ -110,6 +110,7 @@ const LegacyDashboardsVariableOption = ({ value, isSelected, ...rest }) =>
 const LegacyDashboardsVariableDropdown: FC<VariableDropdownProps> = ({ id, name }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const { plugin, accessCheckLoading, useMetricsTenancy } = useMonitoring();
+  const { setQueryArgument } = useRouterUtils();
   const [namespace] = useActiveNamespace();
 
   const timespan = useSelector(
