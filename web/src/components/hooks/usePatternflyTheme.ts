@@ -22,18 +22,29 @@ function getTheme(): 'light' | 'dark' {
 }
 
 /**
- * In case the user sets "system default" theme in the user preferences,
- * update the theme if the system theme changes.
+ * Detects PatternFly theme changes from both system preferences and
+ * OpenShift Console user preferences (which toggle dark theme classes
+ * on the <html> element).
  */
 export function usePatternFlyTheme() {
   const [theme, setTheme] = useState(getTheme());
 
   useEffect(() => {
     const reloadTheme = () => setTheme(getTheme());
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
 
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
     mq.addEventListener('change', reloadTheme);
-    return () => mq.removeEventListener('change', reloadTheme);
+
+    const observer = new MutationObserver(reloadTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => {
+      mq.removeEventListener('change', reloadTheme);
+      observer.disconnect();
+    };
   }, [setTheme]);
 
   return { theme };
